@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 interface Product {
   id: number;
@@ -17,6 +18,7 @@ const Product = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const { token } = useAuth();
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,12 +49,21 @@ const Product = () => {
       setLoading(true);
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/products`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
       setProducts(response.data);
       setError("");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching products:", err);
-      setError("Failed to load products. Please try again.");
+      if (err.response && err.response.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError("Failed to load products. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -60,7 +71,7 @@ const Product = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [token]);
 
   const handleOpenModal = (product: Product | null = null) => {
     if (product) {
@@ -100,17 +111,25 @@ const Product = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
       if (currentProduct) {
         // Update
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/products/${currentProduct.id}`,
           formData,
+          config,
         );
       } else {
         // Create
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/products`,
           formData,
+          config,
         );
       }
       fetchProducts();
@@ -126,6 +145,11 @@ const Product = () => {
       try {
         await axios.delete(
           `${import.meta.env.VITE_API_BASE_URL}/products/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
         fetchProducts();
       } catch (err) {
