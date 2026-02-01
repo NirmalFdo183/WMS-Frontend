@@ -8,8 +8,11 @@ interface SideBarProps {
 const SideBar = ({ isOpen, onClose }: SideBarProps) => {
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: "🏠" },
-    { name: "New Supply", path: "/new-supply", icon: "📦" },
-    { name: "Loading", path: "/loading", icon: "⏳" },
+    { name: "Products", path: "/products", icon: "📦" },
+    { name: "New Supply", path: "/new-supply", icon: "🚚" },
+    { name: "Loading", path: "/loading", icon: "🚛" },
+    { name: "Shops", path: "/shops", icon: "🏪" },
+    { name: "Resources", path: "/resources", icon: "🗂️" },
     { name: "Settings", path: "/settings", icon: "⚙️" },
   ];
 

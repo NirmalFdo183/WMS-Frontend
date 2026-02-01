@@ -1,12 +1,19 @@
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './pages/Login';
-import Dashboard from './dashboard/Dashboard';
-import Loading from './pages/Loading';
-import NewSupply from './pages/NewSupply';
-import Settings from './pages/Settings';
-import Layout from './components/Layout';
-import './App.css';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import Login from "./pages/Login";
+import Dashboard from "./dashboard/Dashboard";
+import Product from "./pages/Product";
+import Loading from "./pages/Loading";
+import NewSupply from "./pages/NewSupply";
+import Resources from "./pages/Resources";
+import Shops from "./pages/Shops";
+import Settings from "./pages/Settings";
+import Layout from "./components/Layout";
+import "./App.css";
 
 // Protected Route Wrapper
 const ProtectedRoute = () => {
@@ -31,12 +38,24 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
+        path: "products",
+        element: <Product />,
+      },
+      {
         path: "new-supply",
         element: <NewSupply />,
       },
       {
         path: "loading",
         element: <Loading />,
+      },
+      {
+        path: "resources",
+        element: <Resources />,
+      },
+      {
+        path: "shops",
+        element: <Shops />,
       },
       {
         path: "settings",
