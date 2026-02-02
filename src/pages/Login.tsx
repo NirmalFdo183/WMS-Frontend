@@ -46,7 +46,7 @@ const Login = () => {
 
         <div className="relative z-10 text-center p-12">
           <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 mb-6 drop-shadow-sm">
-            Hemas Stock Manager
+            Thejani Traders
           </h1>
           <p className="text-xl text-gray-600 font-light">
             Efficiently manage your warehouse operations with our next-gen
