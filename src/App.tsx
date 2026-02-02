@@ -12,6 +12,8 @@ import NewSupply from "./pages/NewSupply";
 import Resources from "./pages/Resources";
 import Shops from "./pages/Shops";
 import Settings from "./pages/Settings";
+import Suppliers from "./pages/Suppliers";
+import SupplyInvoices from "./pages/SupplyInvoices";
 import Layout from "./components/Layout";
 import "./App.css";
 
@@ -38,6 +40,10 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
+        path: "suppliers",
+        element: <Suppliers />,
+      },
+      {
         path: "products",
         element: <Product />,
       },
@@ -60,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: "settings",
         element: <Settings />,
+      },
+      {
+        path: "supply-invoices",
+        element: <SupplyInvoices />,
       },
       {
         path: "",
