@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, Edit2, Trash2, Search } from "lucide-react";
 
 interface BatchStock {
@@ -32,6 +32,7 @@ interface SupplierInvoice {
 
 const SupplyInvoices = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [invoices, setInvoices] = useState<SupplierInvoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -40,8 +41,20 @@ const SupplyInvoices = () => {
     const [modalLoading, setModalLoading] = useState(false);
     const [invoiceToDelete, setInvoiceToDelete] = useState<number | null>(null);
 
+    // Initial Tab Selection from Navigation State
+    useEffect(() => {
+        if (location.state && location.state.activeTab) {
+            setActiveTab(location.state.activeTab);
+            // Clear state so it doesn't persist on refresh if not intended, 
+            // though for keeping tab active on refresh we'd need URL params. 
+            // For now, this handles the redirect from creation page.
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
+
     // Loading State
     const [loadings, setLoadings] = useState<any[]>([]);
+    const [loadingToDelete, setLoadingToDelete] = useState<number | null>(null);
 
     const fetchInvoices = async () => {
         try {
@@ -78,6 +91,21 @@ const SupplyInvoices = () => {
         }
     };
 
+    const deleteLoading = async () => {
+        if (!loadingToDelete) return;
+        try {
+            setLoading(true);
+            await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/loadings/${loadingToDelete}`);
+            setLoadings(loadings.filter(l => l.id !== loadingToDelete));
+            setLoadingToDelete(null);
+        } catch (err) {
+            console.error("Error deleting loading:", err);
+            alert("Failed to delete loading.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const LoadingTable = () => {
         if (loading) return <div className="p-10 text-center text-gray-500">Loading data...</div>;
         if (loadings.length === 0) return <div className="p-10 text-center text-gray-500">No loading manifests found.</div>;
@@ -108,15 +136,34 @@ const SupplyInvoices = () => {
                                 <span className={`px-2 py-1 rounded text-xs font-bold uppercase 
                                     ${load.status === 'delivered' ? 'bg-green-100 text-green-700' :
                                         load.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
-                                    {load.status}
+                                    {load.status.replace("_", " ")}
                                 </span>
                             </td>
                             <td className="px-6 py-4 text-center font-bold text-gray-700">
                                 {load.loading_items?.reduce((sum: number, item: any) => sum + (Number(item.qty) + (Number(item.free_qty) || 0)), 0) || 0}
                             </td>
                             <td className="px-6 py-4 text-right">
-                                {/* Actions placeholder - mainly for viewing details */}
-                                <button className="text-blue-500 hover:text-blue-700 text-sm font-bold">View</button>
+                                <div className="flex justify-end gap-2">
+                                    <button
+                                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                        title="View Details"
+                                    >
+                                        <Eye size={16} />
+                                    </button>
+                                    <button
+                                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                                        title="Edit Loading"
+                                    >
+                                        <Edit2 size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => setLoadingToDelete(load.id)}
+                                        className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                        title="Delete Loading"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -310,7 +357,7 @@ const SupplyInvoices = () => {
 
 
             {/* DELETE CONFIRMATION MODAL */}
-            {invoiceToDelete && (
+            {(invoiceToDelete || loadingToDelete) && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
                         <div className="p-6 sm:p-8 text-center">
@@ -318,17 +365,20 @@ const SupplyInvoices = () => {
                                 <Trash2 size={24} className="sm:hidden" />
                                 <Trash2 size={32} className="hidden sm:block" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Invoice?</h3>
-                            <p className="text-sm text-gray-500 mb-6 sm:mb-8">This action cannot be undone. All stock items associated with this invoice will also be removed.</p>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">{loadingToDelete ? "Delete Manifest?" : "Delete Invoice?"}</h3>
+                            <p className="text-sm text-gray-500 mb-6 sm:mb-8">This action cannot be undone. All associated data will be removed.</p>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => setInvoiceToDelete(null)}
+                                    onClick={() => {
+                                        setInvoiceToDelete(null);
+                                        setLoadingToDelete(null);
+                                    }}
                                     className="py-2.5 sm:py-3 font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-all border border-gray-100"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={handleDeleteInvoice}
+                                    onClick={loadingToDelete ? deleteLoading : handleDeleteInvoice}
                                     className="py-2.5 sm:py-3 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-100 transition-all font-mono"
                                 >
                                     Confirm
