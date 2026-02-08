@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -35,6 +36,7 @@ const NewSupply = () => {
   const editInvoiceId = location.state?.invoiceId;
 
   // Navigation State
+  const { refreshTotalValue } = useWarehouse();
   const [step, setStep] = useState<"invoice" | "items">("invoice");
   const [originalInvoiceTotal, setOriginalInvoiceTotal] = useState<number>(0);
 
@@ -262,6 +264,7 @@ const NewSupply = () => {
   };
 
   const handleCompleteSupply = async () => {
+    await refreshTotalValue();
     alert("Invoice successfully saved!");
     resetForm();
     navigate("/dashboard");

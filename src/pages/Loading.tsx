@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
+import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -46,6 +47,7 @@ interface LoadingItem {
 
 const Loading = () => {
   const navigate = useNavigate();
+  const { refreshTotalValue } = useWarehouse();
 
   // Navigation & UI State
   const [step, setStep] = useState<"details" | "items">("details");
@@ -191,7 +193,13 @@ const Loading = () => {
       setStep("items");
     } catch (err: any) {
       console.error("Error creating loading:", err);
-      alert(err.response?.data?.message || "Failed to create loading.");
+      if (err.response && err.response.status === 422) {
+        const errors = err.response.data.errors;
+        const errorMessages = Object.keys(errors).map(key => errors[key][0]).join('\n');
+        alert(`Validation Failed:\n${errorMessages}`);
+      } else {
+        alert(err.response?.data?.message || "Failed to create loading. Check connection.");
+      }
     } finally {
       setLoading(false);
     }
@@ -247,7 +255,8 @@ const Loading = () => {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    await refreshTotalValue();
     navigate("/supply-invoices", { state: { activeTab: 'loading' } });
   };
 
