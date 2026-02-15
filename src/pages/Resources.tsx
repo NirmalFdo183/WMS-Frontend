@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Edit2, Trash2, Plus } from "lucide-react";
 
 // Interfaces
 interface Route {
   id: number;
   route_code: string;
   route_description: string;
+}
+
+interface Supplier {
+  id: number;
+  name: string;
 }
 
 interface Truck {
@@ -24,23 +30,28 @@ interface Employee {
 
 interface SalesRep {
   id: number;
+  rep_id: string;
+  supplier_id: number;
+  route_id: number;
   name: string;
-  email: string;
-  phone: string;
+  contact: string | null;
+  join_date: string | null;
+  supplier?: { name: string };
+  route?: { route_code: string };
 }
 
 const Resources = () => {
   // State management for tabs
   const [activeTab, setActiveTab] = useState<
-    "routes" | "trucks" | "employees" | "salesReps"
+    "routes" | "trucks" | "employees" | "sales-reps"
   >("routes");
 
   // Data States
   const [routes, setRoutes] = useState<Route[]>([]);
   const [trucks, setTrucks] = useState<Truck[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-
   const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
   // UI States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,28 +95,36 @@ const Resources = () => {
   };
 
   const fetchSalesReps = async () => {
-    // Placeholder for future API integration
-    setSalesReps([
-      {
-        id: 1,
-        name: "John Doe",
-        email: "john@example.com",
-        phone: "0771234567",
-      },
-      {
-        id: 2,
-        name: "Jane Smith",
-        email: "jane@example.com",
-        phone: "0719876543",
-      },
-    ]);
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/sales-reps`,
+      );
+      setSalesReps(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/suppliers`,
+      );
+      setSuppliers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
     if (activeTab === "routes") fetchRoutes();
     else if (activeTab === "trucks") fetchTrucks();
     else if (activeTab === "employees") fetchEmployees();
-    else if (activeTab === "salesReps") fetchSalesReps();
+    else if (activeTab === "sales-reps") {
+      fetchSalesReps();
+      fetchSuppliers();
+      fetchRoutes();
+    }
   }, [activeTab]);
 
   // Modal Handlers
@@ -120,7 +139,16 @@ const Resources = () => {
         item || { name: "", nic: "", role: "warehouse_helper", phoneno: "" },
       );
     } else {
-      setFormData(item || { name: "", email: "", phone: "" });
+      setFormData(
+        item || {
+          rep_id: "",
+          supplier_id: "",
+          route_id: "",
+          name: "",
+          contact: "",
+          join_date: new Date().toISOString().split("T")[0],
+        },
+      );
     }
     setIsModalOpen(true);
   };
@@ -134,12 +162,6 @@ const Resources = () => {
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (activeTab === "salesReps") {
-      alert("Sales Rep API not connected yet!");
-      closeModal();
-      return;
-    }
 
     try {
       if (editingId) {
@@ -157,6 +179,7 @@ const Resources = () => {
       if (activeTab === "routes") fetchRoutes();
       if (activeTab === "trucks") fetchTrucks();
       if (activeTab === "employees") fetchEmployees();
+      if (activeTab === "sales-reps") fetchSalesReps();
       closeModal();
     } catch (err) {
       console.error(err);
@@ -168,11 +191,6 @@ const Resources = () => {
   const handleDelete = async (id: number) => {
     if (!window.confirm("Are you sure?")) return;
 
-    if (activeTab === "salesReps") {
-      alert("Sales Rep API not connected yet!");
-      return;
-    }
-
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/${activeTab}/${id}`,
@@ -180,6 +198,7 @@ const Resources = () => {
       if (activeTab === "routes") fetchRoutes();
       if (activeTab === "trucks") fetchTrucks();
       if (activeTab === "employees") fetchEmployees();
+      if (activeTab === "sales-reps") fetchSalesReps();
     } catch (err) {
       console.error(err);
       alert("Delete failed.");
@@ -199,9 +218,10 @@ const Resources = () => {
         </div>
         <button
           onClick={() => openModal()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+          className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold transition-all hover:bg-blue-700 hover:shadow-lg shadow-blue-200 flex items-center gap-2 text-sm"
         >
-          <span>+</span> Add{" "}
+          <Plus size={18} />
+          Add{" "}
           {activeTab === "routes"
             ? "Route"
             : activeTab === "trucks"
@@ -233,8 +253,8 @@ const Resources = () => {
           Employees
         </button>
         <button
-          className={`px-4 py-2 font-medium text-sm focus:outline-none whitespace-nowrap ${activeTab === "salesReps" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
-          onClick={() => setActiveTab("salesReps")}
+          className={`px-4 py-2 font-medium text-sm focus:outline-none whitespace-nowrap ${activeTab === "sales-reps" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+          onClick={() => setActiveTab("sales-reps")}
         >
           Sales Reps
         </button>
@@ -257,18 +277,22 @@ const Resources = () => {
                   <td className="px-6 py-4 font-mono">{r.route_code}</td>
                   <td className="px-6 py-4">{r.route_description}</td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openModal(r)}
-                      className="text-blue-600 mr-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(r.id)}
-                      className="text-red-600"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => openModal(r)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                        title="Edit Route"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(r.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                        title="Delete Route"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -301,18 +325,22 @@ const Resources = () => {
                   <td className="px-6 py-4 font-mono">{t.licence_plate_no}</td>
                   <td className="px-6 py-4">{t.description || "-"}</td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openModal(t)}
-                      className="text-blue-600 mr-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      className="text-red-600"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => openModal(t)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                        title="Edit Truck"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(t.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                        title="Delete Truck"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -355,18 +383,22 @@ const Resources = () => {
                   </td>
                   <td className="px-6 py-4">{e.phoneno}</td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openModal(e)}
-                      className="text-blue-600 mr-2 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(e.id)}
-                      className="text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => openModal(e)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                        title="Edit Employee"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(e.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                        title="Delete Employee"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -384,42 +416,54 @@ const Resources = () => {
           </table>
         )}
 
-        {activeTab === "salesReps" && (
+        {activeTab === "sales-reps" && (
           <table className="w-full text-left">
             <thead className="bg-gray-50/50">
               <tr>
+                <th className="px-6 py-4">Rep ID</th>
                 <th className="px-6 py-4">Name</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Phone</th>
+                <th className="px-6 py-4">Supplier</th>
+                <th className="px-6 py-4">Route</th>
+                <th className="px-6 py-4">Contact</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {salesReps.map((s) => (
                 <tr key={s.id}>
-                  <td className="px-6 py-4">{s.name}</td>
-                  <td className="px-6 py-4">{s.email}</td>
-                  <td className="px-6 py-4">{s.phone}</td>
+                  <td className="px-6 py-4 font-mono text-sm">{s.rep_id}</td>
+                  <td className="px-6 py-4 font-bold">{s.name}</td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {s.supplier?.name}
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {s.route?.route_code}
+                  </td>
+                  <td className="px-6 py-4">{s.contact}</td>
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => openModal(s)}
-                      className="text-blue-600 mr-2"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      className="text-red-600"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => openModal(s)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                        title="Edit Sales Rep"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s.id)}
+                        className="text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                        title="Delete Sales Rep"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {salesReps.length === 0 && (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={6}
                     className="px-6 py-8 text-center text-gray-400"
                   >
                     No sales reps found
@@ -548,38 +592,85 @@ const Resources = () => {
                 </>
               )}
 
-              {activeTab === "salesReps" && (
+              {activeTab === "sales-reps" && (
                 <>
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    required
-                    value={formData.name || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    required
-                    value={formData.email || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone Number"
-                    required
-                    value={formData.phone || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Rep ID"
+                      required
+                      value={formData.rep_id || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, rep_id: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      required
+                      value={formData.name || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <select
+                      required
+                      value={formData.supplier_id || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          supplier_id: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg bg-white"
+                    >
+                      <option value="">Select Supplier</option>
+                      {suppliers.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      required
+                      value={formData.route_id || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, route_id: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg bg-white"
+                    >
+                      <option value="">Select Route</option>
+                      {routes.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.route_code}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Contact No"
+                      value={formData.contact || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, contact: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                    <input
+                      type="date"
+                      placeholder="Join Date"
+                      value={formData.join_date || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, join_date: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                  </div>
                 </>
               )}
 

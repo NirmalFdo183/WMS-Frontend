@@ -57,8 +57,14 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             <span className="text-gray-900 font-semibold truncate max-w-[100px] lg:max-w-none">
               {user?.name || "User"}
             </span>
-            <span className="text-xs text-gray-500 capitalize">
-              {user?.role || "Admin"}
+            <span className="text-[10px] sm:text-xs text-blue-600 font-bold uppercase tracking-wider">
+              {user?.role === "admin"
+                ? "Administrator"
+                : user?.role === "staff"
+                  ? "Warehouse Staff"
+                  : user?.role === "rep"
+                    ? "Sales Representative"
+                    : "User"}
             </span>
           </div>
         </div>
@@ -66,9 +72,14 @@ const Header = ({ onMenuClick }: HeaderProps) => {
         <div className="hidden md:block h-8 w-px bg-gray-200 mx-2"></div>
 
         <div className="hidden md:flex flex-col">
-          <span className="text-[10px] lg:text-xs text-gray-500 uppercase font-bold tracking-wider">Total Warehouse Value</span>
+          <span className="text-[10px] lg:text-xs text-gray-500 uppercase font-bold tracking-wider">
+            Total Warehouse Value
+          </span>
           <span className="text-sm lg:text-base text-gray-900 font-bold">
-            Rs. {Number(totalValue).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            Rs.{" "}
+            {Number(totalValue).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
           </span>
         </div>
       </div>
@@ -80,9 +91,14 @@ const Header = ({ onMenuClick }: HeaderProps) => {
         </div>
 
         <div className="md:hidden flex flex-col items-end">
-          <span className="text-[10px] text-gray-400 font-bold uppercase">Wh. Value</span>
+          <span className="text-[10px] text-gray-400 font-bold uppercase">
+            Wh. Value
+          </span>
           <span className="text-xs font-bold text-gray-800">
-            Rs. {Number(totalValue).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            Rs.{" "}
+            {Number(totalValue).toLocaleString(undefined, {
+              maximumFractionDigits: 0,
+            })}
           </span>
         </div>
 
