@@ -73,7 +73,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
 
         <div className="hidden md:flex flex-col">
           <span className="text-[10px] lg:text-xs text-gray-500 uppercase font-bold tracking-wider">
-            Total Warehouse Value
+            Total Warehouse Value (Updated)
           </span>
           <span className="text-sm lg:text-base text-gray-900 font-bold">
             Rs.{" "}
