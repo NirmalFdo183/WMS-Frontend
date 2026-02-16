@@ -14,6 +14,7 @@ import {
 interface Product {
   id: number;
   material_code: string;
+  barcode: string;
   name: string;
   supplier_id: number;
   supplier?: {
@@ -59,6 +60,7 @@ const Product = () => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     material_code: "",
+    barcode: "",
     name: "",
     supplier_id: "",
   });
@@ -119,6 +121,7 @@ const Product = () => {
       setCurrentProduct(product);
       setFormData({
         material_code: product.material_code,
+        barcode: product.barcode || "",
         name: product.name,
         supplier_id: String(product.supplier_id),
       });
@@ -126,6 +129,7 @@ const Product = () => {
       setCurrentProduct(null);
       setFormData({
         material_code: "",
+        barcode: "",
         name: "",
         supplier_id: "",
       });
@@ -138,6 +142,7 @@ const Product = () => {
     setCurrentProduct(null);
     setFormData({
       material_code: "",
+      barcode: "",
       name: "",
       supplier_id: "",
     });
@@ -205,7 +210,8 @@ const Product = () => {
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.material_code.toLowerCase().includes(searchTerm.toLowerCase()),
+      product.material_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
@@ -255,6 +261,7 @@ const Product = () => {
               <thead>
                 <tr className="bg-gray-50/50 text-gray-500 text-xs sm:text-sm font-bold uppercase tracking-wider">
                   <th className="px-4 sm:px-6 py-4">Material Code</th>
+                  <th className="px-4 sm:px-6 py-4">Barcode</th>
                   <th className="px-4 sm:px-6 py-4">Description</th>
                   <th className="px-4 sm:px-6 py-4 hidden sm:table-cell">
                     Supplier
@@ -268,16 +275,20 @@ const Product = () => {
                 {filteredProducts.map((product) => (
                   <tr
                     key={product.id}
-                    className={`transition-colors group ${
-                      getProductStatus(product.stock) === "Low Stock" ||
+                    className={`transition-colors group ${getProductStatus(product.stock) === "Low Stock" ||
                       getProductStatus(product.stock) === "Out of Stock"
-                        ? "bg-red-50/50 hover:bg-red-100/50"
-                        : "hover:bg-gray-50/50"
-                    }`}
+                      ? "bg-red-50/50 hover:bg-red-100/50"
+                      : "hover:bg-gray-50/50"
+                      }`}
                   >
                     <td className="px-4 sm:px-6 py-4">
                       <div className="text-[10px] sm:text-xs text-gray-400 font-mono">
                         {product.material_code}
+                      </div>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="text-[10px] sm:text-xs text-gray-400 font-mono">
+                        {product.barcode}
                       </div>
                     </td>
                     <td className="px-4 sm:px-6 py-4">
@@ -373,6 +384,20 @@ const Product = () => {
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
+                  Barcode
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.barcode}
+                  onChange={(e) =>
+                    setFormData({ ...formData, barcode: e.target.value })
+                  }
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
                   Product Name
                 </label>
                 <input
@@ -442,7 +467,7 @@ const Product = () => {
                   <p className="text-sm text-gray-500 font-medium">
                     {viewingProduct?.name}{" "}
                     <span className="text-gray-400 font-mono text-xs ml-1">
-                      ({viewingProduct?.material_code})
+                      ({viewingProduct?.barcode || viewingProduct?.material_code})
                     </span>
                   </p>
                 </div>

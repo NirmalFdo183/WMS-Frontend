@@ -7,6 +7,7 @@ interface Product {
   id: number;
   name: string;
   material_code: string;
+  barcode: string;
   category: string;
 }
 
@@ -152,7 +153,8 @@ const Loading = () => {
       if (!p) return false;
       return (
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.material_code.toLowerCase() === searchTerm.toLowerCase() ||
+        (p.barcode && p.barcode.toLowerCase() === searchTerm.toLowerCase()) ||
+        (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
         p.material_code.toLowerCase().includes(searchTerm.toLowerCase())
       );
     });
@@ -528,7 +530,7 @@ const Loading = () => {
                               : "text-gray-400"
                           }
                         >
-                          {batch.product?.material_code}
+                          {batch.product?.barcode || batch.product?.material_code}
                         </span>
                       </div>
                       <div className="flex justify-between text-[10px] opacity-80 font-semibold italic">
@@ -570,7 +572,7 @@ const Loading = () => {
                           {item.batch_stock?.product?.name}
                         </p>
                         <p className="text-[10px] text-gray-400 mt-0.5">
-                          {item.batch_stock?.product?.material_code}
+                          {item.batch_stock?.product?.barcode || item.batch_stock?.product?.material_code}
                         </p>
                       </td>
                       <td className="px-4 py-4 text-center font-bold text-gray-600">
@@ -672,7 +674,7 @@ const Loading = () => {
                   {activeProduct.name}
                 </h4>
                 <p className="text-[10px] text-gray-400 font-mono mt-1">
-                  CODE: {activeProduct.material_code}
+                  BARCODE: {activeProduct.barcode || activeProduct.material_code}
                 </p>
               </div>
               <button
