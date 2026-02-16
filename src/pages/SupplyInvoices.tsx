@@ -14,6 +14,7 @@ interface BatchStock {
   no_cases: number;
   pack_size: number;
   qty: number;
+  free_qty: number;
   extra_units: number;
   retail_price: number;
   netprice: number;
@@ -25,7 +26,6 @@ interface SupplierInvoice {
   invoice_number: string;
   invoice_date: string;
   total_bill_amount: number;
-  discount: number;
   supplier_id: number;
   supplier?: {
     name: string;
@@ -333,7 +333,6 @@ const SupplyInvoices = () => {
                   <th className="px-6 py-4 text-left">Invoice No</th>
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">Supplier</th>
-                  <th className="px-6 py-4 text-right">Discount</th>
                   <th className="px-6 py-4 text-right">Total Amount</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
@@ -351,7 +350,7 @@ const SupplyInvoices = () => {
                 ) : filteredInvoices.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={5}
                       className="px-6 py-12 text-center text-gray-500"
                     >
                       No invoices found.
@@ -374,9 +373,6 @@ const SupplyInvoices = () => {
                       </td>
                       <td className="px-6 py-4 text-center font-semibold text-gray-800">
                         {inv.supplier?.name || `ID: ${inv.supplier_id}`}
-                      </td>
-                      <td className="px-6 py-4 text-right text-red-500 font-medium">
-                        Rs. {Number(inv.discount).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <span className="font-bold text-gray-900">
@@ -501,14 +497,6 @@ const SupplyInvoices = () => {
                         {selectedInvoice.invoice_date}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest leading-none mb-1">
-                        Discount
-                      </p>
-                      <p className="text-sm sm:text-lg font-bold text-red-500">
-                        Rs. {Number(selectedInvoice.discount).toFixed(2)}
-                      </p>
-                    </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest leading-none mb-1">
                         Invoice Total
@@ -539,6 +527,9 @@ const SupplyInvoices = () => {
                             </th>
                             <th className="px-4 py-4 text-center">
                               Total Units
+                            </th>
+                            <th className="px-4 py-4 text-center">
+                              Free Qty
                             </th>
                             <th className="px-4 py-4 text-right">Net Price</th>
                             <th className="px-4 py-4 text-right">
@@ -584,6 +575,9 @@ const SupplyInvoices = () => {
                               </td>
                               <td className="px-4 py-4 text-center font-bold text-gray-900">
                                 {item.qty}
+                              </td>
+                              <td className="px-4 py-4 text-center font-bold text-green-600">
+                                {item.free_qty > 0 ? item.free_qty : "-"}
                               </td>
                               <td className="px-4 py-4 text-right font-medium">
                                 Rs. {Number(item.netprice).toFixed(2)}
@@ -823,8 +817,8 @@ const SupplyInvoices = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${statusConfirmation.status === "delivered"
-                  ? "bg-green-100 text-green-600"
-                  : "bg-red-100 text-red-600"
+                ? "bg-green-100 text-green-600"
+                : "bg-red-100 text-red-600"
                 }`}
             >
               {statusConfirmation.status === "delivered" ? (
@@ -884,8 +878,8 @@ const SupplyInvoices = () => {
                   )
                 }
                 className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${statusConfirmation.status === "delivered"
-                    ? "bg-green-600 hover:bg-green-700 shadow-green-200"
-                    : "bg-red-600 hover:bg-red-700 shadow-red-200"
+                  ? "bg-green-600 hover:bg-green-700 shadow-green-200"
+                  : "bg-red-600 hover:bg-red-700 shadow-red-200"
                   }`}
               >
                 Yes, Update
