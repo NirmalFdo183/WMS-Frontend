@@ -39,7 +39,8 @@ interface BatchStock {
   pack_size: number;
   extra_units: number;
   qty: number;
-  free_qty?: number;
+  free_qty: number;
+  initial_free_qty: number;
   netprice: number;
   retail_price: number;
   expiry_date: string;
@@ -212,7 +213,8 @@ const Product = () => {
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.material_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase())),
+      (product.barcode &&
+        product.barcode.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
@@ -276,11 +278,12 @@ const Product = () => {
                 {filteredProducts.map((product) => (
                   <tr
                     key={product.id}
-                    className={`transition-colors group ${getProductStatus(product.stock) === "Low Stock" ||
+                    className={`transition-colors group ${
+                      getProductStatus(product.stock) === "Low Stock" ||
                       getProductStatus(product.stock) === "Out of Stock"
-                      ? "bg-red-50/50 hover:bg-red-100/50"
-                      : "hover:bg-gray-50/50"
-                      }`}
+                        ? "bg-red-50/50 hover:bg-red-100/50"
+                        : "hover:bg-gray-50/50"
+                    }`}
                   >
                     <td className="px-4 sm:px-6 py-4">
                       <div className="text-[10px] sm:text-xs text-gray-400 font-mono">
@@ -468,7 +471,9 @@ const Product = () => {
                   <p className="text-sm text-gray-500 font-medium">
                     {viewingProduct?.name}{" "}
                     <span className="text-gray-400 font-mono text-xs ml-1">
-                      ({viewingProduct?.barcode || viewingProduct?.material_code})
+                      (
+                      {viewingProduct?.barcode || viewingProduct?.material_code}
+                      )
                     </span>
                   </p>
                 </div>
@@ -530,8 +535,9 @@ const Product = () => {
                         <tr className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
                           <th className="px-6 py-4">Supply Ref</th>
                           <th className="px-4 py-4">Batch Vol.</th>
-                          <th className="px-4 py-4 text-center">Qty</th>
+                          <th className="px-4 py-4 text-center">Remain Qty</th>
                           <th className="px-4 py-4 text-right">Net Cost</th>
+                          <th className="px-4 py-4 text-right">Retail Price</th>
                           <th className="px-6 py-4">Expiry</th>
                         </tr>
                       </thead>
@@ -539,10 +545,11 @@ const Product = () => {
                         {stockDetails.map((batch) => (
                           <tr
                             key={batch.id}
-                            className={`transition-colors border-b border-gray-50 last:border-0 ${batch.qty === 0 && (batch.free_qty || 0) > 0
+                            className={`transition-colors border-b border-gray-50 last:border-0 ${
+                              batch.qty === 0 && (batch.free_qty || 0) > 0
                                 ? "bg-emerald-50/60 hover:bg-emerald-100/60"
                                 : "hover:bg-gray-50/50"
-                              }`}
+                            }`}
                           >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
@@ -569,30 +576,34 @@ const Product = () => {
                                     + {batch.extra_units}
                                   </span>
                                 )}
+                                {(batch.free_qty || 0) > 0 && (
+                                  <span className="text-emerald-500 ml-1">
+                                    + {batch.free_qty}
+                                  </span>
+                                )}
                               </p>
                               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">
                                 Initial:{" "}
                                 {batch.no_cases * batch.pack_size +
-                                  batch.extra_units}{" "}
+                                  batch.extra_units +
+                                  (batch.free_qty || 0)}{" "}
                                 Units
                               </p>
                             </td>
                             <td className="px-4 py-4 text-center">
                               <div className="flex flex-col items-center gap-1">
-                                {batch.qty > 0 && (
-                                  <span className="font-black text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">
-                                    {batch.qty}
-                                  </span>
-                                )}
-                                {batch.free_qty ? (
-                                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                                    +{batch.free_qty} Free
-                                  </span>
-                                ) : null}
+                                <span
+                                  className={`font-black px-2.5 py-1 rounded-lg ${batch.qty > 0 ? "text-gray-900 bg-gray-100" : "text-gray-400 bg-gray-50"}`}
+                                >
+                                  {batch.qty}
+                                </span>
                               </div>
                             </td>
                             <td className="px-4 py-4 text-right font-bold text-gray-700 font-mono">
                               Rs. {Number(batch.netprice).toFixed(2)}
+                            </td>
+                            <td className="px-4 py-4 text-right font-bold text-gray-600 font-mono">
+                              Rs. {Number(batch.retail_price).toFixed(2)}
                             </td>
                             <td className="px-6 py-4 font-semibold">
                               {batch.expiry_date ? (
