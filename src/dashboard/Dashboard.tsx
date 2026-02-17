@@ -3,16 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import {
   TrendingUp,
   DollarSign,
   Package,
@@ -57,16 +47,6 @@ const Dashboard = () => {
     };
     fetchStats();
   }, []);
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("en-LK", {
-      style: "currency",
-      currency: "LKR",
-      minimumFractionDigits: 0,
-    })
-      .format(val)
-      .replace("LKR", "Rs.");
-  };
 
   const dashboardCards = [
     {
@@ -135,9 +115,10 @@ const Dashboard = () => {
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
             Total Revenue
           </p>
-          <h3 className="text-2xl font-black text-gray-900">
-            {formatCurrency(stats?.total_revenue || 0)}
-          </h3>
+          <h3 className="text-2xl font-black text-gray-400">PENDING</h3>
+          <p className="text-[10px] text-orange-500 font-bold mt-1">
+            Logic Under Review
+          </p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -150,11 +131,12 @@ const Dashboard = () => {
             </span>
           </div>
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
-            Total Profit
+            Total Commission (Profit)
           </p>
-          <h3 className="text-2xl font-black text-emerald-600">
-            {formatCurrency(stats?.total_profit || 0)}
-          </h3>
+          <h3 className="text-2xl font-black text-gray-400">PENDING</h3>
+          <p className="text-[10px] text-orange-500 font-bold mt-1">
+            Logic Under Review
+          </p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -169,9 +151,10 @@ const Dashboard = () => {
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
             Total Supply Cost
           </p>
-          <h3 className="text-2xl font-black text-gray-900 line-clamp-1">
-            {formatCurrency(stats?.total_supply_cost || 0)}
-          </h3>
+          <h3 className="text-2xl font-black text-gray-400">PENDING</h3>
+          <p className="text-[10px] text-orange-500 font-bold mt-1">
+            Logic Under Review
+          </p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -205,57 +188,26 @@ const Dashboard = () => {
               </p>
             </div>
           </div>
-          <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.daily_stats}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f1f5f9"
-                />
-                <XAxis
-                  dataKey="loading_date"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 10 }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 10 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "16px",
-                    border: "none",
-                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                  }}
-                  cursor={{ fill: "#f8fafc" }}
-                />
-                <Legend iconType="circle" />
-                <Bar
-                  dataKey="revenue"
-                  name="Revenue"
-                  fill="#3b82f6"
-                  radius={[6, 6, 0, 0]}
-                  barSize={20}
-                />
-                <Bar
-                  dataKey="profit"
-                  name="Profit"
-                  fill="#10b981"
-                  radius={[6, 6, 0, 0]}
-                  barSize={20}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-[350px] w-full flex flex-col items-center justify-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+            <TrendingUp size={48} className="text-gray-200 mb-4" />
+            <h3 className="text-2xl font-black text-gray-300 uppercase tracking-widest">
+              Performance Data Pending
+            </h3>
+            <p className="text-orange-500 font-bold text-sm mt-2">
+              Logic Under Review
+            </p>
           </div>
         </div>
 
         {/* Dynamic Alerts Section (Instead of static Efficiency Overview) */}
         <div className="flex flex-col gap-6">
-          <div className="bg-red-500 p-8 rounded-3xl text-white shadow-xl shadow-red-100 flex flex-col justify-between">
+          <div
+            className={`bg-red-500 p-8 rounded-3xl text-white shadow-xl shadow-red-100 flex flex-col justify-between transition-all ${
+              (stats?.low_stock_count || 0) >= 1
+                ? "animate-pulse ring-4 ring-red-500/50"
+                : ""
+            }`}
+          >
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-xl font-bold mb-1">Low Stock Alert</h3>
