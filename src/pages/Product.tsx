@@ -39,6 +39,7 @@ interface BatchStock {
   pack_size: number;
   extra_units: number;
   qty: number;
+  free_qty?: number;
   netprice: number;
   retail_price: number;
   expiry_date: string;
@@ -515,7 +516,10 @@ const Product = () => {
                         Total Qty
                       </p>
                       <p className="text-xl font-black text-blue-700">
-                        {stockDetails.reduce((sum, b) => sum + b.qty, 0)}
+                        {stockDetails.reduce(
+                          (sum, b) => sum + b.qty + (b.free_qty || 0),
+                          0,
+                        )}
                       </p>
                     </div>
                   </div>
@@ -533,7 +537,13 @@ const Product = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-50 text-xs sm:text-sm">
                         {stockDetails.map((batch) => (
-                          <tr key={batch.id} className="hover:bg-gray-50/50">
+                          <tr
+                            key={batch.id}
+                            className={`transition-colors border-b border-gray-50 last:border-0 ${batch.qty === 0 && (batch.free_qty || 0) > 0
+                                ? "bg-emerald-50/60 hover:bg-emerald-100/60"
+                                : "hover:bg-gray-50/50"
+                              }`}
+                          >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
                                 <ShoppingBag
@@ -568,9 +578,18 @@ const Product = () => {
                               </p>
                             </td>
                             <td className="px-4 py-4 text-center">
-                              <span className="font-black text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">
-                                {batch.qty}
-                              </span>
+                              <div className="flex flex-col items-center gap-1">
+                                {batch.qty > 0 && (
+                                  <span className="font-black text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">
+                                    {batch.qty}
+                                  </span>
+                                )}
+                                {batch.free_qty ? (
+                                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                    +{batch.free_qty} Free
+                                  </span>
+                                ) : null}
+                              </div>
                             </td>
                             <td className="px-4 py-4 text-right font-bold text-gray-700 font-mono">
                               Rs. {Number(batch.netprice).toFixed(2)}
