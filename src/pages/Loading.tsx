@@ -393,7 +393,7 @@ const Loading = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8">
+    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
@@ -415,17 +415,21 @@ const Loading = () => {
               </button>
               <button
                 onClick={() => setShowConfirmSave(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-bold transition-all hover:bg-gradient-to-r hover:from-blue-700 hover:to-indigo-800 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
+                className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold transition-all hover:bg-blue-700 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
               >
                 Complete Loading
               </button>
             </>
           )}
           <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm ml-4">
-            <div className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest ${step === "details" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-400"}`}>
+            <div
+              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest ${step === "details" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-400"}`}
+            >
               1. Details
             </div>
-            <div className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest ${step === "items" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-400"}`}>
+            <div
+              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest ${step === "items" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-400"}`}
+            >
               2. Items
             </div>
           </div>
@@ -857,7 +861,7 @@ const Loading = () => {
                                 (sum, item) =>
                                   sum +
                                   (Number(item.free_qty) || 0) *
-                                  (Number(item.net_price) || 0),
+                                    (Number(item.net_price) || 0),
                                 0,
                               )
                               .toLocaleString(undefined, {
@@ -920,10 +924,11 @@ const Loading = () => {
                       <div
                         key={batch.id}
                         onClick={() => handleSelectBatch(batch)}
-                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${selectedIndex === index
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : "hover:bg-blue-50 text-gray-900"
-                          }`}
+                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${
+                          selectedIndex === index
+                            ? "bg-blue-600 text-white shadow-lg"
+                            : "hover:bg-blue-50 text-gray-900"
+                        }`}
                       >
                         <div className="flex justify-between items-start font-black text-base">
                           <div>
@@ -1268,7 +1273,10 @@ const Loading = () => {
                     <option value="">-- Choose Batch --</option>
                     {productBatches.map((b) => (
                       <option key={b.id} value={b.id}>
-                        Exp: {b.expiry_date} | Avail: {b.remain_qty} units {(b.returned_qty || 0) > 0 ? `(Inc. ${b.returned_qty} Returns)` : ''}
+                        Exp: {b.expiry_date} | Avail: {b.remain_qty} units{" "}
+                        {(b.returned_qty || 0) > 0
+                          ? `(Inc. ${b.returned_qty} Returns)`
+                          : ""}
                       </option>
                     ))}
                   </select>
