@@ -120,7 +120,7 @@ const Returns = () => {
         <div className="max-w-7xl mx-auto py-4">
             <div className="mb-4">
                 <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                    <RefreshCw className="text-blue-600" />
+
                     Returns Management
                 </h1>
                 <p className="text-gray-500 mt-2 text-lg">
