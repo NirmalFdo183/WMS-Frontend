@@ -24,6 +24,7 @@ interface Product {
   stock?: number;
   shelf_stock?: number;
   pending_stock?: number;
+  total_units?: number;
   status?: "In Stock" | "Low Stock" | "Out of Stock";
   created_at?: string;
   updated_at?: string;
@@ -40,6 +41,7 @@ interface BatchStock {
   no_cases: number;
   pack_size: number;
   extra_units: number;
+  returned_qty?: number;
   remain_qty: number;
   free_qty: number;
   initial_free_qty: number;
@@ -283,12 +285,11 @@ const Product = () => {
                 {filteredProducts.map((product) => (
                   <tr
                     key={product.id}
-                    className={`transition-colors group ${
-                      getProductStatus(product) === "Low Stock" ||
+                    className={`transition-colors group ${getProductStatus(product) === "Low Stock" ||
                       getProductStatus(product) === "Out of Stock"
-                        ? "bg-red-50/50 hover:bg-red-100/50"
-                        : "hover:bg-gray-50/50"
-                    }`}
+                      ? "bg-red-50/50 hover:bg-red-100/50"
+                      : "hover:bg-gray-50/50"
+                      }`}
                   >
                     <td className="px-4 sm:px-6 py-4">
                       <div className="text-[10px] sm:text-xs text-gray-400 font-mono">
@@ -311,7 +312,7 @@ const Product = () => {
                     <td className="px-4 sm:px-6 py-4">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-gray-900 font-bold text-sm">
-                          {product.shelf_stock || 0}
+                          {product.total_units || 0}
                         </span>
                         {Number(product.pending_stock) > 0 && (
                           <span className="text-[10px] text-blue-500 font-black uppercase tracking-tighter">
@@ -371,340 +372,345 @@ const Product = () => {
       </div>
 
       {/* Product Edit/Add Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900">
-                {currentProduct ? "Edit Product" : "New Product"}
-              </h2>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 p-2"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
-                  Material Code
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.material_code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, material_code: e.target.value })
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
-                  Barcode
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.barcode}
-                  onChange={(e) =>
-                    setFormData({ ...formData, barcode: e.target.value })
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
-                  Supplier
-                </label>
-                <select
-                  required
-                  value={formData.supplier_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, supplier_id: e.target.value })
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base appearance-none"
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+              <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 className="text-xl sm:text-2xl font-black text-gray-900">
+                  {currentProduct ? "Edit Product" : "New Product"}
+                </h2>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-400 hover:text-gray-600 p-2"
                 >
-                  <option value="">Select a Supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
+                  <X size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
+                    Material Code
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.material_code}
+                    onChange={(e) =>
+                      setFormData({ ...formData, material_code: e.target.value })
+                    }
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
+                    Barcode
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.barcode}
+                    onChange={(e) =>
+                      setFormData({ ...formData, barcode: e.target.value })
+                    }
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
+                    Supplier
+                  </label>
+                  <select
+                    required
+                    value={formData.supplier_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, supplier_id: e.target.value })
+                    }
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base appearance-none"
+                  >
+                    <option value="">Select a Supplier</option>
+                    {suppliers.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-3 sm:gap-4 pt-4 sm:pt-6">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="flex-1 px-4 sm:px-6 py-3 sm:py-4 border border-gray-200 font-bold text-gray-600 rounded-xl hover:bg-gray-50 transition-all text-sm sm:text-base"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-[2] px-4 sm:px-6 py-3 sm:py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 text-sm sm:text-base"
+                  >
+                    {currentProduct ? "Update" : "Register"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Stock Detail Modal */}
+      {
+        isStockModalOpen && (
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 text-sm sm:text-base">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 border border-gray-100">
+              <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-emerald-50/30">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                    <PackageSearch size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-gray-900">
+                      Stock Breakdown
+                    </h2>
+                    <p className="text-sm text-gray-500 font-medium">
+                      {viewingProduct?.name}{" "}
+                      <span className="text-gray-400 font-mono text-xs ml-1">
+                        (
+                        {viewingProduct?.barcode || viewingProduct?.material_code}
+                        )
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsStockModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all"
+                >
+                  <X size={24} />
+                </button>
               </div>
 
-              <div className="flex gap-3 sm:gap-4 pt-4 sm:pt-6">
+              <div className="flex-1 overflow-y-auto p-6">
+                {stockLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
+                    <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+                    <p className="font-bold animate-pulse">
+                      Analyzing stock data...
+                    </p>
+                  </div>
+                ) : stockDetails.length === 0 ? (
+                  <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                    <div className="text-4xl mb-4">🏜️</div>
+                    <h3 className="text-lg font-bold text-gray-800">
+                      No Active Batches
+                    </h3>
+                    <p className="text-gray-500 max-w-xs mx-auto mt-2">
+                      This product currently has no recorded stock batches from
+                      any suppliers.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                          Total Batches
+                        </p>
+                        <p className="text-xl font-black text-gray-900">
+                          {stockDetails.length}
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                        <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">
+                          On Truck (Pending)
+                        </p>
+                        <p className="text-xl font-black text-orange-700">
+                          {viewingProduct?.pending_stock || 0}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                          In Warehouse
+                        </p>
+                        <p className="text-xl font-black text-emerald-700">
+                          {stockDetails.reduce((sum, batch) => sum + batch.remain_qty, 0)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="border border-gray-100 rounded-xl overflow-hidden">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                            <th className="px-6 py-4">Supply Ref</th>
+                            <th className="px-4 py-3 text-center">Batch Config</th>
+                            <th className="px-4 py-3 text-center">Returned</th>
+                            <th className="px-4 py-3 text-center">Available</th>
+                            <th className="px-4 py-4 text-right">Net Cost</th>
+                            <th className="px-4 py-4 text-right">Retail Price</th>
+                            <th className="px-6 py-4">Expiry</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 text-xs sm:text-sm">
+                          {stockDetails.map((batch) => (
+                            <tr
+                              key={batch.id}
+                              className="transition-colors border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                            >
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <ShoppingBag
+                                    size={14}
+                                    className="text-gray-400"
+                                  />
+                                  <span className="font-bold text-blue-600">
+                                    #
+                                    {batch.supplier_invoice?.invoice_number ||
+                                      "N/A"}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+                                  <Calendar size={10} />{" "}
+                                  {batch.supplier_invoice?.invoice_date || "--"}
+                                </p>
+                              </td>
+                              <td className="px-4 py-4">
+                                <p className="font-medium text-gray-600">
+                                  {batch.no_cases} × {batch.pack_size}
+                                  {batch.extra_units > 0 && (
+                                    <span className="text-blue-500 ml-1">
+                                      + {batch.extra_units}
+                                    </span>
+                                  )}
+                                  {(batch.free_qty || 0) > 0 && (
+                                    <span className="text-emerald-500 ml-1">
+                                      + {batch.free_qty} free
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">
+                                  Initial:{" "}
+                                  {batch.no_cases * batch.pack_size +
+                                    batch.extra_units +
+                                    (batch.free_qty || 0)}{" "}
+                                  units
+                                </p>
+                              </td>
+                              <td className="px-4 py-4 text-center">
+                                <span className={`font-bold px-2.5 py-1 rounded-lg ${(batch.returned_qty || 0) > 0
+                                    ? "text-orange-700 bg-orange-100"
+                                    : "text-gray-300"
+                                  }`}>
+                                  {batch.returned_qty || "-"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 text-center">
+                                <div className="flex flex-col items-center gap-1">
+                                  <span
+                                    className={`font-black px-2.5 py-1 rounded-lg ${batch.remain_qty > 0
+                                        ? "text-emerald-700 bg-emerald-100"
+                                        : "text-gray-400 bg-gray-50"
+                                      }`}
+                                  >
+                                    {batch.remain_qty}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 text-right font-bold text-gray-700 font-mono">
+                                Rs. {Number(batch.netprice).toFixed(2)}
+                              </td>
+                              <td className="px-4 py-4 text-right font-bold text-gray-600 font-mono">
+                                Rs. {Number(batch.retail_price).toFixed(2)}
+                              </td>
+                              <td className="px-6 py-4 font-semibold">
+                                {batch.expiry_date ? (
+                                  <span
+                                    className={
+                                      new Date(batch.expiry_date) < new Date()
+                                        ? "text-red-500"
+                                        : "text-gray-600"
+                                    }
+                                  >
+                                    {batch.expiry_date}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-300">N/A</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
                 <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 px-4 sm:px-6 py-3 sm:py-4 border border-gray-200 font-bold text-gray-600 rounded-xl hover:bg-gray-50 transition-all text-sm sm:text-base"
+                  onClick={() => setIsStockModalOpen(false)}
+                  className="px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all shadow-sm active:scale-95"
+                >
+                  Close Breakdown
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+      {/* Delete Confirmation Modal */}
+      {
+        productToDelete && (
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200 animate-in fade-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-xl font-black text-gray-900 mb-2">
+                Delete Product?
+              </h3>
+              <p className="text-sm text-gray-500 mb-8">
+                Are you sure you want to delete{" "}
+                <span className="font-bold text-gray-800">
+                  {productToDelete.name}
+                </span>
+                ? This action cannot be undone and will remove all associated
+                data.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setProductToDelete(null)}
+                  className="flex-1 py-3 font-bold text-gray-500 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="flex-[2] px-4 sm:px-6 py-3 sm:py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 text-sm sm:text-base"
+                  onClick={confirmDelete}
+                  className="flex-1 py-3 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-100 transition-all active:scale-95"
                 >
-                  {currentProduct ? "Update" : "Register"}
+                  Yes, Delete
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Stock Detail Modal */}
-      {isStockModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 text-sm sm:text-base">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 border border-gray-100">
-            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-emerald-50/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-                  <PackageSearch size={24} />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-gray-900">
-                    Stock Breakdown
-                  </h2>
-                  <p className="text-sm text-gray-500 font-medium">
-                    {viewingProduct?.name}{" "}
-                    <span className="text-gray-400 font-mono text-xs ml-1">
-                      (
-                      {viewingProduct?.barcode || viewingProduct?.material_code}
-                      )
-                    </span>
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsStockModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              {stockLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-3">
-                  <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-                  <p className="font-bold animate-pulse">
-                    Analyzing stock data...
-                  </p>
-                </div>
-              ) : stockDetails.length === 0 ? (
-                <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
-                  <div className="text-4xl mb-4">🏜️</div>
-                  <h3 className="text-lg font-bold text-gray-800">
-                    No Active Batches
-                  </h3>
-                  <p className="text-gray-500 max-w-xs mx-auto mt-2">
-                    This product currently has no recorded stock batches from
-                    any suppliers.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                        Total Batches
-                      </p>
-                      <p className="text-xl font-black text-gray-900">
-                        {stockDetails.length}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                      <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
-                        Shelf Stock
-                      </p>
-                      <p className="text-xl font-black text-blue-700">
-                        {viewingProduct?.shelf_stock || 0}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
-                      <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">
-                        On Truck (Pending)
-                      </p>
-                      <p className="text-xl font-black text-orange-700">
-                        {viewingProduct?.pending_stock || 0}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">
-                        Total Available
-                      </p>
-                      <p className="text-xl font-black text-emerald-700">
-                        {(viewingProduct?.shelf_stock || 0) +
-                          (viewingProduct?.pending_stock || 0)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-100 rounded-xl overflow-hidden">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
-                          <th className="px-6 py-4">Supply Ref</th>
-                          <th className="px-4 py-4">Batch Vol.</th>
-                          <th className="px-4 py-4 text-center">Remain Qty</th>
-                          <th className="px-4 py-4 text-right">Net Cost</th>
-                          <th className="px-4 py-4 text-right">Retail Price</th>
-                          <th className="px-6 py-4">Expiry</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50 text-xs sm:text-sm">
-                        {stockDetails.map((batch) => (
-                          <tr
-                            key={batch.id}
-                            className={`transition-colors border-b border-gray-50 last:border-0 ${
-                              batch.remain_qty === 0 &&
-                              (batch.free_qty || 0) > 0
-                                ? "bg-emerald-50/60 hover:bg-emerald-100/60"
-                                : "hover:bg-gray-50/50"
-                            }`}
-                          >
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                <ShoppingBag
-                                  size={14}
-                                  className="text-gray-400"
-                                />
-                                <span className="font-bold text-blue-600">
-                                  #
-                                  {batch.supplier_invoice?.invoice_number ||
-                                    "N/A"}
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
-                                <Calendar size={10} />{" "}
-                                {batch.supplier_invoice?.invoice_date || "--"}
-                              </p>
-                            </td>
-                            <td className="px-4 py-4">
-                              <p className="font-medium text-gray-600">
-                                {batch.no_cases} × {batch.pack_size}
-                                {batch.extra_units > 0 && (
-                                  <span className="text-blue-500 ml-1">
-                                    + {batch.extra_units}
-                                  </span>
-                                )}
-                                {(batch.free_qty || 0) > 0 && (
-                                  <span className="text-emerald-500 ml-1">
-                                    + {batch.free_qty}
-                                  </span>
-                                )}
-                              </p>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">
-                                Initial:{" "}
-                                {batch.no_cases * batch.pack_size +
-                                  batch.extra_units +
-                                  (batch.free_qty || 0)}{" "}
-                                Units
-                              </p>
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              <div className="flex flex-col items-center gap-1">
-                                <span
-                                  className={`font-black px-2.5 py-1 rounded-lg ${batch.remain_qty > 0 ? "text-gray-900 bg-gray-100" : "text-gray-400 bg-gray-50"}`}
-                                >
-                                  {batch.remain_qty}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-right font-bold text-gray-700 font-mono">
-                              Rs. {Number(batch.netprice).toFixed(2)}
-                            </td>
-                            <td className="px-4 py-4 text-right font-bold text-gray-600 font-mono">
-                              Rs. {Number(batch.retail_price).toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 font-semibold">
-                              {batch.expiry_date ? (
-                                <span
-                                  className={
-                                    new Date(batch.expiry_date) < new Date()
-                                      ? "text-red-500"
-                                      : "text-gray-600"
-                                  }
-                                >
-                                  {batch.expiry_date}
-                                </span>
-                              ) : (
-                                <span className="text-gray-300">N/A</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
-              <button
-                onClick={() => setIsStockModalOpen(false)}
-                className="px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all shadow-sm active:scale-95"
-              >
-                Close Breakdown
-              </button>
             </div>
           </div>
-        </div>
-      )}
-      {/* Delete Confirmation Modal */}
-      {productToDelete && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Trash2 size={32} />
-            </div>
-            <h3 className="text-xl font-black text-gray-900 mb-2">
-              Delete Product?
-            </h3>
-            <p className="text-sm text-gray-500 mb-8">
-              Are you sure you want to delete{" "}
-              <span className="font-bold text-gray-800">
-                {productToDelete.name}
-              </span>
-              ? This action cannot be undone and will remove all associated
-              data.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setProductToDelete(null)}
-                className="flex-1 py-3 font-bold text-gray-500 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all active:scale-95"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="flex-1 py-3 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-100 transition-all active:scale-95"
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 

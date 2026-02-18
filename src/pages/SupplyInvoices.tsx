@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
-import { Eye, Search } from "lucide-react";
+import { Eye, Search, RefreshCw } from "lucide-react";
 
 interface BatchStock {
   id: number;
@@ -40,9 +40,7 @@ const SupplyInvoices = () => {
   const [selectedInvoice, setSelectedInvoice] =
     useState<SupplierInvoice | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"supply" | "shop" | "loading">(
-    "supply",
-  );
+  const [activeTab, setActiveTab] = useState<"supply" | "shop" | "loading">("supply");
   const [modalLoading, setModalLoading] = useState(false);
 
   // Initial Tab Selection from Navigation State or Query Params
@@ -145,6 +143,57 @@ const SupplyInvoices = () => {
     }
   };
 
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [returnLoadingId, setReturnLoadingId] = useState<number | null>(null);
+  const [returnItems, setReturnItems] = useState<any[]>([]);
+  const [returnQuantities, setReturnQuantities] = useState<{ [key: number]: string }>({});
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+
+  const handleReturnClick = (loading: any) => {
+    setReturnLoadingId(loading.id);
+    setReturnItems(loading.loading_items || []);
+    setReturnQuantities({});
+    setReturnModalOpen(true);
+  };
+
+  const submitReturns = async () => {
+    if (!returnLoadingId) return;
+
+    setSubmittingReturn(true);
+    try {
+      // Process each batch return sequentially
+      for (const batchIdStr in returnQuantities) {
+        const qtyStr = returnQuantities[batchIdStr];
+        const qty = parseInt(qtyStr);
+        const batchId = parseInt(batchIdStr);
+
+        if (!isNaN(qty) && qty > 0) {
+          await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/loadings/${returnLoadingId}/returns`,
+            {
+              batch_id: batchId,
+              qty: qty,
+              return_date: new Date().toISOString().split('T')[0], // Today
+              reason: 'Returned from loading',
+            }
+          );
+        }
+      }
+
+      alert("Returns processed successfully!");
+      setReturnModalOpen(false);
+      setReturnLoadingId(null);
+      setReturnItems([]);
+      setReturnQuantities({});
+      fetchInvoices(); // Refresh data to show stock updates if needed (though stock updates are on backend)
+    } catch (err: any) {
+      console.error("Error processing returns:", err);
+      alert(err.response?.data?.message || "Failed to process returns.");
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
   const [selectedLoading, setSelectedLoading] = useState<any | null>(null);
 
   const LoadingTable = () => {
@@ -217,13 +266,12 @@ const SupplyInvoices = () => {
                       handleUpdateStatus(load.id, e.target.value)
                     }
                     className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter outline-none cursor-pointer border
-                                      ${
-                                        load.status === "delivered"
-                                          ? "bg-green-100 text-green-700 border-green-200"
-                                          : load.status === "pending"
-                                            ? "bg-amber-100 text-amber-700 border-amber-200"
-                                            : "bg-red-100 text-red-700 border-red-200"
-                                      }`}
+                                      ${load.status === "delivered"
+                        ? "bg-green-100 text-green-700 border-green-200"
+                        : load.status === "pending"
+                          ? "bg-amber-100 text-amber-700 border-amber-200"
+                          : "bg-red-100 text-red-700 border-red-200"
+                      }`}
                   >
                     <option value="pending">Pending</option>
                     <option value="delivered">Delivered</option>
@@ -232,6 +280,14 @@ const SupplyInvoices = () => {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-1.5">
+                    <button
+                      onClick={() => handleReturnClick(load)}
+                      className="px-3 py-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-all font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5"
+                      title="Process Returns"
+                    >
+                      <RefreshCw size={14} />
+                      Return
+                    </button>
                     <button
                       onClick={() => setSelectedLoading(load)}
                       className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-bold text-[10px] uppercase tracking-wider flex items-center gap-2"
@@ -436,6 +492,108 @@ const SupplyInvoices = () => {
             <LoadingTable />
           </div>
         </>
+      )}
+
+
+
+      {/* RETURNS MODAL */}
+      {returnModalOpen && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-3 sm:p-4 text-sm font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
+            <div className="px-5 sm:px-8 py-4 bg-orange-50 border-b border-orange-100 flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <RefreshCw size={20} className="text-orange-600" />
+                  Process Returns
+                </h2>
+                <p className="text-gray-500 text-xs mt-1">
+                  Select items and quantities returned from Loading #{loadings.find(l => l.id === returnLoadingId)?.load_number}
+                </p>
+              </div>
+              <button
+                onClick={() => setReturnModalOpen(false)}
+                className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-8 overflow-y-auto max-h-[60vh]">
+              {returnItems.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">No items found in this loading.</div>
+              ) : (
+                <div className="space-y-4">
+                  <table className="w-full text-left bg-white border border-gray-100 rounded-lg overflow-hidden">
+                    <thead className="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                      <tr>
+                        <th className="px-4 py-3">Product</th>
+                        <th className="px-4 py-3 text-center">Loaded Qty</th>
+                        <th className="px-4 py-3 text-center w-32">Return Qty</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 text-xs">
+                      {returnItems.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <p className="font-bold text-gray-800">{item.batch_stock?.product?.name}</p>
+                            <p className="text-[10px] text-gray-400 font-mono">
+                              {item.batch_stock?.product?.barcode || item.batch_stock?.product?.material_code}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-gray-700">
+                            {item.qty}
+                          </td>
+                          <td className="px-4 py-3">
+                            <input
+                              type="number"
+                              min="0"
+                              max={item.qty}
+                              className="w-full border border-gray-300 rounded px-2 py-1 text-center font-bold outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-200"
+                              placeholder="0"
+                              value={returnQuantities[item.batch_stock?.id] || ''}
+                              onChange={(e) => {
+                                let val = parseInt(e.target.value);
+                                if (isNaN(val) || val < 0) val = 0;
+                                if (val > item.qty) val = item.qty;
+
+                                setReturnQuantities({
+                                  ...returnQuantities,
+                                  [item.batch_stock?.id]: val.toString()
+                                });
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-[10px] text-gray-400 italic text-center">
+                    Note: Returned items will be added back to stock and prioritized for future sales.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 grid-cols-2">
+              <button
+                onClick={() => setReturnModalOpen(false)}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={submittingReturn}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReturns}
+                disabled={submittingReturn}
+                className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingReturn ? 'Processing...' : 'Confirm Returns'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* DETAIL MODAL */}
@@ -796,7 +954,7 @@ const SupplyInvoices = () => {
                               (sum: number, item: any) =>
                                 sum +
                                 Number(item.free_qty || 0) *
-                                  Number(item.net_price || 0),
+                                Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
@@ -848,11 +1006,10 @@ const SupplyInvoices = () => {
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
-                statusConfirmation.status === "delivered"
-                  ? "bg-green-100 text-green-600"
-                  : "bg-red-100 text-red-600"
-              }`}
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${statusConfirmation.status === "delivered"
+                ? "bg-green-100 text-green-600"
+                : "bg-red-100 text-red-600"
+                }`}
             >
               {statusConfirmation.status === "delivered" ? (
                 <svg
@@ -910,11 +1067,10 @@ const SupplyInvoices = () => {
                     statusConfirmation.status,
                   )
                 }
-                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${
-                  statusConfirmation.status === "delivered"
-                    ? "bg-green-600 hover:bg-green-700 shadow-green-200"
-                    : "bg-red-600 hover:bg-red-700 shadow-red-200"
-                }`}
+                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${statusConfirmation.status === "delivered"
+                  ? "bg-green-600 hover:bg-green-700 shadow-green-200"
+                  : "bg-red-600 hover:bg-red-700 shadow-red-200"
+                  }`}
               >
                 Yes, Update
               </button>
