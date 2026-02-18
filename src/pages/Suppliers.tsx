@@ -80,11 +80,11 @@ const Suppliers = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto py-8 px-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4">
+        <div className="max-w-7xl mx-auto py-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Suppliers</h1>
-                    <p className="text-sm sm:text-base text-gray-500 mt-1 sm:mt-2">Manage your relationship with product suppliers</p>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Suppliers</h1>
+                    <p className="text-gray-500 mt-2 text-lg">Manage your relationship with product suppliers</p>
                 </div>
                 <button
                     onClick={() => {
@@ -92,7 +92,7 @@ const Suppliers = () => {
                         setFormData({ name: "", contactno: "", address: "" });
                         setShowModal(true);
                     }}
-                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-xl font-bold transition-all hover:bg-blue-700 hover:shadow-lg shadow-blue-200 flex items-center justify-center gap-2 text-sm sm:text-base"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-bold transition-all hover:bg-gradient-to-r hover:from-blue-700 hover:to-indigo-800 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
