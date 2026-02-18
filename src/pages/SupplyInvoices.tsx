@@ -13,7 +13,7 @@ interface BatchStock {
   };
   no_cases: number;
   pack_size: number;
-  qty: number;
+  remain_qty: number;
   free_qty: number;
   extra_units: number;
   retail_price: number;
@@ -526,9 +526,6 @@ const SupplyInvoices = () => {
                             <th className="px-4 py-4 text-center">
                               Batch Vol.
                             </th>
-                            <th className="px-4 py-4 text-center">
-                              Total Units
-                            </th>
                             <th className="px-4 py-4 text-center">Free Qty</th>
                             <th className="px-4 py-4 text-right">Net Price</th>
                             <th className="px-4 py-4 text-right">
@@ -558,27 +555,32 @@ const SupplyInvoices = () => {
                                 )}
                               </td>
                               <td className="px-4 py-4 text-center">
-                                <p className="font-medium text-gray-600">
-                                  {item.no_cases} × {item.pack_size}
-                                  {item.extra_units > 0 && (
-                                    <span className="text-blue-500 ml-1">
-                                      + {item.extra_units}
-                                    </span>
-                                  )}
+                                <p className="font-bold text-gray-700">
+                                  {item.no_cases} × {item.pack_size} +{" "}
+                                  {item.extra_units} + {item.free_qty}
                                 </p>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">
-                                  Initial:{" "}
+                                <p className="text-[10px] text-blue-600 font-black uppercase tracking-tighter mt-0.5 bg-blue-50 px-2 py-0.5 rounded-md inline-block">
                                   {item.no_cases * item.pack_size +
                                     item.extra_units +
                                     (item.free_qty || 0)}{" "}
-                                  Units
+                                  Total Units
                                 </p>
                               </td>
-                              <td className="px-4 py-4 text-center font-bold text-gray-900">
-                                {item.qty}
-                              </td>
-                              <td className="px-4 py-4 text-center font-bold text-green-600">
-                                {item.free_qty > 0 ? item.free_qty : "-"}
+
+                              <td className="px-4 py-4 text-center">
+                                <p className="font-bold text-green-600 leading-none">
+                                  {item.free_qty || 0}
+                                </p>
+                                {item.free_qty > 0 && (
+                                  <p className="text-[9px] text-gray-400 font-black uppercase mt-1.5">
+                                    Rs.{" "}
+                                    {(
+                                      item.free_qty * item.netprice
+                                    ).toLocaleString(undefined, {
+                                      minimumFractionDigits: 2,
+                                    })}
+                                  </p>
+                                )}
                               </td>
                               <td className="px-4 py-4 text-right font-medium">
                                 Rs. {Number(item.netprice).toFixed(2)}
@@ -589,7 +591,10 @@ const SupplyInvoices = () => {
                               <td className="px-6 py-4 text-right font-bold text-gray-900">
                                 Rs.{" "}
                                 {(
-                                  Number(item.qty) * Number(item.netprice)
+                                  (Number(item.no_cases) *
+                                    Number(item.pack_size) +
+                                    Number(item.extra_units || 0)) *
+                                  Number(item.netprice)
                                 ).toLocaleString(undefined, {
                                   minimumFractionDigits: 2,
                                 })}

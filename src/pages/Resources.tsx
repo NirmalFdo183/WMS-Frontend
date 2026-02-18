@@ -670,6 +670,7 @@ const Resources = () => {
                           })
                         }
                         className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                        required
                       />
                     </div>
                   </>
@@ -683,7 +684,7 @@ const Resources = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Johnathan Doe"
+                        placeholder="Kamal Addarachchi"
                         required
                         value={formData.name || ""}
                         onChange={(e) =>

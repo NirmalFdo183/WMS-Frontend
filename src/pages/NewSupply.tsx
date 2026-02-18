@@ -547,6 +547,7 @@ const NewSupply = () => {
                         total_bill_amount: e.target.value,
                       })
                     }
+                    required
                   />
                 </div>
               </div>
