@@ -317,7 +317,7 @@ const SupplyInvoices = () => {
     <div className="max-w-7xl mx-auto py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
             Invoices & Manifests
           </h1>
           <p className="text-gray-500 mt-2 text-lg">
@@ -357,7 +357,7 @@ const SupplyInvoices = () => {
         <>
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
                 Supply Invoices Report
               </h2>
               <p className="text-sm text-gray-500">
@@ -465,7 +465,7 @@ const SupplyInvoices = () => {
           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Search size={32} />
           </div>
-          <h3 className="text-xl font-bold text-gray-800">Shop Invoices</h3>
+          <h3 className="text-lg font-bold text-gray-700 tracking-tight">Shop Invoices</h3>
           <p className="text-gray-500 mt-2">
             This module is under development. You will be able to view and
             manage shop invoices here soon.
@@ -476,7 +476,7 @@ const SupplyInvoices = () => {
       {activeTab === "loading" && (
         <>
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
               Loading Manifests
             </h2>
             <p className="text-sm text-gray-500">
@@ -498,7 +498,7 @@ const SupplyInvoices = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
             <div className="px-5 sm:px-8 py-4 bg-orange-50 border-b border-orange-100 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight flex items-center gap-2">
                   <RefreshCw size={20} className="text-orange-600" />
                   Process Returns
                 </h2>
@@ -598,7 +598,7 @@ const SupplyInvoices = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
             <div className="px-5 sm:px-8 py-4 sm:py-6 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
                   Invoice Details
                 </h2>
                 <p className="text-blue-600 font-mono font-bold text-xs sm:text-sm">
@@ -783,7 +783,7 @@ const SupplyInvoices = () => {
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">
                   Loading Manifest Report
                 </p>
-                <h2 className="text-xl sm:text-2xl font-black">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
                   #{selectedLoading.load_number}
                 </h2>
               </div>

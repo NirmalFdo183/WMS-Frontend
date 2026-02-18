@@ -228,7 +228,7 @@ const Product = () => {
     <div className="max-w-7xl mx-auto py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
             Inventory Management
           </h1>
           <p className="text-gray-500 mt-2 text-lg">
@@ -377,7 +377,7 @@ const Product = () => {
           <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
               <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <h2 className="text-xl sm:text-2xl font-black text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
                   {currentProduct ? "Edit Product" : "New Product"}
                 </h2>
                 <button
@@ -483,7 +483,7 @@ const Product = () => {
                     <PackageSearch size={24} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-black text-gray-900">
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
                       Stock Breakdown
                     </h2>
                     <p className="text-sm text-gray-500 font-medium">
@@ -515,7 +515,7 @@ const Product = () => {
                 ) : stockDetails.length === 0 ? (
                   <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
                     <div className="text-4xl mb-4">🏜️</div>
-                    <h3 className="text-lg font-bold text-gray-800">
+                    <h3 className="text-lg font-bold text-gray-700 tracking-tight">
                       No Active Batches
                     </h3>
                     <p className="text-gray-500 max-w-xs mx-auto mt-2">
@@ -681,7 +681,7 @@ const Product = () => {
               <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Trash2 size={32} />
               </div>
-              <h3 className="text-xl font-black text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-gray-800 tracking-tight mb-2">
                 Delete Product?
               </h3>
               <p className="text-sm text-gray-500 mb-8">

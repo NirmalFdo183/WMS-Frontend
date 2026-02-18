@@ -218,7 +218,7 @@ const Resources = () => {
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
             Resource Management
           </h1>
           <p className="text-gray-500 mt-2 text-lg">
@@ -256,8 +256,8 @@ const Resources = () => {
           <button
             key={tab.id}
             className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id
-                ? "bg-blue-600 text-white shadow-md shadow-blue-100"
-                : "text-gray-500 hover:bg-gray-50"
+              ? "bg-blue-600 text-white shadow-md shadow-blue-100"
+              : "text-gray-500 hover:bg-gray-50"
               }`}
             onClick={() => setActiveTab(tab.id as any)}
           >
@@ -575,7 +575,7 @@ const Resources = () => {
           <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
             <div className="px-8 py-6 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight leading-none">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight leading-none">
                   {editingId ? "Edit Resource" : "Create New Resource"}
                 </h2>
                 <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5 leading-none">
