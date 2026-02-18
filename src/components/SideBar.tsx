@@ -1,4 +1,15 @@
 import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  Truck,
+  ShoppingCart,
+  Store,
+  FileText,
+  FolderTree,
+  Settings,
+} from "lucide-react";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -7,15 +18,23 @@ interface SideBarProps {
 
 const SideBar = ({ isOpen, onClose }: SideBarProps) => {
   const navItems = [
-    { name: "Dashboard", path: "/dashboard", icon: "🏠" },
-    { name: "Suppliers", path: "/suppliers", icon: "🏢" },
-    { name: "Products", path: "/products", icon: "📦" },
-    { name: "New Supply", path: "/new-supply", icon: "🚚" },
-    { name: "Loading", path: "/loading", icon: "🚛" },
-    { name: "Shops", path: "/shops", icon: "🏪" },
-    { name: "Invoices", path: "/supply-invoices", icon: "📜" },
-    { name: "Resources", path: "/resources", icon: "🗂️" },
-    { name: "Settings", path: "/settings", icon: "⚙️" },
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: <LayoutDashboard size={20} />,
+    },
+    { name: "Suppliers", path: "/suppliers", icon: <Users size={20} /> },
+    { name: "Products", path: "/products", icon: <Package size={20} /> },
+    { name: "New Supply", path: "/new-supply", icon: <Truck size={20} /> },
+    { name: "Loading", path: "/loading", icon: <ShoppingCart size={20} /> },
+    { name: "Shops", path: "/shops", icon: <Store size={20} /> },
+    {
+      name: "Invoices",
+      path: "/supply-invoices",
+      icon: <FileText size={20} />,
+    },
+    { name: "Resources", path: "/resources", icon: <FolderTree size={20} /> },
+    { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
   ];
 
   return (
@@ -58,15 +77,23 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
               }
             }}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${
+              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                 isActive
-                  ? "bg-gray-100 text-blue-600 font-semibold border-l-4 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200 font-bold"
+                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
               }`
             }
           >
-            <span className="text-xl">{item.icon}</span>
-            <span className="font-medium">{item.name}</span>
+            {({ isActive }) => (
+              <>
+                <span
+                  className={`transition-transform duration-200 group-hover:scale-110 ${isActive ? "text-white" : "text-gray-400"}`}
+                >
+                  {item.icon}
+                </span>
+                <span className="text-sm tracking-tight">{item.name}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
