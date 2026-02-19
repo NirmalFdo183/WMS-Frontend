@@ -216,13 +216,17 @@ const Product = () => {
     }
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.material_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.barcode &&
-        product.barcode.toLowerCase().includes(searchTerm.toLowerCase())),
-  );
+  const filteredProducts = products
+    .filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.material_code
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (product.barcode &&
+          product.barcode.toLowerCase().includes(searchTerm.toLowerCase())),
+    )
+    .sort((a, b) => a.material_code.localeCompare(b.material_code));
 
   return (
     <div className="max-w-7xl mx-auto py-8">
