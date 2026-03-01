@@ -741,7 +741,7 @@ const Loading = () => {
                         Load ID
                       </p>
                       <p className="font-black text-gray-900 text-xl tracking-tight leading-none">
-                        #{loadingData.load_number}
+                        {loadingData.load_number}
                       </p>
                     </div>
                     <div className="text-right">
@@ -861,7 +861,7 @@ const Loading = () => {
                                 (sum, item) =>
                                   sum +
                                   (Number(item.free_qty) || 0) *
-                                    (Number(item.net_price) || 0),
+                                  (Number(item.net_price) || 0),
                                 0,
                               )
                               .toLocaleString(undefined, {
@@ -924,11 +924,10 @@ const Loading = () => {
                       <div
                         key={batch.id}
                         onClick={() => handleSelectBatch(batch)}
-                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${
-                          selectedIndex === index
+                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${selectedIndex === index
                             ? "bg-blue-600 text-white shadow-lg"
                             : "hover:bg-blue-50 text-gray-900"
-                        }`}
+                          }`}
                       >
                         <div className="flex justify-between items-start font-black text-base">
                           <div>

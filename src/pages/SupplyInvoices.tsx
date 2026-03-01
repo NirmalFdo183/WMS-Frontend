@@ -358,7 +358,7 @@ const SupplyInvoices = () => {
               >
                 <td className="px-6 py-4">
                   <span className="font-black text-blue-600 block">
-                    #{load.load_number}
+                    {load.load_number}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -389,13 +389,12 @@ const SupplyInvoices = () => {
                       handleUpdateStatus(load.id, e.target.value)
                     }
                     className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter outline-none cursor-pointer border
-                                      ${
-                                        load.status === "delivered"
-                                          ? "bg-green-100 text-green-700 border-green-200"
-                                          : load.status === "pending"
-                                            ? "bg-amber-100 text-amber-700 border-amber-200"
-                                            : "bg-red-100 text-red-700 border-red-200"
-                                      }`}
+                                      ${load.status === "delivered"
+                        ? "bg-green-100 text-green-700 border-green-200"
+                        : load.status === "pending"
+                          ? "bg-amber-100 text-amber-700 border-amber-200"
+                          : "bg-red-100 text-red-700 border-red-200"
+                      }`}
                   >
                     <option value="pending">Pending</option>
                     <option value="delivered">Delivered</option>
@@ -668,7 +667,7 @@ const SupplyInvoices = () => {
                   Process Returns
                 </h2>
                 <p className="text-gray-500 text-xs mt-1">
-                  Select items and quantities returned from Loading #
+                  Select items and quantities returned from Loading{" "}
                   {loadings.find((l) => l.id === returnLoadingId)?.load_number}
                 </p>
               </div>
@@ -718,8 +717,7 @@ const SupplyInvoices = () => {
                               {item.batch_stock?.product?.name}
                             </p>
                             <p className="text-[10px] text-gray-400 font-mono">
-                              {item.batch_stock?.product?.barcode ||
-                                item.batch_stock?.product?.material_code}
+                              {item.batch_stock?.product?.material_code}
                             </p>
                           </td>
                           <td className="px-4 py-3 text-center font-bold text-gray-700">
@@ -886,8 +884,7 @@ const SupplyInvoices = () => {
                                   {item.product.name}
                                 </p>
                                 <p className="text-[10px] font-mono text-gray-400 mt-0.5">
-                                  {item.product.barcode ||
-                                    item.product.material_code}
+                                  {item.product.material_code}
                                 </p>
                                 {item.expiry_date && (
                                   <p className="text-[10px] text-gray-500 mt-1">
@@ -971,7 +968,7 @@ const SupplyInvoices = () => {
                   Loading Manifest Report
                 </p>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
-                  #{selectedLoading.load_number}
+                  {selectedLoading.load_number}
                 </h2>
               </div>
               <button
@@ -1087,15 +1084,14 @@ const SupplyInvoices = () => {
                                 {item.batch_stock?.product?.name}
                               </p>
                               <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                {item.batch_stock?.product?.barcode ||
-                                  item.batch_stock?.product?.material_code}
+                                {item.batch_stock?.product?.material_code}
                               </p>
                             </td>
                             <td className="px-4 py-4 text-center">
                               <p className="font-bold text-gray-800">
                                 {Math.floor(
                                   (item.qty - (item.free_qty || 0)) /
-                                    (item.batch_stock?.pack_size || 1),
+                                  (item.batch_stock?.pack_size || 1),
                                 )}{" "}
                                 × {item.batch_stock?.pack_size || 1} +{" "}
                                 {(item.qty - (item.free_qty || 0)) %
@@ -1150,7 +1146,7 @@ const SupplyInvoices = () => {
                               (sum: number, item: any) =>
                                 sum +
                                 Number(item.free_qty || 0) *
-                                  Number(item.net_price || 0),
+                                Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
@@ -1173,7 +1169,7 @@ const SupplyInvoices = () => {
                                 sum +
                                 (Number(item.qty) -
                                   Number(item.free_qty || 0)) *
-                                  Number(item.net_price || 0),
+                                Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
@@ -1204,11 +1200,10 @@ const SupplyInvoices = () => {
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
-                statusConfirmation.status === "delivered"
-                  ? "bg-green-100 text-green-600"
-                  : "bg-red-100 text-red-600"
-              }`}
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${statusConfirmation.status === "delivered"
+                ? "bg-green-100 text-green-600"
+                : "bg-red-100 text-red-600"
+                }`}
             >
               {statusConfirmation.status === "delivered" ? (
                 <svg
@@ -1266,11 +1261,10 @@ const SupplyInvoices = () => {
                     statusConfirmation.status,
                   )
                 }
-                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${
-                  statusConfirmation.status === "delivered"
-                    ? "bg-green-600 hover:bg-green-700 shadow-green-200"
-                    : "bg-red-600 hover:bg-red-700 shadow-red-200"
-                }`}
+                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${statusConfirmation.status === "delivered"
+                  ? "bg-green-600 hover:bg-green-700 shadow-green-200"
+                  : "bg-red-600 hover:bg-red-700 shadow-red-200"
+                  }`}
               >
                 Yes, Update
               </button>
@@ -1378,8 +1372,8 @@ const SupplyInvoices = () => {
                             Rs.{" "}
                             {Number(
                               item.retail_price ||
-                                item.batch_stock?.retail_price ||
-                                item.unit_price,
+                              item.batch_stock?.retail_price ||
+                              item.unit_price,
                             ).toLocaleString(undefined, {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
@@ -1422,58 +1416,84 @@ const SupplyInvoices = () => {
       {/* PRINTABLE LOAD LIST */}
       <div
         id="printable-loadlist"
-        className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 font-serif text-black overflow-y-auto"
+        className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 font-mono text-black overflow-y-auto"
       >
         {selectedLoading && (
           <div className="w-full">
-            <div className="text-center mb-6 border-b-2 border-black pb-4">
-              <h1 className="text-2xl font-black uppercase tracking-widest">
-                THEJANI TRADERS - CHILAW
-              </h1>
-              <h2 className="text-lg font-bold uppercase mt-1">Load List</h2>
+            <div className="flex justify-between items-start mb-6 border-b-2 border-black pb-4">
+              <div className="w-48"></div> {/* Invisible spacer to keep center title perfectly centered */}
+              <div className="text-center flex-1 overflow-visible">
+                <h1 className="text-2xl font-black uppercase tracking-widest whitespace-nowrap">
+                  THEJANI TRADERS - CHILAW
+                </h1>
+                <h2 className="text-lg font-bold uppercase mt-1">Load List</h2>
+              </div>
+              <div className="w-48">
+                <table className="w-full text-[11px] font-bold border-collapse border border-black text-left bg-white">
+                  <tbody>
+                    <tr>
+                      <td className="border border-black px-2 py-1">Date</td>
+                      <td className="border border-black px-2 py-1">{new Date().toLocaleDateString()}</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-2 py-1">Time</td>
+                      <td className="border border-black px-2 py-1">
+                        {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase()}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-2 py-1">Req. By</td>
+                      <td className="border border-black px-2 py-1 truncate max-w-[100px]">{selectedLoading.sales_rep?.name || "ADMIN"}</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black px-2 py-1">Task</td>
+                      <td className="border border-black px-2 py-1">{selectedLoading.load_number}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-12 gap-y-2 mb-6 text-[11px] font-bold">
+            <div className="grid grid-cols-3 gap-x-8 gap-y-2 mb-6 text-[11px] font-bold">
+              {/* Column 1 */}
               <div className="space-y-1">
                 <p>
-                  <span className="w-32 inline-block">Load Number</span> :{" "}
+                  <span className="w-24 inline-block">Load Number</span> :{" "}
                   {selectedLoading.load_number}
                 </p>
                 <p>
-                  <span className="w-32 inline-block">Vehicle</span> :{" "}
+                  <span className="w-24 inline-block">Vehicle</span> :{" "}
                   {selectedLoading.truck?.licence_plate_no}
                 </p>
                 <p>
-                  <span className="w-32 inline-block">Territory</span> :{" "}
+                  <span className="w-24 inline-block">Territory</span> :{" "}
                   {selectedLoading.route?.route_code || "CHL1"}
                 </p>
+              </div>
+
+              {/* Column 2 */}
+              <div className="space-y-1">
                 <p>
-                  <span className="w-32 inline-block">Executive</span> :{" "}
+                  <span className="w-24 inline-block">Executive</span> :{" "}
                   {selectedLoading.sales_rep?.name || "-"}
                 </p>
                 <p>
-                  <span className="w-32 inline-block">Town</span> :{" "}
+                  <span className="w-24 inline-block">Town</span> :{" "}
                   {selectedLoading.route?.route_description || "CHILAW TOWN"}
                 </p>
-              </div>
-              <div className="space-y-1">
                 <p>
-                  <span className="w-32 inline-block">Created On</span> :{" "}
-                  {new Date(selectedLoading.created_at).toLocaleDateString()}{" "}
-                  {new Date(selectedLoading.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-                <p>
-                  <span className="w-32 inline-block">Delivery Date</span> :{" "}
+                  <span className="w-24 inline-block">Delivery Date</span> :{" "}
                   {selectedLoading.loading_date}
                 </p>
+              </div>
+
+              {/* Column 3 */}
+              <div className="space-y-1">
                 <p>
-                  <span className="w-32 inline-block">Created By</span> : ADMIN
+                  <span className="w-24 inline-block">Created By</span> : ADMIN
                 </p>
                 <p>
-                  <span className="w-32 inline-block">Delivery Route</span> :{" "}
+                  <span className="w-24 inline-block">Delivery Route</span> :{" "}
                   {selectedLoading.route?.route_code}
                 </p>
               </div>
@@ -1509,14 +1529,16 @@ const SupplyInvoices = () => {
 
                   return Object.entries(groups).map(([brand, items]) => (
                     <React.Fragment key={brand}>
-                      <tr className="border-b border-gray-300">
-                        <td
-                          colSpan={9}
-                          className="py-2 font-black uppercase text-xs tracking-wider"
-                        >
-                          {brand}
-                        </td>
-                      </tr>
+                      {brand !== "OTHER" && (
+                        <tr className="border-b border-black">
+                          <td
+                            colSpan={9}
+                            className="py-2 font-black uppercase text-xs tracking-wider"
+                          >
+                            {brand}
+                          </td>
+                        </tr>
+                      )}
                       {items.map((item: any) => {
                         const packSize = item.batch_stock?.pack_size || 1;
                         const mainQty = item.qty - (item.free_qty || 0);
@@ -1537,7 +1559,7 @@ const SupplyInvoices = () => {
                         return (
                           <tr
                             key={item.id}
-                            className="border-b border-gray-100"
+                            className="border-b border-black"
                           >
                             <td className="py-1">
                               <p className="font-bold">
@@ -1593,7 +1615,7 @@ const SupplyInvoices = () => {
                         (sum: number, item: any) =>
                           sum +
                           (item.qty - (item.free_qty || 0)) *
-                            Number(item.net_price || 0),
+                          Number(item.net_price || 0),
                         0,
                       )
                       .toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -1608,7 +1630,7 @@ const SupplyInvoices = () => {
               <p>Received By: _________________</p>
             </div>
 
-            <p className="text-center mt-12 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+            <p className="text-center mt-12 text-[10px] text-black font-bold uppercase tracking-widest">
               Generated via Thejani Traders WMS
             </p>
           </div>
@@ -1633,12 +1655,12 @@ const SupplyInvoices = () => {
             display: block !important;
           }
           @page {
-            margin: 1cm;
+            margin: 0;
             size: A4 portrait;
           }
         }
       `}</style>
-    </div>
+    </div >
   );
 };
 
