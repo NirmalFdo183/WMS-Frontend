@@ -9,21 +9,21 @@ const SideBar = () => {
     ];
 
     return (
-        <div className="h-screen w-64 bg-gray-900 border-r border-gray-800 text-white flex flex-col fixed left-0 top-0">
-            <div className="p-6 border-b border-gray-800">
-                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                    IMS
+        <div className="h-screen w-64 bg-white border-r border-gray-200 text-gray-900 flex flex-col fixed left-0 top-0 z-50">
+            <div className="p-6 border-b border-gray-200">
+                <h1 className="text-2xl font-bold text-blue-600">
+                    Hemas Stock Manager
                 </h1>
             </div>
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-1">
                 {navItems.map((item) => (
                     <NavLink
                         key={item.path}
                         to={item.path}
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                            `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${isActive
+                                ? 'bg-gray-100 text-blue-600 font-semibold border-l-4 border-blue-600'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                             }`
                         }
                     >
