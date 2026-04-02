@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { Eye, Edit2, Trash2, Search } from "lucide-react";
 
 interface BatchStock {
     id: number;
@@ -29,11 +31,13 @@ interface SupplierInvoice {
 }
 
 const SupplyInvoices = () => {
+    const navigate = useNavigate();
     const [invoices, setInvoices] = useState<SupplierInvoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedInvoice, setSelectedInvoice] = useState<SupplierInvoice | null>(null);
     const [modalLoading, setModalLoading] = useState(false);
+    const [invoiceToDelete, setInvoiceToDelete] = useState<number | null>(null);
 
     const fetchInvoices = async () => {
         try {
@@ -64,6 +68,21 @@ const SupplyInvoices = () => {
         }
     };
 
+    const handleDeleteInvoice = async () => {
+        if (!invoiceToDelete) return;
+        try {
+            setLoading(true);
+            await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices/${invoiceToDelete}`);
+            setInvoices(invoices.filter(inv => inv.id !== invoiceToDelete));
+            setInvoiceToDelete(null);
+        } catch (err) {
+            console.error("Error deleting invoice:", err);
+            alert("Failed to delete invoice. It might have linked stock items.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const filteredInvoices = invoices.filter(
         (inv) =>
             inv.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -86,7 +105,9 @@ const SupplyInvoices = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Search size={18} />
+                    </span>
                 </div>
             </div>
 
@@ -127,8 +148,39 @@ const SupplyInvoices = () => {
                                     <td className="px-6 py-4 text-right">
                                         <span className="font-bold text-gray-900">Rs. {Number(inv.total_bill_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <button className="text-blue-500 hover:text-blue-700 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">View Details</button>
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleInvoiceClick(inv.id);
+                                                }}
+                                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                                title="View Details"
+                                            >
+                                                <Eye size={16} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate("/new-supply", { state: { invoiceId: inv.id } });
+                                                }}
+                                                className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                                                title="Continue Adding Stock"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setInvoiceToDelete(inv.id);
+                                                }}
+                                                className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                                title="Delete Invoice"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -136,6 +188,37 @@ const SupplyInvoices = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* DELETE CONFIRMATION MODAL */}
+            {invoiceToDelete && (
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
+                        <div className="p-8 text-center">
+                            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-black text-gray-900 mb-2">Delete Invoice?</h3>
+                            <p className="text-sm text-gray-500 mb-8">This action cannot be undone. All stock items associated with this invoice will also be removed.</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => setInvoiceToDelete(null)}
+                                    className="py-3 font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-all border border-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteInvoice}
+                                    className="py-3 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-lg shadow-red-100 transition-all"
+                                >
+                                    Confirm Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* DETAIL MODAL */}
             {selectedInvoice && (
