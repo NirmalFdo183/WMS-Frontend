@@ -11,11 +11,11 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
     { name: "Suppliers", path: "/suppliers", icon: "🏢" },
     { name: "Products", path: "/products", icon: "📦" },
     { name: "New Supply", path: "/new-supply", icon: "🚚" },
-    { name: "Loading", path: "/loading", icon: "🚛" },
-    { name: "Shops", path: "/shops", icon: "🏪" },
-    { name: "Supply Invoices", path: "/supply-invoices", icon: "📜" },
+    { name: "Loading", path: "/loading", icon: "🚛", disabled: true },
+    { name: "Shops", path: "/shops", icon: "🏪", disabled: true },
+    { name: "Invoices", path: "/supply-invoices", icon: "📜" },
     { name: "Resources", path: "/resources", icon: "🗂️" },
-    { name: "Settings", path: "/settings", icon: "⚙️" },
+    { name: "Settings", path: "/settings", icon: "⚙️", disabled: true },
   ];
 
   return (
@@ -49,25 +49,36 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       </div>
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            onClick={() => {
-              // Close sidebar on mobile when a link is clicked
-              if (window.innerWidth < 1024) {
-                onClose();
+          item.disabled ? (
+            <div
+              key={item.path}
+              className="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 cursor-not-allowed grayscale"
+              title="Coming Soon"
+            >
+              <span className="text-xl">{item.icon}</span>
+              <span className="font-medium">{item.name}</span>
+            </div>
+          ) : (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => {
+                // Close sidebar on mobile when a link is clicked
+                if (window.innerWidth < 1024) {
+                  onClose();
+                }
+              }}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${isActive
+                  ? "bg-gray-100 text-blue-600 font-semibold border-l-4 border-blue-600"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`
               }
-            }}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${isActive
-                ? "bg-gray-100 text-blue-600 font-semibold border-l-4 border-blue-600"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`
-            }
-          >
-            <span className="text-xl">{item.icon}</span>
-            <span className="font-medium">{item.name}</span>
-          </NavLink>
+            >
+              <span className="text-xl">{item.icon}</span>
+              <span className="font-medium">{item.name}</span>
+            </NavLink>
+          )
         ))}
       </nav>
     </aside>

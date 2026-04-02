@@ -35,6 +35,7 @@ const SupplyInvoices = () => {
     const [invoices, setInvoices] = useState<SupplierInvoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState<"supply" | "shop" | "loading">("supply");
     const [selectedInvoice, setSelectedInvoice] = useState<SupplierInvoice | null>(null);
     const [modalLoading, setModalLoading] = useState(false);
     const [invoiceToDelete, setInvoiceToDelete] = useState<number | null>(null);
@@ -91,103 +92,155 @@ const SupplyInvoices = () => {
 
     return (
         <div className="p-6 max-w-7xl mx-auto font-sans">
-            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Supply Invoices Report</h1>
-                    <p className="text-gray-500">History of all inventory stock updates</p>
-                </div>
-
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Search invoice or supplier..."
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none w-full md:w-80"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        <Search size={18} />
-                    </span>
-                </div>
+            <div className="mb-4">
+                <h1 className="text-2xl font-bold text-gray-800">Invoices Management</h1>
+                <p className="text-gray-500 text-sm">View and manage all types of invoices</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">
-                            <th className="px-6 py-4 text-left">Invoice No</th>
-                            <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4">Supplier</th>
-                            <th className="px-6 py-4 text-right">Discount</th>
-                            <th className="px-6 py-4 text-right">Total Amount</th>
-                            <th className="px-6 py-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {loading ? (
-                            <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">Loading invoices...</td>
-                            </tr>
-                        ) : filteredInvoices.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">No invoices found.</td>
-                            </tr>
-                        ) : (
-                            filteredInvoices.map((inv) => (
-                                <tr
-                                    key={inv.id}
-                                    className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
-                                    onClick={() => handleInvoiceClick(inv.id)}
-                                >
-                                    <td className="px-6 py-4">
-                                        <span className="font-bold text-blue-600">#{inv.invoice_number}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-center text-gray-600">{inv.invoice_date}</td>
-                                    <td className="px-6 py-4 text-center font-semibold text-gray-800">{inv.supplier?.name || `ID: ${inv.supplier_id}`}</td>
-                                    <td className="px-6 py-4 text-right text-red-500 font-medium">Rs. {Number(inv.discount).toFixed(2)}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className="font-bold text-gray-900">Rs. {Number(inv.total_bill_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleInvoiceClick(inv.id);
-                                                }}
-                                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                                                title="View Details"
-                                            >
-                                                <Eye size={16} />
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    navigate("/new-supply", { state: { invoiceId: inv.id } });
-                                                }}
-                                                className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
-                                                title="Continue Adding Stock"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setInvoiceToDelete(inv.id);
-                                                }}
-                                                className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                                                title="Delete Invoice"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">
+                <button
+                    className={`px-6 py-3 font-medium text-sm focus:outline-none whitespace-nowrap transition-all ${activeTab === "supply" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                    onClick={() => setActiveTab("supply")}
+                >
+                    Supply Invoices
+                </button>
+                <button
+                    className={`px-6 py-3 font-medium text-sm focus:outline-none whitespace-nowrap transition-all ${activeTab === "shop" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                    onClick={() => setActiveTab("shop")}
+                >
+                    Shop Invoices
+                </button>
+                <button
+                    className={`px-6 py-3 font-medium text-sm focus:outline-none whitespace-nowrap transition-all ${activeTab === "loading" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+                    onClick={() => setActiveTab("loading")}
+                >
+                    Loading Invoices
+                </button>
+            </div>
+
+            {activeTab === "supply" && (
+                <>
+                    <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800">Supply Invoices Report</h2>
+                            <p className="text-sm text-gray-500">History of all inventory stock updates</p>
+                        </div>
+
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search invoice or supplier..."
+                                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none w-full md:w-80"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                <Search size={18} />
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">
+                                    <th className="px-6 py-4 text-left">Invoice No</th>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4">Supplier</th>
+                                    <th className="px-6 py-4 text-right">Discount</th>
+                                    <th className="px-6 py-4 text-right">Total Amount</th>
+                                    <th className="px-6 py-4">Actions</th>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">Loading invoices...</td>
+                                    </tr>
+                                ) : filteredInvoices.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">No invoices found.</td>
+                                    </tr>
+                                ) : (
+                                    filteredInvoices.map((inv) => (
+                                        <tr
+                                            key={inv.id}
+                                            className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
+                                            onClick={() => handleInvoiceClick(inv.id)}
+                                        >
+                                            <td className="px-6 py-4">
+                                                <span className="font-bold text-blue-600">#{inv.invoice_number}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center text-gray-600">{inv.invoice_date}</td>
+                                            <td className="px-6 py-4 text-center font-semibold text-gray-800">{inv.supplier?.name || `ID: ${inv.supplier_id}`}</td>
+                                            <td className="px-6 py-4 text-right text-red-500 font-medium">Rs. {Number(inv.discount).toFixed(2)}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <span className="font-bold text-gray-900">Rs. {Number(inv.total_bill_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleInvoiceClick(inv.id);
+                                                        }}
+                                                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                                        title="View Details"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate("/new-supply", { state: { invoiceId: inv.id } });
+                                                        }}
+                                                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors"
+                                                        title="Continue Adding Stock"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setInvoiceToDelete(inv.id);
+                                                        }}
+                                                        className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                                        title="Delete Invoice"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
+
+            {activeTab === "shop" && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800">Shop Invoices</h3>
+                    <p className="text-gray-500 mt-2">This module is under development. You will be able to view and manage shop invoices here soon.</p>
+                </div>
+            )}
+
+            {activeTab === "loading" && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+                    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800">Loading Invoices</h3>
+                    <p className="text-gray-500 mt-2">This module is under development. You will be able to view and manage loading invoices here soon.</p>
+                </div>
+            )}
+
 
             {/* DELETE CONFIRMATION MODAL */}
             {invoiceToDelete && (
