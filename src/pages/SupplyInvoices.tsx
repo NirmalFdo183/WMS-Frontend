@@ -40,13 +40,20 @@ const SupplyInvoices = () => {
     const [modalLoading, setModalLoading] = useState(false);
     const [invoiceToDelete, setInvoiceToDelete] = useState<number | null>(null);
 
+    // Loading State
+    const [loadings, setLoadings] = useState<any[]>([]);
+
     const fetchInvoices = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices`);
-            setInvoices(res.data);
+            const [supplyRes, loadingRes] = await Promise.all([
+                axios.get(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices`),
+                axios.get(`${import.meta.env.VITE_API_BASE_URL}/loadings`)
+            ]);
+            setInvoices(supplyRes.data);
+            setLoadings(loadingRes.data);
         } catch (err) {
-            console.error("Error fetching invoices:", err);
+            console.error("Error fetching data:", err);
         } finally {
             setLoading(false);
         }
@@ -55,6 +62,8 @@ const SupplyInvoices = () => {
     useEffect(() => {
         fetchInvoices();
     }, []);
+
+    // ... (rest of the existing handlers)
 
     const handleInvoiceClick = async (id: number) => {
         try {
@@ -67,6 +76,53 @@ const SupplyInvoices = () => {
         } finally {
             setModalLoading(false);
         }
+    };
+
+    const LoadingTable = () => {
+        if (loading) return <div className="p-10 text-center text-gray-500">Loading data...</div>;
+        if (loadings.length === 0) return <div className="p-10 text-center text-gray-500">No loading manifests found.</div>;
+
+        return (
+            <table className="w-full text-left min-w-[800px]">
+                <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                        <th className="px-6 py-4">Load Number</th>
+                        <th className="px-6 py-4">Date</th>
+                        <th className="px-6 py-4">Truck</th>
+                        <th className="px-6 py-4">Route</th>
+                        <th className="px-6 py-4 text-center">Status</th>
+                        <th className="px-6 py-4 text-center">Total Items</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {loadings.map((load) => (
+                        <tr key={load.id} className="hover:bg-blue-50/50 transition-colors">
+                            <td className="px-6 py-4 font-bold text-blue-600">#{load.load_number}</td>
+                            <td className="px-6 py-4 text-gray-600 text-sm">{load.loading_date}</td>
+                            <td className="px-6 py-4 font-semibold text-gray-800 text-sm">
+                                {load.truck?.truck_number} <span className="text-gray-400 font-normal">({load.truck?.driver_name})</span>
+                            </td>
+                            <td className="px-6 py-4 text-gray-800 text-sm">{load.route?.route_name}</td>
+                            <td className="px-6 py-4 text-center">
+                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase 
+                                    ${load.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                        load.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
+                                    {load.status}
+                                </span>
+                            </td>
+                            <td className="px-6 py-4 text-center font-bold text-gray-700">
+                                {load.loading_items?.reduce((sum: number, item: any) => sum + (Number(item.qty) + (Number(item.free_qty) || 0)), 0) || 0}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                                {/* Actions placeholder - mainly for viewing details */}
+                                <button className="text-blue-500 hover:text-blue-700 text-sm font-bold">View</button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        );
     };
 
     const handleDeleteInvoice = async () => {
@@ -232,13 +288,24 @@ const SupplyInvoices = () => {
             )}
 
             {activeTab === "loading" && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Search size={32} />
+                <>
+                    <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800">Loading Manifests</h2>
+                            <p className="text-sm text-gray-500">History of outbound truck loads</p>
+                        </div>
+                        <button
+                            onClick={() => navigate('/loading')}
+                            className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 transition"
+                        >
+                            + New Loading
+                        </button>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800">Loading Invoices</h3>
-                    <p className="text-gray-500 mt-2">This module is under development. You will be able to view and manage loading invoices here soon.</p>
-                </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto no-scrollbar">
+                        <LoadingTable />
+                    </div>
+                </>
             )}
 
 
