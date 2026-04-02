@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, Edit2, Trash2, Search } from "lucide-react";
@@ -55,21 +56,32 @@ const SupplyInvoices = () => {
     // Loading State
     const [loadings, setLoadings] = useState<any[]>([]);
     const [loadingToDelete, setLoadingToDelete] = useState<number | null>(null);
+    const [loadingError, setLoadingError] = useState<string | null>(null);
+    const { totalValue, refreshTotalValue } = useWarehouse();
 
     const fetchInvoices = async () => {
+        setLoading(true);
+
+        // Fetch Supply Invoices
         try {
-            setLoading(true);
-            const [supplyRes, loadingRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices`),
-                axios.get(`${import.meta.env.VITE_API_BASE_URL}/loadings`)
-            ]);
+            const supplyRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices`);
             setInvoices(supplyRes.data);
-            setLoadings(loadingRes.data);
         } catch (err) {
-            console.error("Error fetching data:", err);
-        } finally {
-            setLoading(false);
+            console.error("Error fetching supply invoices:", err);
+            // Don't set failure state here, just log it so one failure doesn't break the page
         }
+
+        // Fetch Loading Manifests
+        try {
+            const loadingRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/loadings`);
+            setLoadings(loadingRes.data);
+            setLoadingError(null);
+        } catch (err) {
+            console.error("Error fetching loadings:", err);
+            setLoadingError("Failed to load manifests from server.");
+        }
+
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -98,6 +110,7 @@ const SupplyInvoices = () => {
             await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/loadings/${loadingToDelete}`);
             setLoadings(loadings.filter(l => l.id !== loadingToDelete));
             setLoadingToDelete(null);
+            refreshTotalValue();
         } catch (err) {
             console.error("Error deleting loading:", err);
             alert("Failed to delete loading.");
@@ -108,6 +121,7 @@ const SupplyInvoices = () => {
 
     const LoadingTable = () => {
         if (loading) return <div className="p-10 text-center text-gray-500">Loading data...</div>;
+        if (loadingError) return <div className="p-10 text-center text-red-500 font-bold">{loadingError}</div>;
         if (loadings.length === 0) return <div className="p-10 text-center text-gray-500">No loading manifests found.</div>;
 
         return (
@@ -179,6 +193,7 @@ const SupplyInvoices = () => {
             await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices/${invoiceToDelete}`);
             setInvoices(invoices.filter(inv => inv.id !== invoiceToDelete));
             setInvoiceToDelete(null);
+            refreshTotalValue();
         } catch (err) {
             console.error("Error deleting invoice:", err);
             alert("Failed to delete invoice. It might have linked stock items.");
@@ -198,6 +213,10 @@ const SupplyInvoices = () => {
             <div className="mb-6">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Invoices</h1>
                 <p className="text-gray-500 text-sm">View and manage all types of invoices</p>
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg inline-block">
+                    <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">Total Warehouse Value</p>
+                    <p className="text-xl font-black text-blue-800">Rs. {Number(totalValue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                </div>
             </div>
 
             {/* Tabs */}

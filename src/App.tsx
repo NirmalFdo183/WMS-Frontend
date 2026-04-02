@@ -4,6 +4,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { WarehouseProvider } from "./context/WarehouseContext";
 import Login from "./pages/Login";
 import Dashboard from "./dashboard/Dashboard";
 import Product from "./pages/Product";
@@ -83,7 +84,9 @@ const router = createBrowserRouter([
 function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <WarehouseProvider>
+        <RouterProvider router={router} />
+      </WarehouseProvider>
     </AuthProvider>
   );
 }

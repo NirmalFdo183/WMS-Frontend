@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { LogOut, Calendar, Menu } from "lucide-react";
 
+import { useWarehouse } from "../context/WarehouseContext";
+
 interface HeaderProps {
   onMenuClick: () => void;
 }
@@ -12,19 +14,11 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [totalValue, setTotalValue] = useState<number>(0);
 
-  const fetchTotalValue = async () => {
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices/total-sum`);
-      setTotalValue(res.data.total);
-    } catch (err) {
-      console.error("Error fetching total value:", err);
-    }
-  };
+  // Use global context for total warehouse value
+  const { totalValue } = useWarehouse();
 
   useEffect(() => {
-    fetchTotalValue();
     const timer = setInterval(() => {
       setCurrentDate(new Date());
     }, 60000);
