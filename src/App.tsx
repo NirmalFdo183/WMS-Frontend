@@ -55,6 +55,7 @@ const router = createBrowserRouter([
         path: "loading",
         element: <Loading />,
       },
+
       {
         path: "resources",
         element: <Resources />,
