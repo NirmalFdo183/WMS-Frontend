@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -10,8 +11,19 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [totalValue, setTotalValue] = useState<number>(0);
+
+  const fetchTotalValue = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/supplier-invoices/total-sum`);
+      setTotalValue(res.data.total);
+    } catch (err) {
+      console.error("Error fetching total value:", err);
+    }
+  };
 
   useEffect(() => {
+    fetchTotalValue();
     const timer = setInterval(() => {
       setCurrentDate(new Date());
     }, 60000);
@@ -73,8 +85,10 @@ const Header = ({ onMenuClick }: HeaderProps) => {
         <div className="h-8 w-px bg-gray-200 mx-2"></div>
 
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500">Current Value</span>
-          <span className="text-gray-900 font-bold">$24,500.00</span>
+          <span className="text-xs text-gray-500">Total Warehouse Value</span>
+          <span className="text-gray-900 font-bold">
+            Rs. {Number(totalValue).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </span>
         </div>
       </div>
 

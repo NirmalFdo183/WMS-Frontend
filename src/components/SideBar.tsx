@@ -8,19 +8,20 @@ interface SideBarProps {
 const SideBar = ({ isOpen, onClose }: SideBarProps) => {
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: "🏠" },
+    { name: "Suppliers", path: "/suppliers", icon: "🏢" },
     { name: "Products", path: "/products", icon: "📦" },
     { name: "New Supply", path: "/new-supply", icon: "🚚" },
     { name: "Loading", path: "/loading", icon: "🚛" },
     { name: "Shops", path: "/shops", icon: "🏪" },
+    { name: "Supply Invoices", path: "/supply-invoices", icon: "📜" },
     { name: "Resources", path: "/resources", icon: "🗂️" },
     { name: "Settings", path: "/settings", icon: "⚙️" },
   ];
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 text-gray-900 flex flex-col transform transition-transform duration-300 ease-in-out ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      } shadow-lg`}
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 text-gray-900 flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"
+        } shadow-lg`}
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-blue-600">
@@ -58,10 +59,9 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
               }
             }}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${
-                isActive
-                  ? "bg-gray-100 text-blue-600 font-semibold border-l-4 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${isActive
+                ? "bg-gray-100 text-blue-600 font-semibold border-l-4 border-blue-600"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`
             }
           >
