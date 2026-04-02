@@ -25,11 +25,16 @@ const Product = () => {
     material_code: "",
     name: "",
     category: "",
-    stock: 0,
-    status: "In Stock",
   });
 
-  const getStatusColor = (status: string | undefined) => {
+  const getProductStatus = (stock: number | undefined) => {
+    const s = stock || 0;
+    if (s > 10) return "In Stock";
+    if (s > 0) return "Low Stock";
+    return "Out of Stock";
+  };
+
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "In Stock":
         return "bg-green-100 text-green-800";
@@ -69,8 +74,6 @@ const Product = () => {
         material_code: product.material_code,
         name: product.name,
         category: product.category,
-        stock: product.stock || 0,
-        status: product.status || "In Stock",
       });
     } else {
       setCurrentProduct(null);
@@ -78,8 +81,6 @@ const Product = () => {
         material_code: "",
         name: "",
         category: "",
-        stock: 0,
-        status: "In Stock",
       });
     }
     setIsModalOpen(true);
@@ -92,8 +93,6 @@ const Product = () => {
       material_code: "",
       name: "",
       category: "",
-      stock: 0,
-      status: "In Stock",
     });
   };
 
@@ -212,9 +211,9 @@ const Product = () => {
                     </td>
                     <td className="px-4 sm:px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wide ${getStatusColor(product.status)}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wide ${getStatusColor(getProductStatus(product.stock))}`}
                       >
-                        {product.status || "Unknown"}
+                        {getProductStatus(product.stock)}
                       </span>
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right">
@@ -311,40 +310,6 @@ const Product = () => {
                   }
                   className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
                 />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
-                  Initial Stock
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      stock: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base"
-                />
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
-                  Current Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none font-medium text-sm sm:text-base appearance-none"
-                >
-                  <option value="In Stock">In Stock</option>
-                  <option value="Low Stock">Low Stock</option>
-                  <option value="Out of Stock">Out of Stock</option>
-                </select>
               </div>
 
               <div className="flex gap-3 sm:gap-4 pt-4 sm:pt-6">
