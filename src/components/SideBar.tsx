@@ -11,22 +11,21 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
     { name: "Suppliers", path: "/suppliers", icon: "🏢" },
     { name: "Products", path: "/products", icon: "📦" },
     { name: "New Supply", path: "/new-supply", icon: "🚚" },
-    { name: "Loading", path: "/loading", icon: "🚛", disabled: true },
-    { name: "Shops", path: "/shops", icon: "🏪", disabled: true },
+    { name: "Loading", path: "/loading", icon: "🚛" },
+    { name: "Shops", path: "/shops", icon: "🏪" },
     { name: "Invoices", path: "/supply-invoices", icon: "📜" },
     { name: "Resources", path: "/resources", icon: "🗂️" },
-    { name: "Settings", path: "/settings", icon: "⚙️", disabled: true },
+    { name: "Settings", path: "/settings", icon: "⚙️" },
   ];
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 text-gray-900 flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"
-        } shadow-lg`}
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 text-gray-900 flex flex-col transform transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } shadow-lg`}
     >
       <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-blue-600">
-          Thejani Traders
-        </h1>
+        <h1 className="text-2xl font-bold text-blue-600">Thejani Traders</h1>
         {/* Close button for mobile */}
         <button
           onClick={onClose}
@@ -49,36 +48,26 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       </div>
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
-          item.disabled ? (
-            <div
-              key={item.path}
-              className="flex items-center gap-3 px-4 py-3 rounded-md text-gray-300 cursor-not-allowed grayscale"
-              title="Coming Soon"
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className="font-medium">{item.name}</span>
-            </div>
-          ) : (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => {
-                // Close sidebar on mobile when a link is clicked
-                if (window.innerWidth < 1024) {
-                  onClose();
-                }
-              }}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${isActive
+          <NavLink
+            key={item.path}
+            to={item.path}
+            onClick={() => {
+              // Close sidebar on mobile when a link is clicked
+              if (window.innerWidth < 1024) {
+                onClose();
+              }
+            }}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200 ${
+                isActive
                   ? "bg-gray-100 text-blue-600 font-semibold border-l-4 border-blue-600"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`
-              }
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className="font-medium">{item.name}</span>
-            </NavLink>
-          )
+              }`
+            }
+          >
+            <span className="text-xl">{item.icon}</span>
+            <span className="font-medium">{item.name}</span>
+          </NavLink>
         ))}
       </nav>
     </aside>
