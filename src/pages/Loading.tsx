@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import EmployeeSelect from "../components/EmployeeSelect";
 
 interface Product {
   id: number;
@@ -23,9 +24,18 @@ interface Route {
   route_description: string;
 }
 
+interface Employee {
+  id: number;
+  name: string;
+  nic: string;
+  role: string;
+  phoneno: string;
+}
+
 interface BatchStock {
   id: number;
   qty: number; // Available quantity
+  free_qty: number; // Free quantity
   pack_size: number;
   expiry_date: string;
   retail_price?: number;
@@ -60,6 +70,7 @@ const Loading = () => {
   // Data Source State
   const [trucks, setTrucks] = useState<Truck[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   // Loading Header State
   const [loadingData, setLoadingData] = useState({
@@ -69,6 +80,9 @@ const Loading = () => {
     route_id: "",
     loading_date: new Date().toISOString().split("T")[0],
     status: "pending",
+    driver_id: "",
+    helper_id: "",
+    cash_collector_id: "",
   });
 
   // Items State
@@ -123,14 +137,16 @@ const Loading = () => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const [trucksRes, routesRes, batchesRes] = await Promise.all([
+        const [trucksRes, routesRes, batchesRes, employeesRes] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/trucks`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/routes`),
           axios.get(`${import.meta.env.VITE_API_BASE_URL}/batch-stocks`),
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/employees`),
         ]);
         setTrucks(trucksRes.data);
         setRoutes(routesRes.data);
         setAllBatches(batchesRes.data);
+        setEmployees(employeesRes.data);
       } catch (err) {
         console.error("Error fetching initial data:", err);
       } finally {
@@ -151,6 +167,9 @@ const Loading = () => {
     const filtered = allBatches.filter((b) => {
       const p = b.product;
       if (!p) return false;
+      // Filter out batches with no stock at all
+      if (b.qty <= 0 && (b.free_qty || 0) <= 0) return false;
+
       return (
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.barcode && p.barcode.toLowerCase() === searchTerm.toLowerCase()) ||
@@ -195,8 +214,8 @@ const Loading = () => {
       no_cases: "",
       loose_qty: "0",
       free_qty: "0",
-      wh_price: batch.netprice?.toString() || "",
-      net_price: batch.retail_price?.toString() || "",
+      wh_price: "", // Not used anymore
+      net_price: batch.netprice?.toString() || "", // Buying price
     });
   };
 
@@ -209,40 +228,51 @@ const Loading = () => {
     e.preventDefault();
     if (!selectedBatch) return;
 
-    if (currentTotalQty > selectedBatch.qty) {
+    const totalAvailable = selectedBatch.qty + (selectedBatch.free_qty || 0);
+
+    // Calculate total requested quantity
+    const reqQty =
+      Number(itemForm.no_cases) * currentPackSize +
+      Number(itemForm.loose_qty || 0);
+
+    if (reqQty <= 0) {
+      alert("Please enter a valid quantity.");
+      return;
+    }
+
+    if (reqQty > totalAvailable) {
       alert(
-        `Insufficient stock! Available: ${selectedBatch.qty}, Requested: ${currentTotalQty}`,
+        `Insufficient stock! Total Available: ${totalAvailable}, Requested: ${reqQty}`,
       );
       return;
     }
 
-    const whPriceNum = Number(itemForm.wh_price);
-    const netPriceNum = Number(selectedBatch.netprice || 0);
-    const retailPriceNum = Number(selectedBatch.retail_price || 0);
+    // Determine paid vs free quantity split
+    // Consume paid qty first, then free qty
+    let confirmQty = 0;
+    let confirmFreeQty = 0;
 
-    if (whPriceNum <= netPriceNum) {
-      alert(
-        `Wholesale price must be greater than Net Price (Rs. ${netPriceNum.toFixed(2)})`,
-      );
-      return;
+    if (reqQty <= selectedBatch.qty) {
+      confirmQty = reqQty;
+      confirmFreeQty = 0;
+    } else {
+      confirmQty = selectedBatch.qty;
+      confirmFreeQty = reqQty - selectedBatch.qty;
     }
-    if (whPriceNum >= retailPriceNum) {
-      alert(
-        `Wholesale price must be lower than Retail Price (Rs. ${retailPriceNum.toFixed(2)})`,
-      );
-      return;
-    }
+
+    // Price Logic: Selling Price = Batch Buying Price (netprice)
+    // User requested "use the batch buying price as the selling price of that product"
+    // So item.net_price should be batch.netprice
+    const finalPrice = Number(selectedBatch.netprice || 0);
 
     const newItem = {
       id: editingItemId || Date.now(),
       batch_id: selectedBatch.id,
-      qty:
-        Number(itemForm.no_cases) * currentPackSize +
-        Number(itemForm.loose_qty || 0),
-      free_qty: Number(itemForm.free_qty || 0),
-      wh_price: whPriceNum,
-      net_price: retailPriceNum, // Keep retail price as 'net_price' for backend consistency
-      batch_stock: selectedBatch, // Store the whole batch for table rendering
+      qty: confirmQty,
+      free_qty: confirmFreeQty,
+      wh_price: 0, // Ignored
+      net_price: finalPrice,
+      batch_stock: selectedBatch,
     };
 
     if (editingItemId) {
@@ -300,6 +330,9 @@ const Loading = () => {
           wh_price: item.wh_price,
           net_price: item.net_price,
         })),
+        driver_id: loadingData.driver_id || null,
+        helper_id: loadingData.helper_id || null,
+        cash_collector_id: loadingData.cash_collector_id || null,
       };
 
       await axios.post(
@@ -426,6 +459,38 @@ const Loading = () => {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                  {/* Driver Selection */}
+                  <EmployeeSelect
+                    label="Driver"
+                    role="driver"
+                    value={loadingData.driver_id}
+                    onChange={(id) => setLoadingData({ ...loadingData, driver_id: id })}
+                    employees={employees}
+                  />
+
+                  {/* Helper Selection */}
+                  <EmployeeSelect
+                    label="Helper"
+                    role="helper" // We need to handle multiple roles here. Let's pass a filter function or role array?
+                    // actually let's just properly filter in the component or pass filtered list.
+                    // Passing filtered list is easier.
+                    employees={employees.filter(e => e.role === 'helper' || e.role === 'warehouse_helper')}
+                    value={loadingData.helper_id}
+                    onChange={(id) => setLoadingData({ ...loadingData, helper_id: id })}
+                  />
+
+                  {/* Cash Collector Selection */}
+                  <EmployeeSelect
+                    label="Cash Collector"
+                    role="cash_collecter"
+                    employees={employees.filter(e => e.role === 'cash_collecter')}
+                    value={loadingData.cash_collector_id}
+                    onChange={(id) => setLoadingData({ ...loadingData, cash_collector_id: id })}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
@@ -515,11 +580,10 @@ const Loading = () => {
                     <div
                       key={batch.id}
                       onClick={() => handleSelectBatch(batch)}
-                      className={`px-4 py-3 cursor-pointer border-b text-xs flex flex-col gap-1 transition-colors ${
-                        selectedIndex === index
-                          ? "bg-blue-600 text-white"
-                          : "hover:bg-blue-50 text-gray-900 shadow-sm"
-                      }`}
+                      className={`px-4 py-3 cursor-pointer border-b text-xs flex flex-col gap-1 transition-colors ${selectedIndex === index
+                        ? "bg-blue-600 text-white"
+                        : "hover:bg-blue-50 text-gray-900 shadow-sm"
+                        }`}
                     >
                       <div className="flex justify-between font-bold text-sm">
                         <span>{batch.product?.name}</span>
@@ -535,10 +599,10 @@ const Loading = () => {
                       </div>
                       <div className="flex justify-between text-[10px] opacity-80 font-semibold italic">
                         <span>
-                          Exp: {batch.expiry_date} | Avail: {batch.qty} Units
+                          Exp: {batch.expiry_date} | Avail: {batch.qty + (batch.free_qty || 0)} Units
                         </span>
                         <span>
-                          Retail: Rs.{batch.retail_price} | Net: Rs.
+                          Net: Rs.
                           {batch.netprice}
                         </span>
                       </div>
@@ -555,7 +619,7 @@ const Loading = () => {
                   <tr className="bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b">
                     <th className="px-6 py-4">Product Details</th>
                     <th className="px-4 py-4 text-center">Pack Details</th>
-                    <th className="px-4 py-4 text-center">WH Price</th>
+                    <th className="px-4 py-4 text-center">Selling Price</th>
                     <th className="px-4 py-4 text-center">Total Units</th>
                     <th className="px-4 py-4 text-right">Total Value</th>
                     <th className="px-4 py-4"></th>
@@ -577,28 +641,19 @@ const Loading = () => {
                       </td>
                       <td className="px-4 py-4 text-center font-bold text-gray-600">
                         {Math.floor(
-                          item.qty / (item.batch_stock?.pack_size || 1),
+                          (item.qty + (item.free_qty || 0)) / (item.batch_stock?.pack_size || 1),
                         )}{" "}
                         x {item.batch_stock?.pack_size} +{" "}
-                        {item.qty % (item.batch_stock?.pack_size || 1)}
+                        {(item.qty + (item.free_qty || 0)) % (item.batch_stock?.pack_size || 1)}
                       </td>
                       <td className="px-4 py-4 text-center font-bold text-gray-700">
-                        {item.wh_price
-                          ? `Rs. ${Number(item.wh_price).toFixed(2)}`
-                          : "-"}
+                        Rs. {Number(item.net_price).toFixed(2)}
                       </td>
                       <td className="px-4 py-4 text-center font-bold text-blue-700">
                         {item.qty + (item.free_qty || 0)}
-                        {item.free_qty > 0 && (
-                          <span className="text-[10px] text-green-500 block">
-                            ({item.free_qty} Free)
-                          </span>
-                        )}
                       </td>
                       <td className="px-4 py-4 text-right font-black text-gray-900">
-                        {item.wh_price
-                          ? `Rs. ${(Number(item.wh_price) * Number(item.qty)).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-                          : "-"}
+                        Rs. {(Number(item.net_price) * Number(item.qty + (item.free_qty || 0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex justify-end gap-1">
@@ -658,270 +713,195 @@ const Loading = () => {
               </table>
             </div>
           </div>
-        )}
+        )
+        }
       </div>
 
       {/* Item Entry Modal */}
-      {activeProduct && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[120] p-4 text-xs font-sans">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-              <div>
-                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
-                  {editingItemId ? "Modify Entry" : "Add Stock to Loading"}
-                </p>
-                <h4 className="font-bold text-gray-900 text-lg leading-tight">
-                  {activeProduct.name}
-                </h4>
-                <p className="text-[10px] text-gray-400 font-mono mt-1">
-                  BARCODE: {activeProduct.barcode || activeProduct.material_code}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setActiveProduct(null);
-                  setEditingItemId(null);
-                }}
-                className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleAddItem} className="p-6 space-y-5">
-              {/* Selected Batch Details Instead of Dropdown */}
-              {selectedBatch ? (
-                <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Expiry Date
-                    </p>
-                    <p className="font-bold text-gray-800">
-                      {selectedBatch.expiry_date}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Avail. Units
-                    </p>
-                    <p className="font-black text-blue-600">
-                      {selectedBatch.qty}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-1.5 contents">
-                  <label className="font-bold text-gray-600 ml-0.5">
-                    Select Batch
-                  </label>
-                  <select
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-medium text-sm"
-                    value={itemForm.batch_id}
-                    onChange={(e) =>
-                      setItemForm({ ...itemForm, batch_id: e.target.value })
-                    }
-                  >
-                    <option value="">-- Choose Batch --</option>
-                    {productBatches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        Exp: {b.expiry_date} | Avail: {b.qty} units
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {selectedBatch && (
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-2 gap-y-4 gap-x-6">
-                  <div>
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                      Pack Size
-                    </p>
-                    <p className="font-bold text-blue-900">
-                      {selectedBatch.pack_size} units
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                      Available Stock
-                    </p>
-                    <p className="font-bold text-blue-900">
-                      {selectedBatch.qty} units
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                      Batch Cost (Net)
-                    </p>
-                    <p className="font-bold text-blue-900">
-                      Rs. {Number(selectedBatch.netprice || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                      Batch Retail
-                    </p>
-                    <p className="font-bold text-blue-900">
-                      Rs. {Number(selectedBatch.retail_price || 0).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
-                    Full Cases
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    autoFocus
-                    className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
-                    value={itemForm.no_cases}
-                    onChange={(e) =>
-                      setItemForm({ ...itemForm, no_cases: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
-                    Loose Units
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
-                    value={itemForm.loose_qty}
-                    onChange={(e) =>
-                      setItemForm({ ...itemForm, loose_qty: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="font-bold text-[10px] uppercase tracking-wider text-green-600 ml-0.5">
-                    Free Units
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    className="w-full px-3 py-2.5 rounded-lg bg-green-50/30 border border-green-100 outline-none font-bold text-sm focus:border-green-500 transition-colors"
-                    value={itemForm.free_qty}
-                    onChange={(e) =>
-                      setItemForm({ ...itemForm, free_qty: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="font-bold text-gray-700 ml-0.5 flex justify-between items-center">
-                    <span>Wholesale Price</span>
-                    <span className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded italic">
-                      Profit: Rs.{" "}
-                      {Number(
-                        Number(itemForm.wh_price || 0) -
-                          Number(selectedBatch?.netprice || 0),
-                      ).toFixed(2)}{" "}
-                      / unit
-                    </span>
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter selling price to shop"
-                    className="w-full px-4 py-4 rounded-xl bg-white border-2 border-blue-100 outline-none font-black text-xl text-blue-900 focus:border-blue-500 transition-all shadow-inner"
-                    value={itemForm.wh_price}
-                    onChange={(e) =>
-                      setItemForm({ ...itemForm, wh_price: e.target.value })
-                    }
-                  />
-                  <div className="flex justify-between px-1">
-                    <p className="text-[10px] font-bold text-gray-400">
-                      MIN: Rs. {Number(selectedBatch?.netprice || 0).toFixed(2)}
-                    </p>
-                    <p className="text-[10px] font-bold text-gray-400">
-                      MAX: Rs.{" "}
-                      {Number(selectedBatch?.retail_price || 0).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-200">
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 leading-none">
-                      Net Price (Cost)
-                    </p>
-                    <p className="font-bold text-gray-600">
-                      Rs. {Number(selectedBatch?.netprice || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 leading-none">
-                      Retail Price
-                    </p>
-                    <p className="font-bold text-gray-600">
-                      Rs. {Number(selectedBatch?.retail_price || 0).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {selectedBatch && (
-                <div className="text-right border-t pt-2 border-gray-100">
-                  <p className="text-xs font-bold text-gray-500">
-                    Total To Add:{" "}
-                    <span className="text-blue-600 text-lg">
-                      {currentTotalQty} Units
-                    </span>
+      {
+        activeProduct && (
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[120] p-4 text-xs font-sans">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
+              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
+                    {editingItemId ? "Modify Entry" : "Add Stock to Loading"}
+                  </p>
+                  <h4 className="font-bold text-gray-900 text-lg leading-tight">
+                    {activeProduct.name}
+                  </h4>
+                  <p className="text-[10px] text-gray-400 font-mono mt-1">
+                    BARCODE: {activeProduct.barcode || activeProduct.material_code}
                   </p>
                 </div>
-              )}
-
-              <div className="flex gap-3 pt-2">
                 <button
-                  type="button"
                   onClick={() => {
                     setActiveProduct(null);
                     setEditingItemId(null);
                   }}
-                  className="flex-1 py-3 font-bold text-gray-500 bg-white border border-gray-300 rounded-xl hover:bg-gray-50"
+                  className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!selectedBatch || loading}
-                  className="flex-[2] py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {loading
-                    ? "Saving..."
-                    : editingItemId
-                      ? "Update Item"
-                      : "Add to Manifest"}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handleAddItem} className="p-6 space-y-5">
+                {/* Selected Batch Details Instead of Dropdown */}
+                {selectedBatch ? (
+                  <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        Expiry Date
+                      </p>
+                      <p className="font-bold text-gray-800">
+                        {selectedBatch.expiry_date}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        Total Avail.
+                      </p>
+                      <p className="font-black text-blue-600">
+                        {selectedBatch.qty + (selectedBatch.free_qty || 0)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 contents">
+                    <label className="font-bold text-gray-600 ml-0.5">
+                      Select Batch
+                    </label>
+                    <select
+                      required
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-medium text-sm"
+                      value={itemForm.batch_id}
+                      onChange={(e) =>
+                        setItemForm({ ...itemForm, batch_id: e.target.value })
+                      }
+                    >
+                      <option value="">-- Choose Batch --</option>
+                      {productBatches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          Exp: {b.expiry_date} | Avail: {b.qty + (b.free_qty || 0)} units
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedBatch && (
+                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-2 gap-y-4 gap-x-6">
+                    <div>
+                      <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
+                        Pack Size
+                      </p>
+                      <p className="font-bold text-blue-900">
+                        {selectedBatch.pack_size} units
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
+                        Selling Price (Net)
+                      </p>
+                      <p className="font-bold text-blue-900">
+                        Rs. {Number(selectedBatch.netprice || 0).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
+                      Full Cases
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      autoFocus
+                      className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
+                      value={itemForm.no_cases}
+                      onChange={(e) =>
+                        setItemForm({ ...itemForm, no_cases: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
+                      Loose Qty
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
+                      value={itemForm.loose_qty}
+                      onChange={(e) =>
+                        setItemForm({ ...itemForm, loose_qty: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-200">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                      Total Quantity
+                    </p>
+                    <p className="font-black text-gray-800 text-lg">
+                      {currentTotalQty} Units
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                      Total Value
+                    </p>
+                    <p className="font-black text-blue-600 text-lg">
+                      Rs. {(currentTotalQty * (selectedBatch?.netprice || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveProduct(null);
+                      setEditingItemId(null);
+                    }}
+                    className="flex-1 py-3 font-bold text-gray-500 bg-white border border-gray-300 rounded-xl hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!selectedBatch || loading}
+                    className="flex-[2] py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {loading
+                      ? "Saving..."
+                      : editingItemId
+                        ? "Update Item"
+                        : "Add to Manifest"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Confirmation Modals */}
       {showConfirmSave && (
