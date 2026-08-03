@@ -38,26 +38,25 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   });
 
   return (
-    <header className="flex justify-between items-center bg-white border-b border-gray-200 px-4 lg:px-8 py-4 lg:pb-2 lg:mb-8 sticky top-0 z-30 lg:static">
-      <div className="flex items-center gap-4 lg:gap-6">
+    <header className="flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-8 py-3 sticky top-0 z-30">
+      <div className="flex items-center gap-4 lg:gap-8">
         <button
           type="button"
-          className="-ml-2 p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-md"
+          className="-ml-2 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all focus:outline-none rounded-xl"
           onClick={onMenuClick}
         >
-          <span className="sr-only">Open sidebar</span>
           <Menu className="h-6 w-6" />
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-blue-600 font-bold text-lg border border-gray-200">
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-100 transition-transform group-hover:scale-105">
             {user?.name?.charAt(0).toUpperCase() || "U"}
           </div>
           <div className="hidden sm:flex flex-col">
-            <span className="text-gray-900 font-semibold truncate max-w-[100px] lg:max-w-none">
+            <span className="text-gray-900 font-bold text-sm tracking-tight leading-none mb-1">
               {user?.name || "User"}
             </span>
-            <span className="text-[10px] sm:text-xs text-blue-600 font-bold uppercase tracking-wider">
+            <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest">
               {user?.role === "admin"
                 ? "Administrator"
                 : user?.role === "staff"
@@ -69,25 +68,27 @@ const Header = ({ onMenuClick }: HeaderProps) => {
           </div>
         </div>
 
-        <div className="hidden md:block h-8 w-px bg-gray-200 mx-2"></div>
+        <div className="hidden md:block h-6 w-px bg-gray-200 mx-2"></div>
 
         <div className="hidden md:flex flex-col">
-          <span className="text-[10px] lg:text-xs text-gray-500 uppercase font-bold tracking-wider">
-            Total Warehouse Value
-          </span>
-          <span className="text-sm lg:text-base text-gray-900 font-bold">
+          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
+            Warehouse Value
+          </p>
+          <p className="text-sm text-gray-900 font-black font-mono">
             Rs.{" "}
             {Number(totalValue).toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}
-          </span>
+          </p>
         </div>
       </div>
 
       <div className="flex items-center gap-3 lg:gap-6">
-        <div className="hidden lg:flex items-center gap-2 text-gray-600 bg-gray-50 px-4 py-2 rounded-md border border-gray-200">
-          <Calendar size={18} className="text-blue-500" />
-          <span className="text-sm font-medium">{formattedDate}</span>
+        <div className="hidden xl:flex items-center gap-2 text-gray-500 bg-gray-50/50 px-4 py-2 rounded-xl border border-gray-100">
+          <Calendar size={16} className="text-blue-500" />
+          <span className="text-xs font-bold uppercase tracking-wide">
+            {formattedDate}
+          </span>
         </div>
 
         <div className="md:hidden flex flex-col items-end">

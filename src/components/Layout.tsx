@@ -4,7 +4,7 @@ import SideBar from "./SideBar";
 import Header from "./Header";
 
 const Layout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
