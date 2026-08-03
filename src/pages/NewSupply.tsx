@@ -171,7 +171,8 @@ const NewSupply = () => {
     }
 
     const directMatch = products.find(
-      (p) => (p.barcode && p.barcode.toLowerCase() === searchTerm.toLowerCase()) ||
+      (p) =>
+        (p.barcode && p.barcode.toLowerCase() === searchTerm.toLowerCase()) ||
         p.material_code.toLowerCase() === searchTerm.toLowerCase(),
     );
 
@@ -184,7 +185,8 @@ const NewSupply = () => {
     const filtered = products.filter(
       (p) =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.barcode &&
+          p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
         p.material_code.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     setSearchResults(filtered);
@@ -249,7 +251,9 @@ const NewSupply = () => {
       e.preventDefault();
       const form = e.currentTarget.form;
       if (!form) return;
-      const inputs = Array.from(form.querySelectorAll("input, select, textarea")) as HTMLElement[];
+      const inputs = Array.from(
+        form.querySelectorAll("input, select, textarea"),
+      ) as HTMLElement[];
       const idx = inputs.indexOf(e.currentTarget);
       if (idx >= 0 && idx < inputs.length - 1) {
         inputs[idx + 1].focus();
@@ -265,7 +269,7 @@ const NewSupply = () => {
     const pSize = Number(batchForm.pack_size || 0);
     const extras = Number(batchForm.extra_units || 0);
     const freeQty = Number(batchForm.free_qty || 0);
-    const qty = cases * pSize + extras;
+    const qty = cases * pSize + extras + freeQty;
 
     if (qty === 0 && freeQty === 0) {
       alert("Please enter at least a quantity or free quantity.");
@@ -385,7 +389,10 @@ const NewSupply = () => {
   };
 
   const getItemsTotal = () => {
-    return batchItems.reduce((sum, item) => sum + item.qty * item.netprice, 0);
+    return batchItems.reduce(
+      (sum, item) => sum + (item.qty - (item.free_qty || 0)) * item.netprice,
+      0,
+    );
   };
 
   const [newProduct, setNewProduct] = useState({
@@ -405,7 +412,12 @@ const NewSupply = () => {
       setProducts([...products, res.data]);
       setShowAddProductModal(false);
       handleSelectProduct(res.data);
-      setNewProduct({ name: "", material_code: "", barcode: "", supplier_id: 0 });
+      setNewProduct({
+        name: "",
+        material_code: "",
+        barcode: "",
+        supplier_id: 0,
+      });
     } catch (err) {
       console.error("Error creating product:", err);
       alert("Failed to create product.");
@@ -634,10 +646,11 @@ const NewSupply = () => {
                       key={p.id}
                       id={`search-result-${index}`}
                       onClick={() => handleSelectProduct(p)}
-                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${highlightedIndex === index
-                        ? "bg-blue-600 text-white"
-                        : "hover:bg-blue-50 text-gray-700"
-                        }`}
+                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${
+                        highlightedIndex === index
+                          ? "bg-blue-600 text-white"
+                          : "hover:bg-blue-50 text-gray-700"
+                      }`}
                     >
                       <span
                         className={`${highlightedIndex === index ? "text-blue-100" : "text-gray-400"} font-mono w-24 flex-shrink-0`}
@@ -684,11 +697,16 @@ const NewSupply = () => {
                           {item.barcode || item.material_code}
                         </p>
                       </td>
-                      <td className="px-4 py-4 text-center text-gray-500">
+                      <td className="px-4 py-4 text-center text-gray-500 font-mono text-[11px]">
                         {item.no_cases} × {item.pack_size}
                         {item.extra_units > 0 && (
                           <span className="text-blue-500 font-bold ml-1">
                             + {item.extra_units}
+                          </span>
+                        )}
+                        {(item.free_qty || 0) > 0 && (
+                          <span className="text-emerald-500 font-bold ml-1">
+                            + {item.free_qty}
                           </span>
                         )}
                       </td>
@@ -706,7 +724,10 @@ const NewSupply = () => {
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-gray-900">
                         Rs.{" "}
-                        {(item.qty * item.netprice).toLocaleString(undefined, {
+                        {(
+                          (item.qty - (item.free_qty || 0)) *
+                          item.netprice
+                        ).toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                         })}
                       </td>
@@ -770,7 +791,8 @@ const NewSupply = () => {
                   {activeProduct.name}
                 </h4>
                 <p className="text-[10px] text-gray-400 font-mono mt-1">
-                  BARCODE: {activeProduct.barcode || activeProduct.material_code}
+                  BARCODE:{" "}
+                  {activeProduct.barcode || activeProduct.material_code}
                 </p>
               </div>
               <button
@@ -852,7 +874,9 @@ const NewSupply = () => {
               <div className="space-y-1.5">
                 <label className="font-bold text-green-600 ml-0.5">
                   Free Qty{" "}
-                  <span className="text-green-400 font-normal text-xs">(Gift/Commission — not billed)</span>
+                  <span className="text-green-400 font-normal text-xs">
+                    (Gift/Commission — not billed)
+                  </span>
                 </label>
                 <input
                   type="number"

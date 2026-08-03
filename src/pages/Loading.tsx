@@ -42,12 +42,18 @@ interface BatchStock {
   id: number;
   qty: number; // Available quantity
   free_qty: number; // Free quantity
+  no_cases: number;
   pack_size: number;
+  extra_units: number;
   expiry_date: string;
   retail_price?: number;
   netprice?: number;
   product?: Product;
   supplier_invoice_id: number;
+  supplier_invoice?: {
+    invoice_number: string;
+    invoice_date: string;
+  };
   created_at: string;
 }
 
@@ -266,31 +272,32 @@ const Loading = () => {
     e.preventDefault();
     if (!selectedBatch) return;
 
-    const totalAvailable = selectedBatch.qty + (selectedBatch.free_qty || 0);
-
-    // Calculate total paid quantity
-    const paidQty =
+    // Calculate total paid quantity requested
+    const requestedPaidQty =
       Number(itemForm.no_cases) * currentPackSize +
       Number(itemForm.loose_qty || 0);
 
-    const freeQty = Number(itemForm.free_qty || 0);
-    const totalReq = paidQty + freeQty;
+    const requestedFreeQty = Number(itemForm.free_qty || 0);
 
-    if (totalReq <= 0) {
+    // Total Requested items (Paid + Free)
+    const totalRequested = requestedPaidQty + requestedFreeQty;
+
+    if (totalRequested <= 0) {
       alert("Please enter a valid quantity.");
       return;
     }
 
-    if (totalReq > totalAvailable) {
+    // Validate against total available pool in 'qty'
+    if (totalRequested > (selectedBatch.qty || 0)) {
       alert(
-        `Insufficient stock! Total Available: ${totalAvailable}, Requested: ${totalReq}`,
+        `Insufficient Stock! Total Available: ${selectedBatch.qty}, Requested: ${totalRequested}`,
       );
       return;
     }
 
-    // Use user-provided split
-    const confirmQty = paidQty;
-    const confirmFreeQty = freeQty;
+    // Use user-provided split: qty will now be the TOTAL physical units
+    const confirmQty = requestedPaidQty + requestedFreeQty;
+    const confirmFreeQty = requestedFreeQty;
 
     // Price Logic: Selling Price = Batch Buying Price (netprice)
     // User requested "use the batch buying price as the selling price of that product"
@@ -327,8 +334,10 @@ const Loading = () => {
     setProductBatches([item.batch_stock]);
     setActiveProduct(item.batch_stock.product);
 
-    const packs = Math.floor(item.qty / (item.batch_stock.pack_size || 1));
-    const loose = item.qty % (item.batch_stock.pack_size || 1);
+    const paidQty = item.qty - (item.free_qty || 0);
+    const packSize = item.batch_stock.pack_size || 1;
+    const packs = Math.floor(paidQty / packSize);
+    const loose = paidQty % packSize;
 
     setItemForm({
       batch_id: item.batch_id.toString(),
@@ -439,8 +448,7 @@ const Loading = () => {
                 {/* Left Side: General Info */}
                 <div className="lg:col-span-5 space-y-8">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-1 h-4 bg-blue-600 rounded-full"></div>
-                    <h3 className="text-sm font-bold text-gray-800">
+                    <h3 className="text-sm font-black text-gray-800 uppercase tracking-tight">
                       General Assignment
                     </h3>
                   </div>
@@ -514,7 +522,7 @@ const Loading = () => {
                       </label>
                       <select
                         required
-                        className="w-full px-3 py-2.5 rounded-lg bg-blue-50/50 border border-blue-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-semibold text-blue-900"
+                        className="w-full px-3 py-2.5 rounded-lg bg-blue-50/50 border border-blue-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-black text-blue-900"
                         value={loadingData.sales_rep_id}
                         onChange={(e) =>
                           setLoadingData({
@@ -538,7 +546,6 @@ const Loading = () => {
                 <div className="lg:col-span-7 space-y-6 px-4 lg:lg:sticky lg:top-8 lg:h-fit">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
                       <h3 className="text-sm font-black text-gray-800 uppercase tracking-tight">
                         Dispatch Team
                       </h3>
@@ -711,14 +718,8 @@ const Loading = () => {
               <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                   <h3 className="font-black text-gray-800 tracking-tighter text-xs uppercase tracking-widest leading-none">
-                    Manifest Overview
+                    Manifest Summary
                   </h3>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
-                      Active
-                    </span>
-                  </div>
                 </div>
                 <div className="p-6 space-y-5">
                   <div className="flex justify-between items-start">
@@ -732,11 +733,13 @@ const Loading = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
-                        Status
+                        Sales Rep
                       </p>
-                      <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 italic">
-                        In-Progress
-                      </span>
+                      <p className="font-black text-blue-600 text-sm">
+                        {salesReps.find(
+                          (r) => r.id.toString() === loadingData.sales_rep_id,
+                        )?.name || "N/A"}
+                      </p>
                     </div>
                   </div>
 
@@ -745,7 +748,7 @@ const Loading = () => {
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
                         Route
                       </p>
-                      <p className="font-bold text-gray-800 text-sm">
+                      <p className="font-black text-gray-900 text-sm">
                         {routes.find(
                           (r) => r.id.toString() === loadingData.route_id,
                         )?.route_code || "N/A"}
@@ -760,7 +763,7 @@ const Loading = () => {
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
                         Truck
                       </p>
-                      <p className="font-bold text-gray-800 text-sm">
+                      <p className="font-black text-gray-900 text-sm">
                         {trucks.find(
                           (t) => t.id.toString() === loadingData.truck_id,
                         )?.licence_plate_no || "N/A"}
@@ -773,61 +776,121 @@ const Loading = () => {
                     </div>
                   </div>
 
-                  <div className="pt-2">
-                    <div className="flex justify-between items-center bg-gray-900 px-5 py-4 rounded-2xl shadow-xl shadow-gray-200">
-                      <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">
-                          Items Loaded
+                  <div className="pt-4 border-t border-gray-50 flex flex-col gap-3">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                      Field Personnel
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <p className="text-[8px] font-black text-gray-400 uppercase">
+                          Driver
                         </p>
-                        <p className="text-2xl font-black text-white leading-none">
-                          {loadingItems.length}
+                        <p className="text-[10px] font-bold text-gray-700 truncate">
+                          {employees.find(
+                            (e) => e.id.toString() === loadingData.driver_id,
+                          )?.name || "-"}
                         </p>
                       </div>
-                      <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                          />
-                        </svg>
+                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <p className="text-[8px] font-black text-gray-400 uppercase">
+                          Helper
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-700 truncate">
+                          {employees.find(
+                            (e) => e.id.toString() === loadingData.helper_id,
+                          )?.name || "-"}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <p className="text-[8px] font-black text-gray-400 uppercase">
+                          Cashier
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-700 truncate">
+                          {employees.find(
+                            (e) =>
+                              e.id.toString() === loadingData.cash_collector_id,
+                          )?.name || "-"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-5 border-t border-gray-100">
+                    <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50">
+                      <div className="mb-4 ml-0.5">
+                        <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest leading-none">
+                          Free Stock Summary
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-end px-0.5">
+                        <div>
+                          <p className="text-[8px] font-black text-emerald-500 uppercase mb-1.5 tracking-tighter">
+                            Free Quantity
+                          </p>
+                          <p className="text-xl font-black text-emerald-900 leading-none">
+                            {loadingItems.reduce(
+                              (sum, item) => sum + (Number(item.free_qty) || 0),
+                              0,
+                            )}
+                            <span className="text-[10px] ml-1 font-bold">
+                              Units
+                            </span>
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[8px] font-black text-emerald-500 uppercase mb-1.5 tracking-tighter">
+                            Total Value
+                          </p>
+                          <p className="text-xl font-black text-emerald-900 leading-none font-mono">
+                            Rs.{" "}
+                            {loadingItems
+                              .reduce(
+                                (sum, item) =>
+                                  sum +
+                                  (Number(item.free_qty) || 0) *
+                                    (Number(item.net_price) || 0),
+                                0,
+                              )
+                              .toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                              })}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Sidebar Search Bar */}
-              <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 space-y-4 relative">
-                <div className="flex items-center justify-between ml-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                    Stock Search Index
-                  </label>
-                  <span className="text-[8px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded font-black uppercase">
-                    Live
+            {/* Main Content: Search & Items Table */}
+            <div className="flex-1 w-full pb-10 space-y-6">
+              {/* Top Search Bar */}
+              <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-200 relative ring-1 ring-gray-100">
+                <div className="flex items-center justify-between mb-4 ml-1">
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-black text-gray-800 uppercase tracking-widest">
+                      Quick Item Add (Search Stock)
+                    </label>
+                  </div>
+                  <span className="text-[10px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-black uppercase tracking-widest border border-blue-100 animate-pulse">
+                    Scan or Type
                   </span>
                 </div>
                 <div className="relative group">
                   <input
                     ref={searchInputRef}
                     type="text"
-                    className="w-full pl-11 pr-4 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-8 focus:ring-blue-500/5 outline-none font-bold text-sm transition-all shadow-inner"
-                    placeholder="Barcode or Product Name"
+                    className="w-full pl-14 pr-6 py-5 rounded-3xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-blue-500 focus:ring-8 focus:ring-blue-500/5 outline-none font-black text-lg transition-all shadow-inner placeholder:text-gray-300 placeholder:font-bold"
+                    placeholder="Search by Barcode, Material Code or Product Name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={handleKeyDown}
                   />
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
+                      className="h-7 w-7"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -835,7 +898,7 @@ const Loading = () => {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                       />
                     </svg>
@@ -843,51 +906,100 @@ const Loading = () => {
                 </div>
 
                 {searchResults.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-3 bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden z-[110] max-h-[400px] overflow-y-auto animate-in slide-in-from-top-4 duration-300 ring-1 ring-black/5 mx-2">
+                  <div className="absolute left-0 right-0 mt-3 bg-white border border-gray-200 rounded-[2rem] shadow-2xl overflow-hidden z-[110] max-h-[450px] overflow-y-auto animate-in slide-in-from-top-4 duration-300 ring-1 ring-black/5 mx-2">
                     {searchResults.map((batch, index) => (
                       <div
                         key={batch.id}
                         onClick={() => handleSelectBatch(batch)}
-                        className={`px-6 py-4 cursor-pointer border-b last:border-0 transition-all ${
+                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${
                           selectedIndex === index
                             ? "bg-blue-600 text-white shadow-lg"
                             : "hover:bg-blue-50 text-gray-900"
                         }`}
                       >
-                        <div className="flex justify-between font-black text-sm">
-                          <span className="truncate pr-4">
-                            {batch.product?.name}
-                          </span>
+                        <div className="flex justify-between items-start font-black text-base">
+                          <div>
+                            <span className="truncate pr-4 block">
+                              {batch.product?.name}
+                            </span>
+                            <div
+                              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mt-0.5 ${selectedIndex === index ? "text-blue-100" : "text-gray-400"}`}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-3 w-3"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2.5}
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                              Exp: {batch.expiry_date || "N/A"}
+                              <span className="mx-1.5 opacity-40">|</span>
+                              Inv:{" "}
+                              {batch.supplier_invoice?.invoice_date || "N/A"}
+                            </div>
+                          </div>
                           <span
-                            className={`text-[10px] shrink-0 font-mono ${selectedIndex === index ? "text-blue-200" : "text-gray-400"}`}
+                            className={`text-xs shrink-0 font-mono ${selectedIndex === index ? "text-blue-100" : "text-gray-400"}`}
                           >
                             {batch.product?.barcode ||
                               batch.product?.material_code}
                           </span>
                         </div>
-                        <div
-                          className={`flex justify-between text-[10px] font-bold mt-2 uppercase tracking-widest italic opacity-80`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-700">
-                              Total: {batch.qty + (batch.free_qty || 0)} Units
+                        <div className="flex justify-between items-end mt-3">
+                          <div className="flex flex-col gap-1">
+                            <span
+                              className={`text-xs font-black uppercase tracking-widest ${selectedIndex === index ? "text-blue-100" : "text-gray-800"}`}
+                            >
+                              Availability: {batch.qty + (batch.free_qty || 0)}{" "}
+                              Units
+                              <span className="mx-2 opacity-30">|</span>
+                              <span className="opacity-60">
+                                Initial:{" "}
+                                {batch.no_cases * batch.pack_size +
+                                  batch.extra_units +
+                                  (batch.free_qty || 0)}{" "}
+                                Units
+                              </span>
                             </span>
-                            <div className="flex gap-2 text-[9px] font-black uppercase tracking-tighter mt-0.5">
-                              <span className="text-blue-500">
+                            <div className="flex gap-3 text-[10px] font-black uppercase tracking-tighter">
+                              <span
+                                className={
+                                  selectedIndex === index
+                                    ? "text-white"
+                                    : "text-blue-500"
+                                }
+                              >
                                 Normal: {batch.qty}
                               </span>
                               {batch.free_qty > 0 && (
-                                <span className="text-emerald-500">
+                                <span
+                                  className={
+                                    selectedIndex === index
+                                      ? "text-emerald-200"
+                                      : "text-emerald-500"
+                                  }
+                                >
                                   Free: {batch.free_qty}
                                 </span>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-100">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`px-3 py-1 rounded-lg font-black text-xs border font-mono ${selectedIndex === index ? "bg-white/10 border-white/20 text-white" : "bg-blue-50 border-blue-100 text-blue-700"}`}
+                            >
                               Net: Rs.{batch.netprice}
                             </span>
-                            <span className="px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 font-bold text-[10px] border border-orange-100">
+                            <span
+                              className={`px-3 py-1 rounded-lg font-black text-xs border font-mono ${selectedIndex === index ? "bg-white/10 border-white/20 text-white" : "bg-gray-50 border-gray-100 text-gray-700"}`}
+                            >
                               Retail: Rs.{batch.retail_price}
                             </span>
                           </div>
@@ -897,10 +1009,6 @@ const Loading = () => {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Main Content: Items Table */}
-            <div className="flex-1 w-full pb-10">
               <div className="bg-white rounded-[2rem] shadow-sm border border-gray-200 overflow-hidden ring-1 ring-gray-100 transition-shadow hover:shadow-md">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
@@ -911,9 +1019,7 @@ const Loading = () => {
                           Unit Breakdown
                         </th>
                         <th className="px-6 py-6 text-center">Net Price</th>
-                        <th className="px-6 py-6 text-center text-orange-600">
-                          Retail
-                        </th>
+                        <th className="px-6 py-6 text-center">Retail Price</th>
                         <th className="px-6 py-6 text-center">Total Qty</th>
                         <th className="px-6 py-6 text-right">Value (LKR)</th>
                         <th className="px-8 py-6"></th>
@@ -926,44 +1032,71 @@ const Loading = () => {
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-6 py-4">
-                            <p className="font-bold text-gray-800">
+                            <p className="font-black text-gray-800">
                               {item.batch_stock?.product?.name}
                             </p>
                             <p className="text-[10px] text-gray-400 mt-0.5">
                               {item.batch_stock?.product?.barcode ||
                                 item.batch_stock?.product?.material_code}
+                              <span className="mx-1.5 opacity-50">|</span>
+                              Bat. Vol:{" "}
+                              {(item.batch_stock?.no_cases || 0) *
+                                (item.batch_stock?.pack_size || 0) +
+                                (item.batch_stock?.extra_units || 0) +
+                                (item.batch_stock?.free_qty || 0)}
                             </p>
                           </td>
                           <td className="px-4 py-4 text-center">
-                            <div className="font-bold text-gray-700">
-                              {Math.floor(
-                                item.qty / (item.batch_stock?.pack_size || 1),
-                              )}{" "}
-                              x {item.batch_stock?.pack_size} +{" "}
-                              {item.qty % (item.batch_stock?.pack_size || 1)}
+                            <div className="font-black text-gray-700 font-mono text-[11px] flex items-center justify-center gap-1.5">
+                              {(() => {
+                                const paidQty = item.qty - (item.free_qty || 0);
+                                const packSize =
+                                  item.batch_stock?.pack_size || 1;
+                                return (
+                                  <>
+                                    <span>
+                                      {Math.floor(paidQty / packSize)} x{" "}
+                                      {packSize}
+                                    </span>
+                                    <span className="text-blue-500">
+                                      + {paidQty % packSize}
+                                    </span>
+                                  </>
+                                );
+                              })()}
+                              {item.free_qty > 0 && (
+                                <span className="text-emerald-500">
+                                  + {item.free_qty}
+                                </span>
+                              )}
                             </div>
-                            {item.free_qty > 0 && (
-                              <div className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter mt-0.5">
-                                Free: {item.free_qty} units
-                              </div>
-                            )}
+                            <div className="text-[8px] font-black text-gray-400 uppercase tracking-tighter mt-1 space-x-2">
+                              <span>
+                                Total: {item.qty + (item.free_qty || 0)} Units
+                              </span>
+                            </div>
                           </td>
-                          <td className="px-4 py-4 text-center font-bold text-gray-700">
-                            Rs. {Number(item.net_price).toFixed(2)}
+                          <td className="px-4 py-4 text-center">
+                            <span className="font-black text-gray-800 font-mono">
+                              Rs. {Number(item.net_price).toFixed(2)}
+                            </span>
                           </td>
-                          <td className="px-4 py-4 text-center font-bold text-orange-700">
-                            Rs.{" "}
-                            {Number(
-                              item.batch_stock?.retail_price || 0,
-                            ).toFixed(2)}
+                          <td className="px-4 py-4 text-center">
+                            <span className="font-bold text-gray-500 font-mono">
+                              Rs.{" "}
+                              {Number(
+                                item.batch_stock?.retail_price || 0,
+                              ).toFixed(2)}
+                            </span>
                           </td>
-                          <td className="px-4 py-4 text-center font-bold text-blue-700">
+                          <td className="px-4 py-4 text-center font-black text-blue-700">
                             {item.qty + (item.free_qty || 0)}
                           </td>
-                          <td className="px-4 py-4 text-right font-black text-gray-900">
+                          <td className="px-4 py-4 text-right font-black text-gray-900 font-mono">
                             Rs.{" "}
                             {(
-                              Number(item.net_price) * Number(item.qty)
+                              Number(item.net_price) *
+                              (Number(item.qty) - (Number(item.free_qty) || 0))
                             ).toLocaleString(undefined, {
                               minimumFractionDigits: 2,
                             })}

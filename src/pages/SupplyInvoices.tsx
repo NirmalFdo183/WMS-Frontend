@@ -569,7 +569,8 @@ const SupplyInvoices = () => {
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">
                                   Initial:{" "}
                                   {item.no_cases * item.pack_size +
-                                    item.extra_units}{" "}
+                                    item.extra_units +
+                                    (item.free_qty || 0)}{" "}
                                   Units
                                 </p>
                               </td>
