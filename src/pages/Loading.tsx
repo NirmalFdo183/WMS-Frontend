@@ -28,8 +28,14 @@ interface Employee {
   id: number;
   name: string;
   nic: string;
-  role: string;
   phoneno: string;
+}
+
+interface SalesRep {
+  id: number;
+  name: string;
+  rep_id: string;
+  route_id: number;
 }
 
 interface BatchStock {
@@ -71,6 +77,7 @@ const Loading = () => {
   const [trucks, setTrucks] = useState<Truck[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
 
   // Loading Header State
   const [loadingData, setLoadingData] = useState({
@@ -83,6 +90,7 @@ const Loading = () => {
     driver_id: "",
     helper_id: "",
     cash_collector_id: "",
+    sales_rep_id: "",
   });
 
   // Items State
@@ -137,16 +145,19 @@ const Loading = () => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const [trucksRes, routesRes, batchesRes, employeesRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/trucks`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/routes`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/batch-stocks`),
-          axios.get(`${import.meta.env.VITE_API_BASE_URL}/employees`),
-        ]);
+        const [trucksRes, routesRes, batchesRes, employeesRes, salesRepsRes] =
+          await Promise.all([
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/trucks`),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/routes`),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/batch-stocks`),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/employees`),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/sales-reps`),
+          ]);
         setTrucks(trucksRes.data);
         setRoutes(routesRes.data);
         setAllBatches(batchesRes.data);
         setEmployees(employeesRes.data);
+        setSalesReps(salesRepsRes.data);
       } catch (err) {
         console.error("Error fetching initial data:", err);
       } finally {
@@ -173,7 +184,8 @@ const Loading = () => {
       return (
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.barcode && p.barcode.toLowerCase() === searchTerm.toLowerCase()) ||
-        (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.barcode &&
+          p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
         p.material_code.toLowerCase().includes(searchTerm.toLowerCase())
       );
     });
@@ -219,8 +231,34 @@ const Loading = () => {
     });
   };
 
+  const handleRouteChange = (routeId: string) => {
+    const selectedRep = salesReps.find(
+      (r) => r.route_id.toString() === routeId,
+    );
+    setLoadingData({
+      ...loadingData,
+      route_id: routeId,
+      sales_rep_id: selectedRep
+        ? selectedRep.id.toString()
+        : loadingData.sales_rep_id,
+    });
+  };
+
   const handleCreateLoading = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if at least one employee is selected (1-3 employees)
+    if (
+      !loadingData.driver_id &&
+      !loadingData.helper_id &&
+      !loadingData.cash_collector_id
+    ) {
+      alert(
+        "Please select at least one employee (Driver, Helper, or Cash Collector).",
+      );
+      return;
+    }
+
     setStep("items");
   };
 
@@ -230,35 +268,29 @@ const Loading = () => {
 
     const totalAvailable = selectedBatch.qty + (selectedBatch.free_qty || 0);
 
-    // Calculate total requested quantity
-    const reqQty =
+    // Calculate total paid quantity
+    const paidQty =
       Number(itemForm.no_cases) * currentPackSize +
       Number(itemForm.loose_qty || 0);
 
-    if (reqQty <= 0) {
+    const freeQty = Number(itemForm.free_qty || 0);
+    const totalReq = paidQty + freeQty;
+
+    if (totalReq <= 0) {
       alert("Please enter a valid quantity.");
       return;
     }
 
-    if (reqQty > totalAvailable) {
+    if (totalReq > totalAvailable) {
       alert(
-        `Insufficient stock! Total Available: ${totalAvailable}, Requested: ${reqQty}`,
+        `Insufficient stock! Total Available: ${totalAvailable}, Requested: ${totalReq}`,
       );
       return;
     }
 
-    // Determine paid vs free quantity split
-    // Consume paid qty first, then free qty
-    let confirmQty = 0;
-    let confirmFreeQty = 0;
-
-    if (reqQty <= selectedBatch.qty) {
-      confirmQty = reqQty;
-      confirmFreeQty = 0;
-    } else {
-      confirmQty = selectedBatch.qty;
-      confirmFreeQty = reqQty - selectedBatch.qty;
-    }
+    // Use user-provided split
+    const confirmQty = paidQty;
+    const confirmFreeQty = freeQty;
 
     // Price Logic: Selling Price = Batch Buying Price (netprice)
     // User requested "use the batch buying price as the selling price of that product"
@@ -333,6 +365,7 @@ const Loading = () => {
         driver_id: loadingData.driver_id || null,
         helper_id: loadingData.helper_id || null,
         cash_collector_id: loadingData.cash_collector_id || null,
+        sales_rep_id: loadingData.sales_rep_id || null,
       };
 
       await axios.post(
@@ -383,127 +416,262 @@ const Loading = () => {
 
       <div className="max-w-7xl mx-auto">
         {step === "details" ? (
-          <div className="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="font-bold text-gray-700 uppercase tracking-wider text-xs">
-                Loading Details
-              </h2>
+          <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="px-8 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+              <div>
+                <h2 className="font-black text-gray-800 uppercase tracking-tighter text-lg leading-tight">
+                  Manifest Configuration
+                </h2>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+                  Initial Setup & Team Assignment
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+                  Step 1 of 2
+                </span>
+              </div>
             </div>
 
-            <form onSubmit={handleCreateLoading} className="p-6 space-y-5">
-              <div className="space-y-4 text-sm">
-                <div>
-                  <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
-                    Load Number
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                    value={loadingData.load_number}
-                    onChange={(e) =>
-                      setLoadingData({
-                        ...loadingData,
-                        load_number: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
-                      Truck
-                    </label>
-                    <select
-                      required
-                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                      value={loadingData.truck_id}
-                      onChange={(e) =>
-                        setLoadingData({
-                          ...loadingData,
-                          truck_id: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Select Truck</option>
-                      {trucks.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.licence_plate_no} - {t.description}
-                        </option>
-                      ))}
-                    </select>
+            <form onSubmit={handleCreateLoading} className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Left Side: General Info */}
+                <div className="lg:col-span-5 space-y-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1 h-4 bg-blue-600 rounded-full"></div>
+                    <h3 className="text-sm font-bold text-gray-800">
+                      General Assignment
+                    </h3>
                   </div>
-                  <div>
-                    <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
-                      Route
-                    </label>
-                    <select
-                      required
-                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                      value={loadingData.route_id}
-                      onChange={(e) =>
-                        setLoadingData({
-                          ...loadingData,
-                          route_id: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="">Select Route</option>
-                      {routes.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.route_code} - {r.route_description}
-                        </option>
-                      ))}
-                    </select>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
+                        Load Number
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. LOAD-001"
+                        className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold"
+                        value={loadingData.load_number}
+                        onChange={(e) =>
+                          setLoadingData({
+                            ...loadingData,
+                            load_number: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
+                        Truck
+                      </label>
+                      <select
+                        required
+                        className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                        value={loadingData.truck_id}
+                        onChange={(e) =>
+                          setLoadingData({
+                            ...loadingData,
+                            truck_id: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select Truck</option>
+                        {trucks.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.licence_plate_no} - {t.description}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
+                        Route
+                      </label>
+                      <select
+                        required
+                        className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                        value={loadingData.route_id}
+                        onChange={(e) => handleRouteChange(e.target.value)}
+                      >
+                        <option value="">Select Route</option>
+                        {routes.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.route_code} - {r.route_description}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
+                        Responsible Sales Rep
+                      </label>
+                      <select
+                        required
+                        className="w-full px-3 py-2.5 rounded-lg bg-blue-50/50 border border-blue-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-semibold text-blue-900"
+                        value={loadingData.sales_rep_id}
+                        onChange={(e) =>
+                          setLoadingData({
+                            ...loadingData,
+                            sales_rep_id: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select Sales Rep</option>
+                        {salesReps.map((rep) => (
+                          <option key={rep.id} value={rep.id}>
+                            {rep.name} ({rep.rep_id})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Right Side: Dispatch Team */}
+                <div className="lg:col-span-7 space-y-6 px-4 lg:lg:sticky lg:top-8 lg:h-fit">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
+                      <h3 className="text-sm font-black text-gray-800 uppercase tracking-tight">
+                        Dispatch Team
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-widest">
+                      Select 1-3 Personnel
+                    </span>
+                  </div>
 
-                  {/* Driver Selection */}
-                  <EmployeeSelect
-                    label="Driver"
-                    role="driver"
-                    value={loadingData.driver_id}
-                    onChange={(id) => setLoadingData({ ...loadingData, driver_id: id })}
-                    employees={employees}
-                  />
+                  {/* Driver Card */}
+                  <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1-1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="font-black text-gray-800 text-sm">
+                            Driver
+                          </h4>
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">
+                            Primary operator
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <EmployeeSelect
+                      label=""
+                      employees={employees}
+                      value={loadingData.driver_id}
+                      onChange={(id) =>
+                        setLoadingData({ ...loadingData, driver_id: id })
+                      }
+                    />
+                  </div>
 
-                  {/* Helper Selection */}
-                  <EmployeeSelect
-                    label="Helper"
-                    role="helper" // We need to handle multiple roles here. Let's pass a filter function or role array?
-                    // actually let's just properly filter in the component or pass filtered list.
-                    // Passing filtered list is easier.
-                    employees={employees.filter(e => e.role === 'helper' || e.role === 'warehouse_helper')}
-                    value={loadingData.helper_id}
-                    onChange={(id) => setLoadingData({ ...loadingData, helper_id: id })}
-                  />
+                  {/* Helper Card */}
+                  <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-emerald-200 hover:shadow-md transition-all group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="font-black text-gray-800 text-sm">
+                            Helper
+                          </h4>
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">
+                            Stock Assistant
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <EmployeeSelect
+                      label=""
+                      employees={employees}
+                      value={loadingData.helper_id}
+                      onChange={(id) =>
+                        setLoadingData({ ...loadingData, helper_id: id })
+                      }
+                    />
+                  </div>
 
-                  {/* Cash Collector Selection */}
-                  <EmployeeSelect
-                    label="Cash Collector"
-                    role="cash_collecter"
-                    employees={employees.filter(e => e.role === 'cash_collecter')}
-                    value={loadingData.cash_collector_id}
-                    onChange={(id) => setLoadingData({ ...loadingData, cash_collector_id: id })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
-                      Loading Date
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                      value={loadingData.loading_date}
-                      onChange={(e) =>
+                  {/* Cash Collector Card */}
+                  <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-amber-200 hover:shadow-md transition-all group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="font-black text-gray-800 text-sm">
+                            Cash Collector
+                          </h4>
+                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">
+                            Finance Lead
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <EmployeeSelect
+                      label=""
+                      employees={employees}
+                      value={loadingData.cash_collector_id}
+                      onChange={(id) =>
                         setLoadingData({
                           ...loadingData,
-                          loading_date: e.target.value,
+                          cash_collector_id: id,
                         })
                       }
                     />
@@ -511,239 +679,15 @@ const Loading = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                Start Loading Items
-              </button>
-            </form>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Header Info Card */}
-            <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-6 items-center justify-between">
-              <div className="flex gap-8">
-                <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
-                    Load No
-                  </p>
-                  <p className="font-black text-gray-800 text-lg">
-                    #{loadingData.load_number}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
-                    Route
-                  </p>
-                  <p className="font-bold text-gray-800 text-sm">
-                    {routes.find(
-                      (r) => r.id.toString() === loadingData.route_id,
-                    )?.route_code || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
-                    Truck
-                  </p>
-                  <p className="font-bold text-gray-800 text-sm">
-                    {trucks.find(
-                      (t) => t.id.toString() === loadingData.truck_id,
-                    )?.licence_plate_no || "N/A"}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
-                  Total Items
-                </p>
-                <p className="text-xl font-black text-blue-600">
-                  {loadingItems.length}
-                </p>
-              </div>
-            </div>
-
-            {/* Search Bar */}
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-              <input
-                ref={searchInputRef}
-                type="text"
-                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white outline-none font-medium text-sm"
-                placeholder="Scan Barcode / Search Product..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-              {searchResults.length > 0 && (
-                <div className="mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto z-10 relative">
-                  {searchResults.map((batch, index) => (
-                    <div
-                      key={batch.id}
-                      onClick={() => handleSelectBatch(batch)}
-                      className={`px-4 py-3 cursor-pointer border-b text-xs flex flex-col gap-1 transition-colors ${selectedIndex === index
-                        ? "bg-blue-600 text-white"
-                        : "hover:bg-blue-50 text-gray-900 shadow-sm"
-                        }`}
-                    >
-                      <div className="flex justify-between font-bold text-sm">
-                        <span>{batch.product?.name}</span>
-                        <span
-                          className={
-                            selectedIndex === index
-                              ? "text-blue-100"
-                              : "text-gray-400"
-                          }
-                        >
-                          {batch.product?.barcode || batch.product?.material_code}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-[10px] opacity-80 font-semibold italic">
-                        <span>
-                          Exp: {batch.expiry_date} | Avail: {batch.qty + (batch.free_qty || 0)} Units
-                        </span>
-                        <span>
-                          Net: Rs.
-                          {batch.netprice}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Items Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b">
-                    <th className="px-6 py-4">Product Details</th>
-                    <th className="px-4 py-4 text-center">Pack Details</th>
-                    <th className="px-4 py-4 text-center">Selling Price</th>
-                    <th className="px-4 py-4 text-center">Total Units</th>
-                    <th className="px-4 py-4 text-right">Total Value</th>
-                    <th className="px-4 py-4"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {loadingItems.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <p className="font-bold text-gray-800">
-                          {item.batch_stock?.product?.name}
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          {item.batch_stock?.product?.barcode || item.batch_stock?.product?.material_code}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4 text-center font-bold text-gray-600">
-                        {Math.floor(
-                          (item.qty + (item.free_qty || 0)) / (item.batch_stock?.pack_size || 1),
-                        )}{" "}
-                        x {item.batch_stock?.pack_size} +{" "}
-                        {(item.qty + (item.free_qty || 0)) % (item.batch_stock?.pack_size || 1)}
-                      </td>
-                      <td className="px-4 py-4 text-center font-bold text-gray-700">
-                        Rs. {Number(item.net_price).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-4 text-center font-bold text-blue-700">
-                        {item.qty + (item.free_qty || 0)}
-                      </td>
-                      <td className="px-4 py-4 text-right font-black text-gray-900">
-                        Rs. {(Number(item.net_price) * Number(item.qty + (item.free_qty || 0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <div className="flex justify-end gap-1">
-                          <button
-                            onClick={() => handleEditItem(item)}
-                            className="text-blue-400 hover:text-blue-600 p-2 transition-colors"
-                            title="Edit Quantity"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="text-red-400 hover:text-red-600 p-2 transition-colors"
-                            title="Remove Item"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {loadingItems.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="py-20 text-center text-gray-400 font-bold uppercase tracking-widest opacity-30"
-                      >
-                        No items added
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
-        }
-      </div>
-
-      {/* Item Entry Modal */}
-      {
-        activeProduct && (
-          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[120] p-4 text-xs font-sans">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-                <div>
-                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
-                    {editingItemId ? "Modify Entry" : "Add Stock to Loading"}
-                  </p>
-                  <h4 className="font-bold text-gray-900 text-lg leading-tight">
-                    {activeProduct.name}
-                  </h4>
-                  <p className="text-[10px] text-gray-400 font-mono mt-1">
-                    BARCODE: {activeProduct.barcode || activeProduct.material_code}
-                  </p>
-                </div>
+              <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end mt-10 -mx-8 -mb-8">
                 <button
-                  onClick={() => {
-                    setActiveProduct(null);
-                    setEditingItemId(null);
-                  }}
-                  className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
+                  type="submit"
+                  className="w-full lg:w-auto px-10 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-200 transition-all flex items-center justify-center gap-3 group"
                 >
+                  <span>Initialize Loading Sheet</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
+                    className="h-5 w-5 group-hover:translate-x-1 transition-transform"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -752,156 +696,556 @@ const Loading = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
                     />
                   </svg>
                 </button>
               </div>
-
-              <form onSubmit={handleAddItem} className="p-6 space-y-5">
-                {/* Selected Batch Details Instead of Dropdown */}
-                {selectedBatch ? (
-                  <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center justify-between">
+            </form>
+          </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            {/* Left Sidebar: Sticky Manifest Info & Search */}
+            <div className="w-full lg:w-[350px] lg:sticky lg:top-8 space-y-6">
+              {/* Manifest Summary Card */}
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                  <h3 className="font-black text-gray-800 tracking-tighter text-xs uppercase tracking-widest leading-none">
+                    Manifest Overview
+                  </h3>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
+                      Active
+                    </span>
+                  </div>
+                </div>
+                <div className="p-6 space-y-5">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                        Expiry Date
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
+                        Load ID
                       </p>
-                      <p className="font-bold text-gray-800">
-                        {selectedBatch.expiry_date}
+                      <p className="font-black text-gray-900 text-xl tracking-tight leading-none">
+                        #{loadingData.load_number}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                        Total Avail.
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
+                        Status
                       </p>
-                      <p className="font-black text-blue-600">
-                        {selectedBatch.qty + (selectedBatch.free_qty || 0)}
+                      <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 italic">
+                        In-Progress
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6 pt-5 border-t border-gray-50">
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
+                        Route
+                      </p>
+                      <p className="font-bold text-gray-800 text-sm">
+                        {routes.find(
+                          (r) => r.id.toString() === loadingData.route_id,
+                        )?.route_code || "N/A"}
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">
+                        {routes.find(
+                          (r) => r.id.toString() === loadingData.route_id,
+                        )?.route_description || ""}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
+                        Truck
+                      </p>
+                      <p className="font-bold text-gray-800 text-sm">
+                        {trucks.find(
+                          (t) => t.id.toString() === loadingData.truck_id,
+                        )?.licence_plate_no || "N/A"}
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">
+                        {trucks.find(
+                          (t) => t.id.toString() === loadingData.truck_id,
+                        )?.description || ""}
                       </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-1.5 contents">
-                    <label className="font-bold text-gray-600 ml-0.5">
-                      Select Batch
-                    </label>
-                    <select
-                      required
-                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-medium text-sm"
-                      value={itemForm.batch_id}
-                      onChange={(e) =>
-                        setItemForm({ ...itemForm, batch_id: e.target.value })
-                      }
+
+                  <div className="pt-2">
+                    <div className="flex justify-between items-center bg-gray-900 px-5 py-4 rounded-2xl shadow-xl shadow-gray-200">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">
+                          Items Loaded
+                        </p>
+                        <p className="text-2xl font-black text-white leading-none">
+                          {loadingItems.length}
+                        </p>
+                      </div>
+                      <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar Search Bar */}
+              <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-200 space-y-4 relative">
+                <div className="flex items-center justify-between ml-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                    Stock Search Index
+                  </label>
+                  <span className="text-[8px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded font-black uppercase">
+                    Live
+                  </span>
+                </div>
+                <div className="relative group">
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    className="w-full pl-11 pr-4 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-8 focus:ring-blue-500/5 outline-none font-bold text-sm transition-all shadow-inner"
+                    placeholder="Barcode or Product Name"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                  />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <option value="">-- Choose Batch --</option>
-                      {productBatches.map((b) => (
-                        <option key={b.id} value={b.id}>
-                          Exp: {b.expiry_date} | Avail: {b.qty + (b.free_qty || 0)} units
-                        </option>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="absolute left-0 right-0 mt-3 bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden z-[110] max-h-[400px] overflow-y-auto animate-in slide-in-from-top-4 duration-300 ring-1 ring-black/5 mx-2">
+                    {searchResults.map((batch, index) => (
+                      <div
+                        key={batch.id}
+                        onClick={() => handleSelectBatch(batch)}
+                        className={`px-6 py-4 cursor-pointer border-b last:border-0 transition-all ${
+                          selectedIndex === index
+                            ? "bg-blue-600 text-white shadow-lg"
+                            : "hover:bg-blue-50 text-gray-900"
+                        }`}
+                      >
+                        <div className="flex justify-between font-black text-sm">
+                          <span className="truncate pr-4">
+                            {batch.product?.name}
+                          </span>
+                          <span
+                            className={`text-[10px] shrink-0 font-mono ${selectedIndex === index ? "text-blue-200" : "text-gray-400"}`}
+                          >
+                            {batch.product?.barcode ||
+                              batch.product?.material_code}
+                          </span>
+                        </div>
+                        <div
+                          className={`flex justify-between text-[10px] font-bold mt-2 uppercase tracking-widest italic opacity-80`}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-bold text-gray-700">
+                              Total: {batch.qty + (batch.free_qty || 0)} Units
+                            </span>
+                            <div className="flex gap-2 text-[9px] font-black uppercase tracking-tighter mt-0.5">
+                              <span className="text-blue-500">
+                                Normal: {batch.qty}
+                              </span>
+                              {batch.free_qty > 0 && (
+                                <span className="text-emerald-500">
+                                  Free: {batch.free_qty}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-100">
+                              Net: Rs.{batch.netprice}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 font-bold text-[10px] border border-orange-100">
+                              Retail: Rs.{batch.retail_price}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Main Content: Items Table */}
+            <div className="flex-1 w-full pb-10">
+              <div className="bg-white rounded-[2rem] shadow-sm border border-gray-200 overflow-hidden ring-1 ring-gray-100 transition-shadow hover:shadow-md">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50/80 backdrop-blur-md text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                        <th className="px-8 py-6">Stock Identifier</th>
+                        <th className="px-6 py-6 text-center">
+                          Unit Breakdown
+                        </th>
+                        <th className="px-6 py-6 text-center">Net Price</th>
+                        <th className="px-6 py-6 text-center text-orange-600">
+                          Retail
+                        </th>
+                        <th className="px-6 py-6 text-center">Total Qty</th>
+                        <th className="px-6 py-6 text-right">Value (LKR)</th>
+                        <th className="px-8 py-6"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {loadingItems.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <p className="font-bold text-gray-800">
+                              {item.batch_stock?.product?.name}
+                            </p>
+                            <p className="text-[10px] text-gray-400 mt-0.5">
+                              {item.batch_stock?.product?.barcode ||
+                                item.batch_stock?.product?.material_code}
+                            </p>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="font-bold text-gray-700">
+                              {Math.floor(
+                                item.qty / (item.batch_stock?.pack_size || 1),
+                              )}{" "}
+                              x {item.batch_stock?.pack_size} +{" "}
+                              {item.qty % (item.batch_stock?.pack_size || 1)}
+                            </div>
+                            {item.free_qty > 0 && (
+                              <div className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter mt-0.5">
+                                Free: {item.free_qty} units
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-center font-bold text-gray-700">
+                            Rs. {Number(item.net_price).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-4 text-center font-bold text-orange-700">
+                            Rs.{" "}
+                            {Number(
+                              item.batch_stock?.retail_price || 0,
+                            ).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-4 text-center font-bold text-blue-700">
+                            {item.qty + (item.free_qty || 0)}
+                          </td>
+                          <td className="px-4 py-4 text-right font-black text-gray-900">
+                            Rs.{" "}
+                            {(
+                              Number(item.net_price) * Number(item.qty)
+                            ).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                            })}
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <div className="flex justify-end gap-1">
+                              <button
+                                onClick={() => handleEditItem(item)}
+                                className="text-blue-400 hover:text-blue-600 p-2 transition-colors"
+                                title="Edit Quantity"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleRemoveItem(item.id)}
+                                className="text-red-400 hover:text-red-600 p-2 transition-colors"
+                                title="Remove Item"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
                       ))}
-                    </select>
-                  </div>
-                )}
-
-                {selectedBatch && (
-                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-2 gap-y-4 gap-x-6">
-                    <div>
-                      <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                        Pack Size
-                      </p>
-                      <p className="font-bold text-blue-900">
-                        {selectedBatch.pack_size} units
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                        Selling Price (Net)
-                      </p>
-                      <p className="font-bold text-blue-900">
-                        Rs. {Number(selectedBatch.netprice || 0).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
-                      Full Cases
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      autoFocus
-                      className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
-                      value={itemForm.no_cases}
-                      onChange={(e) =>
-                        setItemForm({ ...itemForm, no_cases: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
-                      Loose Qty
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
-                      value={itemForm.loose_qty}
-                      onChange={(e) =>
-                        setItemForm({ ...itemForm, loose_qty: e.target.value })
-                      }
-                    />
-                  </div>
+                      {loadingItems.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="py-20 text-center text-gray-400 font-bold uppercase tracking-widest opacity-30"
+                          >
+                            No items added
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-
-                <div className="bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-200">
-                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                      Total Quantity
-                    </p>
-                    <p className="font-black text-gray-800 text-lg">
-                      {currentTotalQty} Units
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                      Total Value
-                    </p>
-                    <p className="font-black text-blue-600 text-lg">
-                      Rs. {(currentTotalQty * (selectedBatch?.netprice || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveProduct(null);
-                      setEditingItemId(null);
-                    }}
-                    className="flex-1 py-3 font-bold text-gray-500 bg-white border border-gray-300 rounded-xl hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!selectedBatch || loading}
-                    className="flex-[2] py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {loading
-                      ? "Saving..."
-                      : editingItemId
-                        ? "Update Item"
-                        : "Add to Manifest"}
-                  </button>
-                </div>
-              </form>
+              </div>
             </div>
           </div>
-        )
-      }
+        )}
+      </div>
+
+      {/* Item Entry Modal */}
+      {activeProduct && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[120] p-4 text-xs font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+              <div>
+                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
+                  {editingItemId ? "Modify Entry" : "Add Stock to Loading"}
+                </p>
+                <h4 className="font-bold text-gray-900 text-lg leading-tight">
+                  {activeProduct.name}
+                </h4>
+                <p className="text-[10px] text-gray-400 font-mono mt-1">
+                  BARCODE:{" "}
+                  {activeProduct?.barcode || activeProduct?.material_code}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setActiveProduct(null);
+                  setEditingItemId(null);
+                }}
+                className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddItem} className="p-6 space-y-5">
+              {/* Selected Batch Details Instead of Dropdown */}
+              {selectedBatch ? (
+                <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      Expiry Date
+                    </p>
+                    <p className="font-bold text-gray-800">
+                      {selectedBatch?.expiry_date}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      Total Avail.
+                    </p>
+                    <p className="font-black text-blue-600">
+                      {(selectedBatch?.qty || 0) +
+                        (selectedBatch?.free_qty || 0)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5 contents">
+                  <label className="font-bold text-gray-600 ml-0.5">
+                    Select Batch
+                  </label>
+                  <select
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-medium text-sm"
+                    value={itemForm.batch_id}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, batch_id: e.target.value })
+                    }
+                  >
+                    <option value="">-- Choose Batch --</option>
+                    {productBatches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        Exp: {b.expiry_date} | Avail:{" "}
+                        {b.qty + (b.free_qty || 0)} units
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {selectedBatch && (
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-3 gap-y-4 gap-x-6">
+                  <div>
+                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
+                      Pack Size
+                    </p>
+                    <p className="font-bold text-blue-900">
+                      {selectedBatch.pack_size} units
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
+                      Net Price
+                    </p>
+                    <p className="font-bold text-blue-900">
+                      Rs. {Number(selectedBatch.netprice || 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-0.5">
+                      Retail Price
+                    </p>
+                    <p className="font-bold text-orange-900">
+                      Rs. {Number(selectedBatch.retail_price || 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
+                    Full Cases
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    autoFocus
+                    className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
+                    value={itemForm.no_cases}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, no_cases: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
+                    Loose Units
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
+                    value={itemForm.loose_qty}
+                    onChange={(e) =>
+                      setItemForm({ ...itemForm, loose_qty: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-[10px] uppercase tracking-wider text-emerald-600 ml-0.5">
+                  Free Quantity (Units)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full px-4 py-3 rounded-xl bg-emerald-50/50 border border-emerald-100 outline-none font-black text-sm text-emerald-700 focus:border-emerald-500 transition-all shadow-sm"
+                  placeholder="Enter free items in units..."
+                  value={itemForm.free_qty}
+                  onChange={(e) =>
+                    setItemForm({ ...itemForm, free_qty: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-200">
+                <div className="flex justify-between items-center mb-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                    Total Quantity
+                  </p>
+                  <p className="font-black text-gray-800 text-lg">
+                    {currentTotalQty} Units
+                  </p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                    Total Value
+                  </p>
+                  <p className="font-black text-blue-600 text-lg">
+                    Rs.{" "}
+                    {(
+                      (Number(itemForm.no_cases) * currentPackSize +
+                        Number(itemForm.loose_qty || 0)) *
+                      (selectedBatch?.netprice || 0)
+                    ).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveProduct(null);
+                    setEditingItemId(null);
+                  }}
+                  className="flex-1 py-3 font-bold text-gray-500 bg-white border border-gray-300 rounded-xl hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!selectedBatch || loading}
+                  className="flex-[2] py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {loading
+                    ? "Saving..."
+                    : editingItemId
+                      ? "Update Item"
+                      : "Add to Manifest"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modals */}
       {showConfirmSave && (

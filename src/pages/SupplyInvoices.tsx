@@ -217,12 +217,13 @@ const SupplyInvoices = () => {
                       handleUpdateStatus(load.id, e.target.value)
                     }
                     className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter outline-none cursor-pointer border
-                                      ${load.status === "delivered"
-                        ? "bg-green-100 text-green-700 border-green-200"
-                        : load.status === "pending"
-                          ? "bg-amber-100 text-amber-700 border-amber-200"
-                          : "bg-red-100 text-red-700 border-red-200"
-                      }`}
+                                      ${
+                                        load.status === "delivered"
+                                          ? "bg-green-100 text-green-700 border-green-200"
+                                          : load.status === "pending"
+                                            ? "bg-amber-100 text-amber-700 border-amber-200"
+                                            : "bg-red-100 text-red-700 border-red-200"
+                                      }`}
                   >
                     <option value="pending">Pending</option>
                     <option value="delivered">Delivered</option>
@@ -528,9 +529,7 @@ const SupplyInvoices = () => {
                             <th className="px-4 py-4 text-center">
                               Total Units
                             </th>
-                            <th className="px-4 py-4 text-center">
-                              Free Qty
-                            </th>
+                            <th className="px-4 py-4 text-center">Free Qty</th>
                             <th className="px-4 py-4 text-right">Net Price</th>
                             <th className="px-4 py-4 text-right">
                               Retail Price
@@ -549,7 +548,8 @@ const SupplyInvoices = () => {
                                   {item.product.name}
                                 </p>
                                 <p className="text-[10px] font-mono text-gray-400 mt-0.5">
-                                  {item.product.barcode || item.product.material_code}
+                                  {item.product.barcode ||
+                                    item.product.material_code}
                                 </p>
                                 {item.expiry_date && (
                                   <p className="text-[10px] text-gray-500 mt-1">
@@ -649,32 +649,59 @@ const SupplyInvoices = () => {
             </div>
 
             <div className="p-5 sm:p-8 overflow-y-auto">
-              {/* Simple Details Header */}
-              <div className="grid grid-cols-3 gap-y-1 gap-x-4 text-[12px] sm:text-xs font-mono text-gray-800 mb-6">
-                <div>
-                  <span className="font-bold">Vehicle:</span>{" "}
-                  {selectedLoading.truck?.licence_plate_no}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 bg-blue-50/30 p-5 rounded-2xl border border-blue-100 mb-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                    Date / Logistics
+                  </p>
+                  <p className="font-bold text-gray-800">
+                    {selectedLoading.loading_date}
+                  </p>
+                  <p className="text-[10px] font-bold text-blue-600 truncate">
+                    {selectedLoading.truck?.licence_plate_no}
+                  </p>
                 </div>
-                <div className="text-center">
-                  <span className="font-bold">Route:</span>{" "}
-                  {selectedLoading.route?.route_code}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                    Assignments
+                  </p>
+                  <p className="font-bold text-gray-800">
+                    Rep: {selectedLoading.sales_rep?.name || "-"}
+                  </p>
+                  <p className="text-[10px] font-bold text-blue-600 italic">
+                    {selectedLoading.route?.route_code}
+                  </p>
                 </div>
-                <div className="text-right">
-                  <span className="font-bold">Date:</span>{" "}
-                  {selectedLoading.loading_date}
-                </div>
-
-                <div>
-                  <span className="font-bold">Driver:</span>{" "}
-                  {selectedLoading.driver?.name || "-"}
-                </div>
-                <div className="text-center">
-                  <span className="font-bold">Helper:</span>{" "}
-                  {selectedLoading.helper?.name || "-"}
-                </div>
-                <div className="text-right">
-                  <span className="font-bold">Col:</span>{" "}
-                  {selectedLoading.cash_collector?.name || "-"}
+                <div className="col-span-2 space-y-2">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                    Field Personnel
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white p-2 rounded-lg border border-blue-50 shadow-sm">
+                      <p className="text-[8px] font-black text-gray-400 uppercase">
+                        Driver
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-700 truncate">
+                        {selectedLoading.driver?.name || "-"}
+                      </p>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-blue-50 shadow-sm">
+                      <p className="text-[8px] font-black text-gray-400 uppercase">
+                        Helper
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-700 truncate">
+                        {selectedLoading.helper?.name || "-"}
+                      </p>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-blue-50 shadow-sm">
+                      <p className="text-[8px] font-black text-gray-400 uppercase">
+                        Cashier
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-700 truncate">
+                        {selectedLoading.cash_collector?.name || "-"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -689,15 +716,19 @@ const SupplyInvoices = () => {
                         <th className="px-6 py-4">Product Details</th>
                         <th className="px-4 py-4 text-center">Qty (Units)</th>
                         <th className="px-4 py-4 text-center">Free Qty</th>
-                        <th className="px-4 py-4 text-right">Selling Price</th>
+                        <th className="px-4 py-4 text-right">Net Price</th>
+                        <th className="px-4 py-4 text-right text-orange-600">
+                          Retail
+                        </th>
                         <th className="px-6 py-4 text-right">Subtotal</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 text-xs">
                       {selectedLoading.loading_items?.map((item: any) => {
-
-                        const price = Number(item.batch_stock?.retail_price || 0);
-
+                        const netPrice = Number(item.net_price || 0);
+                        const retailPrice = Number(
+                          item.batch_stock?.retail_price || 0,
+                        );
 
                         return (
                           <tr
@@ -709,7 +740,8 @@ const SupplyInvoices = () => {
                                 {item.batch_stock?.product?.name}
                               </p>
                               <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                {item.batch_stock?.product?.barcode || item.batch_stock?.product?.material_code}
+                                {item.batch_stock?.product?.barcode ||
+                                  item.batch_stock?.product?.material_code}
                               </p>
                             </td>
                             <td className="px-4 py-4 text-center font-black">
@@ -724,13 +756,15 @@ const SupplyInvoices = () => {
                                 "--"
                               )}
                             </td>
-                            <td className="px-4 py-4 text-right">
-                              Rs. {price.toFixed(2)}
+                            <td className="px-4 py-4 text-right font-medium">
+                              Rs. {netPrice.toFixed(2)}
                             </td>
-
+                            <td className="px-4 py-4 text-right text-orange-700">
+                              Rs. {retailPrice.toFixed(2)}
+                            </td>
                             <td className="px-6 py-4 text-right font-black text-blue-600">
                               Rs.{" "}
-                              {(Number(item.qty) * price).toLocaleString(
+                              {(Number(item.qty) * netPrice).toLocaleString(
                                 undefined,
                                 {
                                   minimumFractionDigits: 2,
@@ -742,10 +776,31 @@ const SupplyInvoices = () => {
                       })}
                     </tbody>
                     <tfoot>
-
+                      <tr className="bg-emerald-50 border-t border-emerald-100">
+                        <td
+                          colSpan={5}
+                          className="px-6 py-3 text-right text-[10px] font-black uppercase text-emerald-600"
+                        >
+                          Value of Free Items
+                        </td>
+                        <td className="px-6 py-3 text-right text-sm font-bold text-emerald-700">
+                          Rs.{" "}
+                          {selectedLoading.loading_items
+                            ?.reduce(
+                              (sum: number, item: any) =>
+                                sum +
+                                Number(item.free_qty || 0) *
+                                  Number(item.net_price || 0),
+                              0,
+                            )
+                            .toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                            })}
+                        </td>
+                      </tr>
                       <tr className="bg-blue-600">
                         <td
-                          colSpan={4}
+                          colSpan={5}
                           className="px-6 py-4 text-right text-[10px] font-black uppercase text-blue-100"
                         >
                           Manifest Grand Total
@@ -756,7 +811,7 @@ const SupplyInvoices = () => {
                             ?.reduce(
                               (sum: number, item: any) =>
                                 sum +
-                                Number(item.qty) * Number(item.batch_stock?.retail_price || 0),
+                                Number(item.qty) * Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
@@ -787,10 +842,11 @@ const SupplyInvoices = () => {
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${statusConfirmation.status === "delivered"
-                ? "bg-green-100 text-green-600"
-                : "bg-red-100 text-red-600"
-                }`}
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
+                statusConfirmation.status === "delivered"
+                  ? "bg-green-100 text-green-600"
+                  : "bg-red-100 text-red-600"
+              }`}
             >
               {statusConfirmation.status === "delivered" ? (
                 <svg
@@ -848,10 +904,11 @@ const SupplyInvoices = () => {
                     statusConfirmation.status,
                   )
                 }
-                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${statusConfirmation.status === "delivered"
-                  ? "bg-green-600 hover:bg-green-700 shadow-green-200"
-                  : "bg-red-600 hover:bg-red-700 shadow-red-200"
-                  }`}
+                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${
+                  statusConfirmation.status === "delivered"
+                    ? "bg-green-600 hover:bg-green-700 shadow-green-200"
+                    : "bg-red-600 hover:bg-red-700 shadow-red-200"
+                }`}
               >
                 Yes, Update
               </button>

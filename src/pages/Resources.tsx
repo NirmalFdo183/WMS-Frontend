@@ -24,7 +24,6 @@ interface Employee {
   id: number;
   name: string;
   nic: string;
-  role: "warehouse_helper" | "cash_collecter" | "helper" | "driver";
   phoneno: string;
 }
 
@@ -135,9 +134,7 @@ const Resources = () => {
     } else if (activeTab === "trucks") {
       setFormData(item || { licence_plate_no: "", description: "" });
     } else if (activeTab === "employees") {
-      setFormData(
-        item || { name: "", nic: "", role: "warehouse_helper", phoneno: "" },
-      );
+      setFormData(item || { name: "", nic: "", phoneno: "" });
     } else {
       setFormData(
         item || {
@@ -364,7 +361,6 @@ const Resources = () => {
               <tr>
                 <th className="px-6 py-4">Name</th>
                 <th className="px-6 py-4">NIC</th>
-                <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Phone</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -376,11 +372,6 @@ const Resources = () => {
                     {e.name}
                   </td>
                   <td className="px-6 py-4 font-mono text-sm">{e.nic}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                      {e.role.replace("_", " ")}
-                    </span>
-                  </td>
                   <td className="px-6 py-4">{e.phoneno}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
@@ -405,7 +396,7 @@ const Resources = () => {
               {employees.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     className="px-6 py-8 text-center text-gray-400"
                   >
                     No employees found
@@ -567,18 +558,6 @@ const Resources = () => {
                     }
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
-                  <select
-                    value={formData.role || "warehouse_helper"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                  >
-                    <option value="warehouse_helper">Warehouse Helper</option>
-                    <option value="cash_collecter">Cash Collecter</option>
-                    <option value="helper">Helper</option>
-                    <option value="driver">Driver</option>
-                  </select>
                   <input
                     type="tel"
                     placeholder="Phone Number"
