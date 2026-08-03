@@ -32,6 +32,7 @@ interface BatchItem {
   pack_size: number;
   extra_units: number;
   qty: number;
+  free_qty: number;
   retail_price: number;
   netprice: number;
   expiry_date: string;
@@ -53,7 +54,6 @@ const NewSupply = () => {
     supplier_name: "",
     invoice_no: "",
     invoice_date: new Date().toISOString().split("T")[0],
-    discount: "0",
     total_bill_amount: "",
   });
 
@@ -72,6 +72,7 @@ const NewSupply = () => {
     no_cases: "",
     pack_size: "",
     extra_units: "0",
+    free_qty: "0",
     retail_price: "",
     net_price: "",
     expiry_date: "",
@@ -130,7 +131,6 @@ const NewSupply = () => {
           supplier_name: inv.supplier?.name || "",
           invoice_no: inv.invoice_number,
           invoice_date: inv.invoice_date,
-          discount: inv.discount.toString(),
           total_bill_amount: inv.total_bill_amount.toString(),
         });
         setOriginalInvoiceTotal(inv.total_bill_amount);
@@ -243,6 +243,20 @@ const NewSupply = () => {
     setStep("items");
   };
 
+  // Enter key handler: move to next input instead of submitting
+  const handleBatchFormKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (!form) return;
+      const inputs = Array.from(form.querySelectorAll("input, select, textarea")) as HTMLElement[];
+      const idx = inputs.indexOf(e.currentTarget);
+      if (idx >= 0 && idx < inputs.length - 1) {
+        inputs[idx + 1].focus();
+      }
+    }
+  };
+
   const handleAddBatch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeProduct) return;
@@ -262,6 +276,7 @@ const NewSupply = () => {
       pack_size: pSize,
       extra_units: extras,
       qty: qty,
+      free_qty: Number(batchForm.free_qty || 0),
       retail_price: Number(batchForm.retail_price),
       netprice: Number(batchForm.net_price),
       expiry_date: batchForm.expiry_date,
@@ -281,6 +296,7 @@ const NewSupply = () => {
       no_cases: "",
       pack_size: "",
       extra_units: "0",
+      free_qty: "0",
       retail_price: "",
       net_price: "",
       expiry_date: "",
@@ -297,6 +313,7 @@ const NewSupply = () => {
       no_cases: item.no_cases.toString(),
       pack_size: item.pack_size.toString(),
       extra_units: (item.extra_units || 0).toString(),
+      free_qty: (item.free_qty || 0).toString(),
       retail_price: item.retail_price.toString(),
       net_price: item.netprice.toString(),
       expiry_date: item.expiry_date || "",
@@ -314,7 +331,6 @@ const NewSupply = () => {
         supplier_id: Number(invoiceData.supplier_id),
         invoice_number: invoiceData.invoice_no,
         invoice_date: invoiceData.invoice_date,
-        discount: Number(invoiceData.discount || 0),
         total_bill_amount: Number(originalInvoiceTotal),
         items: batchItems.map((item) => ({
           product_id: item.product_id,
@@ -322,6 +338,7 @@ const NewSupply = () => {
           pack_size: item.pack_size,
           extra_units: item.extra_units,
           qty: item.qty,
+          free_qty: item.free_qty,
           retail_price: item.retail_price,
           netprice: item.netprice,
           expiry_date: item.expiry_date || null,
@@ -352,7 +369,6 @@ const NewSupply = () => {
       supplier_name: "",
       invoice_no: "",
       invoice_date: new Date().toISOString().split("T")[0],
-      discount: "0",
       total_bill_amount: "",
     });
     setBatchItems([]);
@@ -515,24 +531,6 @@ const NewSupply = () => {
                     }
                   />
                 </div>
-
-                <div>
-                  <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
-                    Discount Amount
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
-                    value={invoiceData.discount}
-                    onChange={(e) =>
-                      setInvoiceData({
-                        ...invoiceData,
-                        discount: e.target.value,
-                      })
-                    }
-                  />
-                </div>
               </div>
 
               <button
@@ -610,18 +608,6 @@ const NewSupply = () => {
                     )
                   )}
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest leading-none mb-1">
-                    Discount
-                  </p>
-                  <p className="text-lg font-bold text-orange-600">
-                    Rs.{" "}
-                    {Number(invoiceData.discount || 0).toLocaleString(
-                      undefined,
-                      { minimumFractionDigits: 2 },
-                    )}
-                  </p>
-                </div>
               </div>
             </div>
 
@@ -643,8 +629,8 @@ const NewSupply = () => {
                       id={`search-result-${index}`}
                       onClick={() => handleSelectProduct(p)}
                       className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${highlightedIndex === index
-                          ? "bg-blue-600 text-white"
-                          : "hover:bg-blue-50 text-gray-700"
+                        ? "bg-blue-600 text-white"
+                        : "hover:bg-blue-50 text-gray-700"
                         }`}
                     >
                       <span
@@ -671,6 +657,7 @@ const NewSupply = () => {
                     <th className="px-6 py-4">Product Details</th>
                     <th className="px-4 py-4 text-center">Batch Vol.</th>
                     <th className="px-4 py-4 text-center">Units</th>
+                    <th className="px-4 py-4 text-center">Free Qty</th>
                     <th className="px-4 py-4 text-right">Net Price</th>
                     <th className="px-4 py-4 text-right">Retail Price</th>
                     <th className="px-6 py-4 text-right">Line Total</th>
@@ -701,6 +688,9 @@ const NewSupply = () => {
                       </td>
                       <td className="px-4 py-4 text-center font-bold">
                         {item.qty}
+                      </td>
+                      <td className="px-4 py-4 text-center font-bold text-green-600">
+                        {item.free_qty > 0 ? item.free_qty : "-"}
                       </td>
                       <td className="px-4 py-4 text-right font-medium text-blue-600">
                         Rs. {Number(item.netprice).toFixed(2)}
@@ -811,6 +801,7 @@ const NewSupply = () => {
                     autoFocus
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
                     value={batchForm.no_cases}
+                    onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
                       setBatchForm({ ...batchForm, no_cases: e.target.value })
                     }
@@ -826,6 +817,7 @@ const NewSupply = () => {
                     placeholder="0"
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
                     value={batchForm.pack_size}
+                    onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
                       setBatchForm({ ...batchForm, pack_size: e.target.value })
                     }
@@ -840,6 +832,7 @@ const NewSupply = () => {
                     min="0"
                     className="w-full px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 outline-none font-bold text-base text-blue-700"
                     value={batchForm.extra_units}
+                    onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
                       setBatchForm({
                         ...batchForm,
@@ -848,6 +841,26 @@ const NewSupply = () => {
                     }
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-green-600 ml-0.5">
+                  Free Qty{" "}
+                  <span className="text-green-400 font-normal text-xs">(Gift/Commission — not billed)</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full px-4 py-3 rounded-xl bg-green-50 border border-green-100 outline-none font-bold text-base text-green-700"
+                  value={batchForm.free_qty}
+                  onKeyDown={handleBatchFormKeyDown}
+                  onChange={(e) =>
+                    setBatchForm({
+                      ...batchForm,
+                      free_qty: e.target.value,
+                    })
+                  }
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -861,6 +874,7 @@ const NewSupply = () => {
                     step="0.01"
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
                     value={batchForm.net_price}
+                    onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
                       setBatchForm({ ...batchForm, net_price: e.target.value })
                     }
@@ -876,6 +890,7 @@ const NewSupply = () => {
                     step="0.01"
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
                     value={batchForm.retail_price}
+                    onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
                       setBatchForm({
                         ...batchForm,
