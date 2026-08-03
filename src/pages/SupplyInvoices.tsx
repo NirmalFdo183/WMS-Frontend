@@ -9,6 +9,7 @@ interface BatchStock {
   product: {
     name: string;
     material_code: string;
+    barcode: string;
   };
   no_cases: number;
   pack_size: number;
@@ -216,13 +217,12 @@ const SupplyInvoices = () => {
                       handleUpdateStatus(load.id, e.target.value)
                     }
                     className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter outline-none cursor-pointer border
-                                      ${
-                                        load.status === "delivered"
-                                          ? "bg-green-100 text-green-700 border-green-200"
-                                          : load.status === "pending"
-                                            ? "bg-amber-100 text-amber-700 border-amber-200"
-                                            : "bg-red-100 text-red-700 border-red-200"
-                                      }`}
+                                      ${load.status === "delivered"
+                        ? "bg-green-100 text-green-700 border-green-200"
+                        : load.status === "pending"
+                          ? "bg-amber-100 text-amber-700 border-amber-200"
+                          : "bg-red-100 text-red-700 border-red-200"
+                      }`}
                   >
                     <option value="pending">Pending</option>
                     <option value="delivered">Delivered</option>
@@ -558,7 +558,7 @@ const SupplyInvoices = () => {
                                   {item.product.name}
                                 </p>
                                 <p className="text-[10px] font-mono text-gray-400 mt-0.5">
-                                  {item.product.material_code}
+                                  {item.product.barcode || item.product.material_code}
                                 </p>
                                 {item.expiry_date && (
                                   <p className="text-[10px] text-gray-500 mt-1">
@@ -721,7 +721,7 @@ const SupplyInvoices = () => {
                                 {item.batch_stock?.product?.name}
                               </p>
                               <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                {item.batch_stock?.product?.material_code}
+                                {item.batch_stock?.product?.barcode || item.batch_stock?.product?.material_code}
                               </p>
                             </td>
                             <td className="px-4 py-4 text-center font-black">
@@ -822,11 +822,10 @@ const SupplyInvoices = () => {
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
-                statusConfirmation.status === "delivered"
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${statusConfirmation.status === "delivered"
                   ? "bg-green-100 text-green-600"
                   : "bg-red-100 text-red-600"
-              }`}
+                }`}
             >
               {statusConfirmation.status === "delivered" ? (
                 <svg
@@ -884,11 +883,10 @@ const SupplyInvoices = () => {
                     statusConfirmation.status,
                   )
                 }
-                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${
-                  statusConfirmation.status === "delivered"
+                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${statusConfirmation.status === "delivered"
                     ? "bg-green-600 hover:bg-green-700 shadow-green-200"
                     : "bg-red-600 hover:bg-red-700 shadow-red-200"
-                }`}
+                  }`}
               >
                 Yes, Update
               </button>

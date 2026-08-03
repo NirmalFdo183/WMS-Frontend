@@ -7,6 +7,7 @@ interface Product {
   id: number;
   name: string;
   material_code: string;
+  barcode: string;
   supplier_id: number;
   supplier?: {
     id: number;
@@ -26,6 +27,7 @@ interface BatchItem {
   product_id: number;
   product_name: string;
   material_code: string;
+  barcode: string;
   no_cases: number;
   pack_size: number;
   extra_units: number;
@@ -138,6 +140,7 @@ const NewSupply = () => {
           product_id: bs.product_id,
           product_name: bs.product?.name || "Unknown Product",
           material_code: bs.product?.material_code || "",
+          barcode: bs.product?.barcode || "",
           no_cases: bs.no_cases,
           pack_size: bs.pack_size,
           qty: bs.qty,
@@ -168,7 +171,8 @@ const NewSupply = () => {
     }
 
     const directMatch = products.find(
-      (p) => p.material_code.toLowerCase() === searchTerm.toLowerCase(),
+      (p) => (p.barcode && p.barcode.toLowerCase() === searchTerm.toLowerCase()) ||
+        p.material_code.toLowerCase() === searchTerm.toLowerCase(),
     );
 
     if (directMatch) {
@@ -180,6 +184,7 @@ const NewSupply = () => {
     const filtered = products.filter(
       (p) =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
         p.material_code.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     setSearchResults(filtered);
@@ -189,6 +194,7 @@ const NewSupply = () => {
       setNewProduct({
         ...newProduct,
         material_code: searchTerm,
+        barcode: searchTerm,
         supplier_id: Number(invoiceData.supplier_id),
       });
       setShowAddProductModal(true);
@@ -251,6 +257,7 @@ const NewSupply = () => {
       product_id: activeProduct.id,
       product_name: activeProduct.name,
       material_code: activeProduct.material_code,
+      barcode: activeProduct.barcode || "",
       no_cases: cases,
       pack_size: pSize,
       extra_units: extras,
@@ -362,6 +369,7 @@ const NewSupply = () => {
   const [newProduct, setNewProduct] = useState({
     name: "",
     material_code: "",
+    barcode: "",
     supplier_id: 0,
   });
 
@@ -375,7 +383,7 @@ const NewSupply = () => {
       setProducts([...products, res.data]);
       setShowAddProductModal(false);
       handleSelectProduct(res.data);
-      setNewProduct({ name: "", material_code: "", supplier_id: 0 });
+      setNewProduct({ name: "", material_code: "", barcode: "", supplier_id: 0 });
     } catch (err) {
       console.error("Error creating product:", err);
       alert("Failed to create product.");
@@ -634,16 +642,15 @@ const NewSupply = () => {
                       key={p.id}
                       id={`search-result-${index}`}
                       onClick={() => handleSelectProduct(p)}
-                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${
-                        highlightedIndex === index
+                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${highlightedIndex === index
                           ? "bg-blue-600 text-white"
                           : "hover:bg-blue-50 text-gray-700"
-                      }`}
+                        }`}
                     >
                       <span
                         className={`${highlightedIndex === index ? "text-blue-100" : "text-gray-400"} font-mono w-24 flex-shrink-0`}
                       >
-                        {p.material_code}
+                        {p.barcode || p.material_code}
                       </span>
                       <span className="flex-grow">{p.name}</span>
                       <span
@@ -681,7 +688,7 @@ const NewSupply = () => {
                           {item.product_name}
                         </p>
                         <p className="text-[10px] text-gray-400 mt-0.5">
-                          {item.material_code}
+                          {item.barcode || item.material_code}
                         </p>
                       </td>
                       <td className="px-4 py-4 text-center text-gray-500">
@@ -767,7 +774,7 @@ const NewSupply = () => {
                   {activeProduct.name}
                 </h4>
                 <p className="text-[10px] text-gray-400 font-mono mt-1">
-                  CODE: {activeProduct.material_code}
+                  BARCODE: {activeProduct.barcode || activeProduct.material_code}
                 </p>
               </div>
               <button
