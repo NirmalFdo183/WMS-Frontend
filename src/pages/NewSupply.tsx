@@ -264,7 +264,13 @@ const NewSupply = () => {
     const cases = Number(batchForm.no_cases || 0);
     const pSize = Number(batchForm.pack_size || 0);
     const extras = Number(batchForm.extra_units || 0);
+    const freeQty = Number(batchForm.free_qty || 0);
     const qty = cases * pSize + extras;
+
+    if (qty === 0 && freeQty === 0) {
+      alert("Please enter at least a quantity or free quantity.");
+      return;
+    }
 
     const itemData: BatchItem = {
       temp_id: editingItemId || Date.now(),
