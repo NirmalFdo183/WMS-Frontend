@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
 import { LogOut, Calendar, Menu } from "lucide-react";
 
 import { useWarehouse } from "../context/WarehouseContext";
@@ -15,7 +15,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Use global context for total warehouse value
+  // Use global context for total warehouse value hhhh
   const { totalValue } = useWarehouse();
 
   useEffect(() => {
