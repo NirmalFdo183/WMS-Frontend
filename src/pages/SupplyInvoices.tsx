@@ -649,36 +649,32 @@ const SupplyInvoices = () => {
             </div>
 
             <div className="p-5 sm:p-8 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 italic">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">
-                    Vehicle Info
-                  </p>
-                  <p className="font-black text-gray-800">
-                    {selectedLoading.truck?.licence_plate_no}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {selectedLoading.truck?.description}
-                  </p>
+              {/* Simple Details Header */}
+              <div className="grid grid-cols-3 gap-y-1 gap-x-4 text-[12px] sm:text-xs font-mono text-gray-800 mb-6">
+                <div>
+                  <span className="font-bold">Vehicle:</span>{" "}
+                  {selectedLoading.truck?.licence_plate_no}
                 </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">
-                    Route/Territory
-                  </p>
-                  <p className="font-black text-gray-800">
-                    {selectedLoading.route?.route_code}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {selectedLoading.route?.route_description}
-                  </p>
+                <div className="text-center">
+                  <span className="font-bold">Route:</span>{" "}
+                  {selectedLoading.route?.route_code}
                 </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 text-right">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">
-                    Loading Date
-                  </p>
-                  <p className="font-bold text-gray-800">
-                    Load: {selectedLoading.loading_date}
-                  </p>
+                <div className="text-right">
+                  <span className="font-bold">Date:</span>{" "}
+                  {selectedLoading.loading_date}
+                </div>
+
+                <div>
+                  <span className="font-bold">Driver:</span>{" "}
+                  {selectedLoading.driver?.name || "-"}
+                </div>
+                <div className="text-center">
+                  <span className="font-bold">Helper:</span>{" "}
+                  {selectedLoading.helper?.name || "-"}
+                </div>
+                <div className="text-right">
+                  <span className="font-bold">Col:</span>{" "}
+                  {selectedLoading.cash_collector?.name || "-"}
                 </div>
               </div>
 
@@ -693,17 +689,15 @@ const SupplyInvoices = () => {
                         <th className="px-6 py-4">Product Details</th>
                         <th className="px-4 py-4 text-center">Qty (Units)</th>
                         <th className="px-4 py-4 text-center">Free Qty</th>
-                        <th className="px-4 py-4 text-right">WH Price</th>
-                        <th className="px-4 py-4 text-right">Profit</th>
+                        <th className="px-4 py-4 text-right">Selling Price</th>
                         <th className="px-6 py-4 text-right">Subtotal</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 text-xs">
                       {selectedLoading.loading_items?.map((item: any) => {
-                        const cost = Number(item.batch_stock?.netprice || 0);
-                        const price = Number(item.wh_price || 0);
-                        const profitPerUnit = price - cost;
-                        const totalProfit = profitPerUnit * Number(item.qty);
+
+                        const price = Number(item.batch_stock?.retail_price || 0);
+
 
                         return (
                           <tr
@@ -733,9 +727,7 @@ const SupplyInvoices = () => {
                             <td className="px-4 py-4 text-right">
                               Rs. {price.toFixed(2)}
                             </td>
-                            <td className="px-4 py-4 text-right font-bold text-emerald-600">
-                              Rs. {totalProfit.toFixed(2)}
-                            </td>
+
                             <td className="px-6 py-4 text-right font-black text-blue-600">
                               Rs.{" "}
                               {(Number(item.qty) * price).toLocaleString(
@@ -750,31 +742,10 @@ const SupplyInvoices = () => {
                       })}
                     </tbody>
                     <tfoot>
-                      <tr className="bg-blue-50/10 border-t border-blue-100">
-                        <td
-                          colSpan={5}
-                          className="px-6 py-3 text-right text-[10px] font-black uppercase text-gray-400"
-                        >
-                          Estimated Profit
-                        </td>
-                        <td className="px-6 py-3 text-right text-xs font-bold text-emerald-600">
-                          Rs.{" "}
-                          {selectedLoading.loading_items
-                            ?.reduce((sum: number, item: any) => {
-                              const cost = Number(
-                                item.batch_stock?.netprice || 0,
-                              );
-                              const price = Number(item.wh_price || 0);
-                              return sum + (price - cost) * Number(item.qty);
-                            }, 0)
-                            .toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                            })}
-                        </td>
-                      </tr>
+
                       <tr className="bg-blue-600">
                         <td
-                          colSpan={5}
+                          colSpan={4}
                           className="px-6 py-4 text-right text-[10px] font-black uppercase text-blue-100"
                         >
                           Manifest Grand Total
@@ -785,7 +756,7 @@ const SupplyInvoices = () => {
                             ?.reduce(
                               (sum: number, item: any) =>
                                 sum +
-                                Number(item.qty) * Number(item.wh_price || 0),
+                                Number(item.qty) * Number(item.batch_stock?.retail_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
