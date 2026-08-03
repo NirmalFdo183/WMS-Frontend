@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Edit2, Trash2, Plus } from "lucide-react";
+import {
+  Edit2,
+  Trash2,
+  Plus,
+  Search,
+  MapPin,
+  Truck as TruckIcon,
+  Users,
+  UserCheck,
+} from "lucide-react";
 
 // Interfaces
 interface Route {
@@ -54,6 +63,7 @@ const Resources = () => {
 
   // UI States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Form State (Dynamic based on active tab)
   const [formData, setFormData] = useState<any>({});
@@ -116,14 +126,17 @@ const Resources = () => {
   };
 
   useEffect(() => {
-    if (activeTab === "routes") fetchRoutes();
-    else if (activeTab === "trucks") fetchTrucks();
-    else if (activeTab === "employees") fetchEmployees();
-    else if (activeTab === "sales-reps") {
-      fetchSalesReps();
-      fetchSuppliers();
-      fetchRoutes();
-    }
+    setLoading(true);
+    const loadData = async () => {
+      if (activeTab === "routes") await fetchRoutes();
+      else if (activeTab === "trucks") await fetchTrucks();
+      else if (activeTab === "employees") await fetchEmployees();
+      else if (activeTab === "sales-reps") {
+        await Promise.all([fetchSalesReps(), fetchSuppliers(), fetchRoutes()]);
+      }
+      setLoading(false);
+    };
+    loadData();
   }, [activeTab]);
 
   // Modal Handlers
@@ -203,21 +216,21 @@ const Resources = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
             Resource Management
           </h1>
-          <p className="text-gray-500 mt-1">
-            Manage Routes, Trucks, and Sales Representatives
+          <p className="text-gray-500 mt-2 text-lg">
+            Manage Routes, Trucks, Employees and Sales Representatives
           </p>
         </div>
         <button
           onClick={() => openModal()}
-          className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold transition-all hover:bg-blue-700 hover:shadow-lg shadow-blue-200 flex items-center gap-2 text-sm"
+          className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold transition-all hover:bg-blue-700 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
         >
-          <Plus size={18} />
+          <Plus size={20} />
           Add{" "}
           {activeTab === "routes"
             ? "Route"
@@ -230,442 +243,629 @@ const Resources = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">
-        <button
-          className={`px-4 py-2 font-medium text-sm focus:outline-none whitespace-nowrap ${activeTab === "routes" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
-          onClick={() => setActiveTab("routes")}
-        >
-          Routes
-        </button>
-        <button
-          className={`px-4 py-2 font-medium text-sm focus:outline-none whitespace-nowrap ${activeTab === "trucks" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
-          onClick={() => setActiveTab("trucks")}
-        >
-          Trucks
-        </button>
-        <button
-          className={`px-4 py-2 font-medium text-sm focus:outline-none whitespace-nowrap ${activeTab === "employees" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
-          onClick={() => setActiveTab("employees")}
-        >
-          Employees
-        </button>
-        <button
-          className={`px-4 py-2 font-medium text-sm focus:outline-none whitespace-nowrap ${activeTab === "sales-reps" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
-          onClick={() => setActiveTab("sales-reps")}
-        >
-          Sales Reps
-        </button>
+      <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm mb-10 overflow-x-auto no-scrollbar max-w-fit">
+        {[
+          { id: "routes", label: "Routes", icon: <MapPin size={16} /> },
+          { id: "trucks", label: "Trucks", icon: <TruckIcon size={16} /> },
+          { id: "employees", label: "Employees", icon: <Users size={16} /> },
+          {
+            id: "sales-reps",
+            label: "Sales Reps",
+            icon: <UserCheck size={16} />,
+          },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeTab === tab.id
+                ? "bg-blue-600 text-white shadow-md shadow-blue-100"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+            onClick={() => setActiveTab(tab.id as any)}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Content Area */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         {activeTab === "routes" && (
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-4">Route Code</th>
-                <th className="px-6 py-4">Description</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {routes.map((r) => (
-                <tr key={r.id}>
-                  <td className="px-6 py-4 font-mono">{r.route_code}</td>
-                  <td className="px-6 py-4">{r.route_description}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openModal(r)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                        title="Edit Route"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(r.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                        title="Delete Route"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[600px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <th className="px-8 py-4">Route Information</th>
+                  <th className="px-8 py-4">Description</th>
+                  <th className="px-8 py-4 text-right">Actions</th>
                 </tr>
-              ))}
-              {routes.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-6 py-8 text-center text-gray-400"
-                  >
-                    No routes found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      Loading routes...
+                    </td>
+                  </tr>
+                ) : routes.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      No routes found
+                    </td>
+                  </tr>
+                ) : (
+                  routes.map((r) => (
+                    <tr
+                      key={r.id}
+                      className="hover:bg-blue-50/30 transition-colors group"
+                    >
+                      <td className="px-8 py-5">
+                        <span className="font-mono font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl text-sm border border-blue-100 shadow-sm shadow-blue-50">
+                          {r.route_code}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5 font-bold text-gray-700 text-sm">
+                        {r.route_description}
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-4 group-hover:translate-x-0">
+                          <button
+                            onClick={() => openModal(r)}
+                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100 active:scale-90"
+                            title="Edit Route"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(r.id)}
+                            className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 active:scale-90"
+                            title="Delete Route"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {activeTab === "trucks" && (
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-4">License Plate</th>
-                <th className="px-6 py-4">Description</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {trucks.map((t) => (
-                <tr key={t.id}>
-                  <td className="px-6 py-4 font-mono">{t.licence_plate_no}</td>
-                  <td className="px-6 py-4">{t.description || "-"}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openModal(t)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                        title="Edit Truck"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(t.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                        title="Delete Truck"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[600px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <th className="px-8 py-4">Vehicle Identification</th>
+                  <th className="px-8 py-4">Description</th>
+                  <th className="px-8 py-4 text-right">Actions</th>
                 </tr>
-              ))}
-              {trucks.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-6 py-8 text-center text-gray-400"
-                  >
-                    No trucks found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      Loading trucks...
+                    </td>
+                  </tr>
+                ) : trucks.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      No trucks found
+                    </td>
+                  </tr>
+                ) : (
+                  trucks.map((t) => (
+                    <tr
+                      key={t.id}
+                      className="hover:bg-blue-50/30 transition-colors group"
+                    >
+                      <td className="px-8 py-5">
+                        <span className="font-mono font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl text-sm border border-blue-100 shadow-sm shadow-blue-50">
+                          {t.licence_plate_no}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5 font-bold text-gray-700 text-sm">
+                        {t.description || "-"}
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-4 group-hover:translate-x-0">
+                          <button
+                            onClick={() => openModal(t)}
+                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100 active:scale-90"
+                            title="Edit Truck"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(t.id)}
+                            className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 active:scale-90"
+                            title="Delete Truck"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {activeTab === "employees" && (
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-4">Name</th>
-                <th className="px-6 py-4">NIC</th>
-                <th className="px-6 py-4">Phone</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {employees.map((e) => (
-                <tr key={e.id}>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {e.name}
-                  </td>
-                  <td className="px-6 py-4 font-mono text-sm">{e.nic}</td>
-                  <td className="px-6 py-4">{e.phoneno}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openModal(e)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                        title="Edit Employee"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(e.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                        title="Delete Employee"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[700px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <th className="px-8 py-4">Employee Details</th>
+                  <th className="px-8 py-4 text-center">
+                    NIC / Identification
+                  </th>
+                  <th className="px-8 py-4">Contact</th>
+                  <th className="px-8 py-4 text-right">Actions</th>
                 </tr>
-              ))}
-              {employees.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-8 text-center text-gray-400"
-                  >
-                    No employees found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      Loading employees...
+                    </td>
+                  </tr>
+                ) : employees.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      No employees found
+                    </td>
+                  </tr>
+                ) : (
+                  employees.map((e) => (
+                    <tr
+                      key={e.id}
+                      className="hover:bg-blue-50/30 transition-colors group"
+                    >
+                      <td className="px-8 py-5">
+                        <p className="font-black text-gray-900 text-sm tracking-tight">
+                          {e.name}
+                        </p>
+                      </td>
+                      <td className="px-8 py-5 text-center">
+                        <span className="font-mono font-black text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg text-xs border border-gray-100">
+                          {e.nic}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5 font-bold text-gray-700 text-sm italic">
+                        {e.phoneno}
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-4 group-hover:translate-x-0">
+                          <button
+                            onClick={() => openModal(e)}
+                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100 active:scale-90"
+                            title="Edit Employee"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(e.id)}
+                            className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 active:scale-90"
+                            title="Delete Employee"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {activeTab === "sales-reps" && (
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-4">Rep ID</th>
-                <th className="px-6 py-4">Name</th>
-                <th className="px-6 py-4">Supplier</th>
-                <th className="px-6 py-4">Route</th>
-                <th className="px-6 py-4">Contact</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {salesReps.map((s) => (
-                <tr key={s.id}>
-                  <td className="px-6 py-4 font-mono text-sm">{s.rep_id}</td>
-                  <td className="px-6 py-4 font-bold">{s.name}</td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {s.supplier?.name}
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {s.route?.route_code}
-                  </td>
-                  <td className="px-6 py-4">{s.contact}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openModal(s)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
-                        title="Edit Sales Rep"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(s.id)}
-                        className="text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-                        title="Delete Sales Rep"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[900px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <th className="px-8 py-4">Representative</th>
+                  <th className="px-8 py-4">Supplier</th>
+                  <th className="px-8 py-4 text-center">Route Allocation</th>
+                  <th className="px-8 py-4">Direct Contact</th>
+                  <th className="px-8 py-4 text-right">Actions</th>
                 </tr>
-              ))}
-              {salesReps.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-8 text-center text-gray-400"
-                  >
-                    No sales reps found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      Loading sales reps...
+                    </td>
+                  </tr>
+                ) : salesReps.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-8 py-12 text-center text-gray-400 font-medium"
+                    >
+                      No sales representatives found
+                    </td>
+                  </tr>
+                ) : (
+                  salesReps.map((s) => (
+                    <tr
+                      key={s.id}
+                      className="hover:bg-blue-50/30 transition-colors group"
+                    >
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black text-xs border border-blue-100">
+                            {s.rep_id}
+                          </div>
+                          <p className="font-black text-gray-900 text-sm tracking-tight">
+                            {s.name}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 font-bold text-gray-700 text-sm">
+                        {s.supplier?.name || "N/A"}
+                      </td>
+                      <td className="px-8 py-5 text-center">
+                        <span className="font-mono font-black text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-lg text-[10px] border border-blue-100 uppercase">
+                          {s.route?.route_code || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5 font-bold text-gray-700 text-sm">
+                        {s.contact || "-"}
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-4 group-hover:translate-x-0">
+                          <button
+                            onClick={() => openModal(s)}
+                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100 active:scale-90"
+                            title="Edit Sales Rep"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(s.id)}
+                            className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 active:scale-90"
+                            title="Delete Sales Rep"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
-            <h2 className="text-xl font-bold mb-4">
-              {editingId ? "Edit" : "Add"}{" "}
-              {activeTab === "routes"
-                ? "Route"
-                : activeTab === "trucks"
-                  ? "Truck"
-                  : activeTab === "employees"
-                    ? "Employee"
-                    : "Sales Rep"}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {activeTab === "routes" && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Route Code"
-                    required
-                    value={formData.route_code || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, route_code: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    required
-                    value={formData.route_description || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        route_description: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                </>
-              )}
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 text-sm tracking-tight">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
+            <div className="px-8 py-6 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight leading-none">
+                  {editingId ? "Edit Resource" : "Create New Resource"}
+                </h2>
+                <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5 leading-none">
+                  {activeTab.replace("-", " ")} Registry Entry
+                </p>
+              </div>
+              <button
+                onClick={closeModal}
+                className="h-10 w-10 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all"
+              >
+                <Plus size={24} className="rotate-45" />
+              </button>
+            </div>
 
-              {activeTab === "trucks" && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="License Plate No"
-                    required
-                    value={formData.licence_plate_no || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        licence_plate_no: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Description (Optional)"
-                    value={formData.description || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg"
-                  />
-                </>
-              )}
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <div className="grid grid-cols-1 gap-6">
+                {activeTab === "routes" && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                        Route Allocation Code
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. RT-KOL-01"
+                        required
+                        value={formData.route_code || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            route_code: e.target.value,
+                          })
+                        }
+                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                        Operational Description
+                      </label>
+                      <textarea
+                        placeholder="Describe coverage area and landmarks..."
+                        required
+                        rows={3}
+                        value={formData.route_description || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            route_description: e.target.value,
+                          })
+                        }
+                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900 no-scrollbar resize-none"
+                      />
+                    </div>
+                  </>
+                )}
 
-              {activeTab === "employees" && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    required
-                    value={formData.name || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                  <input
-                    type="text"
-                    placeholder="NIC Number"
-                    required
-                    value={formData.nic || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nic: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone Number"
-                    required
-                    value={formData.phoneno || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phoneno: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </>
-              )}
+                {activeTab === "trucks" && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                        License Plate Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="ABC-1234"
+                        required
+                        value={formData.licence_plate_no || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            licence_plate_no: e.target.value,
+                          })
+                        }
+                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                        Vehicle Specifications
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="E.g. 5 Ton Freezer Truck"
+                        value={formData.description || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            description: e.target.value,
+                          })
+                        }
+                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                      />
+                    </div>
+                  </>
+                )}
 
-              {activeTab === "sales-reps" && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Rep ID"
-                      required
-                      value={formData.rep_id || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, rep_id: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Full Name"
-                      required
-                      value={formData.name || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg"
-                    />
+                {activeTab === "employees" && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                        Legal Full Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Johnathan Doe"
+                        required
+                        value={formData.name || ""}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
+                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          NIC Entry
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="199200000000"
+                          required
+                          value={formData.nic || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, nic: e.target.value })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Direct Mobile
+                        </label>
+                        <input
+                          type="tel"
+                          placeholder="077-XXXXXXX"
+                          required
+                          value={formData.phoneno || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              phoneno: e.target.value,
+                            })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeTab === "sales-reps" && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Registry ID
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="REP-01"
+                          required
+                          value={formData.rep_id || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, rep_id: e.target.value })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Rep Name
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Display Name"
+                          required
+                          value={formData.name || ""}
+                          onChange={(e) =>
+                            setFormData({ ...formData, name: e.target.value })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Supplier Entity
+                        </label>
+                        <select
+                          required
+                          value={formData.supplier_id || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              supplier_id: e.target.value,
+                            })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900 bg-white"
+                        >
+                          <option value="">Select Supplier</option>
+                          {suppliers.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Assigned Route
+                        </label>
+                        <select
+                          required
+                          value={formData.route_id || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              route_id: e.target.value,
+                            })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900 bg-white"
+                        >
+                          <option value="">Select Route</option>
+                          {routes.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.route_code}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Primary Contact
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Contact No"
+                          value={formData.contact || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              contact: e.target.value,
+                            })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                          Joined Date
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.join_date || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              join_date: e.target.value,
+                            })
+                          }
+                          className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-900 px-w-full"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <select
-                      required
-                      value={formData.supplier_id || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          supplier_id: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg bg-white"
-                    >
-                      <option value="">Select Supplier</option>
-                      {suppliers.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      required
-                      value={formData.route_id || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, route_id: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg bg-white"
-                    >
-                      <option value="">Select Route</option>
-                      {routes.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.route_code}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Contact No"
-                      value={formData.contact || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, contact: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg"
-                    />
-                    <input
-                      type="date"
-                      placeholder="Join Date"
-                      value={formData.join_date || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, join_date: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border rounded-lg"
-                    />
-                  </div>
-                </>
-              )}
+                )}
+              </div>
 
-              <div className="flex justify-end gap-2 mt-4">
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 bg-gray-100 rounded-lg"
+                  className="px-6 py-3 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-all active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  className="px-10 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95"
                 >
-                  Save
+                  {editingId ? "Save Changes" : "Create Resource"}
                 </button>
               </div>
             </form>
