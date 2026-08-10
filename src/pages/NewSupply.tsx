@@ -143,7 +143,7 @@ const NewSupply = () => {
           barcode: bs.product?.barcode || "",
           no_cases: bs.no_cases,
           pack_size: bs.pack_size,
-          qty: bs.qty,
+          qty: bs.remain_qty,
           retail_price: bs.retail_price,
           netprice: bs.netprice,
           expiry_date: bs.expiry_date || "",

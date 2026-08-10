@@ -40,7 +40,7 @@ interface SalesRep {
 
 interface BatchStock {
   id: number;
-  qty: number; // Available quantity
+  remain_qty: number; // Available quantity
   free_qty: number; // Free quantity
   no_cases: number;
   pack_size: number;
@@ -185,7 +185,7 @@ const Loading = () => {
       const p = b.product;
       if (!p) return false;
       // Filter out batches with no stock at all
-      if (b.qty <= 0 && (b.free_qty || 0) <= 0) return false;
+      if (b.remain_qty <= 0 && (b.free_qty || 0) <= 0) return false;
 
       return (
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -288,9 +288,9 @@ const Loading = () => {
     }
 
     // Validate against total available pool in 'qty'
-    if (totalRequested > (selectedBatch.qty || 0)) {
+    if (totalRequested > (selectedBatch.remain_qty || 0)) {
       alert(
-        `Insufficient Stock! Total Available: ${selectedBatch.qty}, Requested: ${totalRequested}`,
+        `Insufficient Stock! Total Available: ${selectedBatch.remain_qty}, Requested: ${totalRequested}`,
       );
       return;
     }
@@ -957,8 +957,7 @@ const Loading = () => {
                             <span
                               className={`text-xs font-black uppercase tracking-widest ${selectedIndex === index ? "text-blue-100" : "text-gray-800"}`}
                             >
-                              Availability: {batch.qty + (batch.free_qty || 0)}{" "}
-                              Units
+                              Availability: {batch.remain_qty} Units
                               <span className="mx-2 opacity-30">|</span>
                               <span className="opacity-60">
                                 Initial:{" "}
@@ -976,7 +975,8 @@ const Loading = () => {
                                     : "text-blue-500"
                                 }
                               >
-                                Normal: {batch.qty}
+                                Normal:{" "}
+                                {batch.remain_qty - (batch.free_qty || 0)}
                               </span>
                               {batch.free_qty > 0 && (
                                 <span
@@ -1071,9 +1071,7 @@ const Loading = () => {
                               )}
                             </div>
                             <div className="text-[8px] font-black text-gray-400 uppercase tracking-tighter mt-1 space-x-2">
-                              <span>
-                                Total: {item.qty + (item.free_qty || 0)} Units
-                              </span>
+                              <span>Total: {item.qty} Units</span>
                             </div>
                           </td>
                           <td className="px-4 py-4 text-center">
@@ -1090,7 +1088,7 @@ const Loading = () => {
                             </span>
                           </td>
                           <td className="px-4 py-4 text-center font-black text-blue-700">
-                            {item.qty + (item.free_qty || 0)}
+                            {item.qty}
                           </td>
                           <td className="px-4 py-4 text-right font-black text-gray-900 font-mono">
                             Rs.{" "}
@@ -1222,8 +1220,7 @@ const Loading = () => {
                       Total Avail.
                     </p>
                     <p className="font-black text-blue-600">
-                      {(selectedBatch?.qty || 0) +
-                        (selectedBatch?.free_qty || 0)}
+                      {selectedBatch?.remain_qty || 0}
                     </p>
                   </div>
                 </div>
@@ -1243,8 +1240,7 @@ const Loading = () => {
                     <option value="">-- Choose Batch --</option>
                     {productBatches.map((b) => (
                       <option key={b.id} value={b.id}>
-                        Exp: {b.expiry_date} | Avail:{" "}
-                        {b.qty + (b.free_qty || 0)} units
+                        Exp: {b.expiry_date} | Avail: {b.remain_qty} units
                       </option>
                     ))}
                   </select>

@@ -38,7 +38,7 @@ interface BatchStock {
   no_cases: number;
   pack_size: number;
   extra_units: number;
-  qty: number;
+  remain_qty: number;
   free_qty: number;
   initial_free_qty: number;
   netprice: number;
@@ -518,13 +518,10 @@ const Product = () => {
                     </div>
                     <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                       <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
-                        Total Qty
+                        Total Remain Qty
                       </p>
                       <p className="text-xl font-black text-blue-700">
-                        {stockDetails.reduce(
-                          (sum, b) => sum + b.qty + (b.free_qty || 0),
-                          0,
-                        )}
+                        {stockDetails.reduce((sum, b) => sum + b.remain_qty, 0)}
                       </p>
                     </div>
                   </div>
@@ -546,7 +543,8 @@ const Product = () => {
                           <tr
                             key={batch.id}
                             className={`transition-colors border-b border-gray-50 last:border-0 ${
-                              batch.qty === 0 && (batch.free_qty || 0) > 0
+                              batch.remain_qty === 0 &&
+                              (batch.free_qty || 0) > 0
                                 ? "bg-emerald-50/60 hover:bg-emerald-100/60"
                                 : "hover:bg-gray-50/50"
                             }`}
@@ -593,9 +591,9 @@ const Product = () => {
                             <td className="px-4 py-4 text-center">
                               <div className="flex flex-col items-center gap-1">
                                 <span
-                                  className={`font-black px-2.5 py-1 rounded-lg ${batch.qty > 0 ? "text-gray-900 bg-gray-100" : "text-gray-400 bg-gray-50"}`}
+                                  className={`font-black px-2.5 py-1 rounded-lg ${batch.remain_qty > 0 ? "text-gray-900 bg-gray-100" : "text-gray-400 bg-gray-50"}`}
                                 >
-                                  {batch.qty}
+                                  {batch.remain_qty}
                                 </span>
                               </div>
                             </td>
