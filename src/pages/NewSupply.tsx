@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Package } from "lucide-react";
 
 interface Product {
   id: number;
@@ -191,17 +192,6 @@ const NewSupply = () => {
     );
     setSearchResults(filtered);
     setHighlightedIndex(-1);
-
-    if (searchTerm.length > 5 && filtered.length === 0) {
-      setNewProduct({
-        ...newProduct,
-        material_code: searchTerm,
-        barcode: searchTerm,
-        supplier_id: Number(invoiceData.supplier_id),
-      });
-      setShowAddProductModal(true);
-      setSearchTerm("");
-    }
   }, [searchTerm, products]);
 
   const handleSelectProduct = (product: Product) => {
@@ -228,6 +218,17 @@ const NewSupply = () => {
         handleSelectProduct(searchResults[highlightedIndex]);
       } else if (searchResults.length === 1) {
         handleSelectProduct(searchResults[0]);
+      } else if (searchResults.length === 0 && searchTerm.trim().length > 0) {
+        // Trigger Add New Product if no results and Enter is pressed
+        setNewProduct({
+          ...newProduct,
+          name: isNaN(Number(searchTerm)) ? searchTerm : "",
+          material_code: searchTerm,
+          barcode: searchTerm,
+          supplier_id: Number(invoiceData.supplier_id),
+        });
+        setShowAddProductModal(true);
+        setSearchTerm("");
       }
     } else if (e.key === "Escape") {
       setSearchResults([]);
@@ -363,7 +364,7 @@ const NewSupply = () => {
       await refreshTotalValue();
       alert("Supply record successfully saved!");
       resetForm();
-      navigate("/dashboard");
+      navigate("/supply-invoices", { state: { activeTab: "supply" } });
     } catch (err: any) {
       console.error("Supply save error:", err);
       alert(err.response?.data?.message || "Failed to save supply record.");
@@ -666,6 +667,39 @@ const NewSupply = () => {
                       </span>
                     </div>
                   ))}
+                </div>
+              )}
+              {searchTerm.trim().length > 0 && searchResults.length === 0 && (
+                <div className="mt-2 p-4 bg-orange-50 rounded-xl border border-orange-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                      <Package size={18} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">
+                        Product "{searchTerm}" not found
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        Press Enter or click the button to register it.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setNewProduct({
+                        ...newProduct,
+                        name: isNaN(Number(searchTerm)) ? searchTerm : "",
+                        material_code: searchTerm,
+                        barcode: searchTerm,
+                        supplier_id: Number(invoiceData.supplier_id),
+                      });
+                      setShowAddProductModal(true);
+                      setSearchTerm("");
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    Register New
+                  </button>
                 </div>
               )}
             </div>
@@ -1077,13 +1111,30 @@ const NewSupply = () => {
                 />
               </div>
               <div>
-                <label className="font-bold text-gray-600 block mb-1">
+                <label className="font-bold text-gray-600 block mb-1 text-xs">
+                  Barcode
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-2.5 bg-gray-50 border rounded-xl outline-none font-mono font-bold text-sm focus:border-blue-500"
+                  value={newProduct.barcode}
+                  onChange={(e) =>
+                    setNewProduct({
+                      ...newProduct,
+                      barcode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="font-bold text-gray-600 block mb-1 text-xs">
                   Material Code
                 </label>
                 <input
                   type="text"
                   required
-                  className="w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none font-mono font-bold"
+                  className="w-full px-4 py-2.5 bg-gray-50 border rounded-xl outline-none font-mono font-bold text-sm focus:border-blue-500"
                   value={newProduct.material_code}
                   onChange={(e) =>
                     setNewProduct({
