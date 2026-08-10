@@ -105,15 +105,15 @@ const Shops = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="max-w-7xl mx-auto py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Shop Management</h1>
-          <p className="text-gray-500 mt-1">Manage shops and assign routes</p>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Shop Management</h1>
+          <p className="text-gray-500 mt-2 text-lg">Manage shops and assign routes</p>
         </div>
         <button
           onClick={() => openModal()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-bold transition-all hover:bg-gradient-to-r hover:from-blue-700 hover:to-indigo-800 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
         >
           <span>+</span> Add Shop
         </button>

@@ -314,19 +314,21 @@ const SupplyInvoices = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-          Invoices
-        </h1>
-        <p className="text-gray-500 text-sm">
-          View and manage all types of invoices
-        </p>
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg inline-block">
-          <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">
+    <div className="max-w-7xl mx-auto py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+            Invoices & Manifests
+          </h1>
+          <p className="text-gray-500 mt-2 text-lg">
+            View and manage all types of invoices and delivery manifests.
+          </p>
+        </div>
+        <div className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl text-white shadow-xl shadow-blue-100">
+          <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-blue-100">
             Total Warehouse Value
           </p>
-          <p className="text-xl font-black text-blue-800">
+          <p className="text-2xl font-black">
             Rs.{" "}
             {Number(totalValue).toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -335,26 +337,20 @@ const SupplyInvoices = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">
-        <button
-          className={`px-4 sm:px-6 py-3 font-medium text-sm focus:outline-none whitespace-nowrap transition-all ${activeTab === "supply" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-          onClick={() => setActiveTab("supply")}
-        >
-          Supply Invoices
-        </button>
-        <button
-          className={`px-4 sm:px-6 py-3 font-medium text-sm focus:outline-none whitespace-nowrap transition-all ${activeTab === "shop" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-          onClick={() => setActiveTab("shop")}
-        >
-          Shop Invoices
-        </button>
-        <button
-          className={`px-4 sm:px-6 py-3 font-medium text-sm focus:outline-none whitespace-nowrap transition-all ${activeTab === "loading" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-          onClick={() => setActiveTab("loading")}
-        >
-          Loading Invoices
-        </button>
+      <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm mb-10 overflow-x-auto no-scrollbar max-w-fit">
+        {[
+          { id: "supply", label: "Supply Invoices" },
+          { id: "shop", label: "Shop Invoices" },
+          { id: "loading", label: "Loading Invoices" }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab.id ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-500 hover:bg-gray-50"}`}
+            onClick={() => setActiveTab(tab.id as any)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {activeTab === "supply" && (
@@ -912,7 +908,7 @@ const SupplyInvoices = () => {
                               <p className="font-bold text-gray-800">
                                 {Math.floor(
                                   (item.qty - (item.free_qty || 0)) /
-                                    (item.batch_stock?.pack_size || 1),
+                                  (item.batch_stock?.pack_size || 1),
                                 )}{" "}
                                 × {item.batch_stock?.pack_size || 1} +{" "}
                                 {(item.qty - (item.free_qty || 0)) %
@@ -990,7 +986,7 @@ const SupplyInvoices = () => {
                                 sum +
                                 (Number(item.qty) -
                                   Number(item.free_qty || 0)) *
-                                  Number(item.net_price || 0),
+                                Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {

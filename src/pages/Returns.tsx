@@ -117,26 +117,26 @@ const Returns = () => {
     );
 
     return (
-        <div className="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-            <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <RefreshCw className="text-orange-600" />
+        <div className="max-w-7xl mx-auto py-4">
+            <div className="mb-4">
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                    <RefreshCw className="text-blue-600" />
                     Returns Management
                 </h1>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-gray-500 mt-2 text-lg">
                     Process stock returns from delivery trucks and view return history.
                 </p>
             </div>
 
-            <div className="flex border-b border-gray-200 mb-6">
+            <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-x-auto no-scrollbar max-w-fit">
                 <button
-                    className={`px-6 py-3 font-medium text-sm focus:outline-none transition-all ${activeTab === "new" ? "border-b-2 border-orange-600 text-orange-600 font-bold" : "text-gray-500 hover:text-gray-700"}`}
+                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "new" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-500 hover:bg-gray-50"}`}
                     onClick={() => setActiveTab("new")}
                 >
                     Create New Return
                 </button>
                 <button
-                    className={`px-6 py-3 font-medium text-sm focus:outline-none transition-all ${activeTab === "history" ? "border-b-2 border-orange-600 text-orange-600 font-bold" : "text-gray-500 hover:text-gray-700"}`}
+                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "history" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-500 hover:bg-gray-50"}`}
                     onClick={() => setActiveTab("history")}
                 >
                     Return History

@@ -225,19 +225,19 @@ const Product = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="max-w-7xl mx-auto py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            Products
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+            Inventory Management
           </h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">
-            Manage your inventory items
+          <p className="text-gray-500 mt-2 text-lg">
+            Manage your materials, material codes, and physical inventory levels.
           </p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-xl font-bold transition-all hover:bg-blue-700 hover:shadow-lg shadow-blue-200 flex items-center justify-center gap-2 text-sm sm:text-base"
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-bold transition-all hover:bg-gradient-to-r hover:from-blue-700 hover:to-indigo-800 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
         >
           <Plus size={20} /> Add Product
         </button>
@@ -613,8 +613,8 @@ const Product = () => {
                               </td>
                               <td className="px-4 py-4 text-center">
                                 <span className={`font-bold px-2.5 py-1 rounded-lg ${(batch.returned_qty || 0) > 0
-                                    ? "text-orange-700 bg-orange-100"
-                                    : "text-gray-300"
+                                  ? "text-orange-700 bg-orange-100"
+                                  : "text-gray-300"
                                   }`}>
                                   {batch.returned_qty || "-"}
                                 </span>
@@ -623,8 +623,8 @@ const Product = () => {
                                 <div className="flex flex-col items-center gap-1">
                                   <span
                                     className={`font-black px-2.5 py-1 rounded-lg ${batch.remain_qty > 0
-                                        ? "text-emerald-700 bg-emerald-100"
-                                        : "text-gray-400 bg-gray-50"
+                                      ? "text-emerald-700 bg-emerald-100"
+                                      : "text-gray-400 bg-gray-50"
                                       }`}
                                   >
                                     {batch.remain_qty}
