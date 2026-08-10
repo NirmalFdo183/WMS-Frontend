@@ -720,7 +720,7 @@ const SupplyInvoices = () => {
                     <thead>
                       <tr className="bg-gray-50 text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">
                         <th className="px-6 py-4">Product Details</th>
-                        <th className="px-4 py-4 text-center">Qty (Units)</th>
+                        <th className="px-4 py-4 text-center">Batch Vol.</th>
                         <th className="px-4 py-4 text-center">Free Qty</th>
                         <th className="px-4 py-4 text-right">Net Price</th>
                         <th className="px-4 py-4 text-right text-orange-600">
@@ -750,8 +750,20 @@ const SupplyInvoices = () => {
                                   item.batch_stock?.product?.material_code}
                               </p>
                             </td>
-                            <td className="px-4 py-4 text-center font-black">
-                              {item.qty}
+                            <td className="px-4 py-4 text-center">
+                              <p className="font-bold text-gray-800">
+                                {Math.floor(
+                                  (item.qty - (item.free_qty || 0)) /
+                                    (item.batch_stock?.pack_size || 1),
+                                )}{" "}
+                                × {item.batch_stock?.pack_size || 1} +{" "}
+                                {(item.qty - (item.free_qty || 0)) %
+                                  (item.batch_stock?.pack_size || 1)}{" "}
+                                + {item.free_qty || 0}
+                              </p>
+                              <p className="text-[10px] text-blue-600 font-black uppercase tracking-tighter mt-0.5 bg-blue-50 px-2 py-0.5 rounded-md inline-block">
+                                {item.qty} Total Units
+                              </p>
                             </td>
                             <td className="px-4 py-4 text-center">
                               {item.free_qty > 0 ? (
@@ -770,12 +782,13 @@ const SupplyInvoices = () => {
                             </td>
                             <td className="px-6 py-4 text-right font-black text-blue-600">
                               Rs.{" "}
-                              {(Number(item.qty) * netPrice).toLocaleString(
-                                undefined,
-                                {
-                                  minimumFractionDigits: 2,
-                                },
-                              )}
+                              {(
+                                (Number(item.qty) -
+                                  Number(item.free_qty || 0)) *
+                                netPrice
+                              ).toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                              })}
                             </td>
                           </tr>
                         );
@@ -817,7 +830,9 @@ const SupplyInvoices = () => {
                             ?.reduce(
                               (sum: number, item: any) =>
                                 sum +
-                                Number(item.qty) * Number(item.net_price || 0),
+                                (Number(item.qty) -
+                                  Number(item.free_qty || 0)) *
+                                  Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
