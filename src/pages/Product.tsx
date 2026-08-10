@@ -22,6 +22,8 @@ interface Product {
     name: string;
   };
   stock?: number;
+  shelf_stock?: number;
+  pending_stock?: number;
   status?: "In Stock" | "Low Stock" | "Out of Stock";
   created_at?: string;
   updated_at?: string;
@@ -76,10 +78,13 @@ const Product = () => {
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [stockLoading, setStockLoading] = useState(false);
 
-  const getProductStatus = (stock: number | undefined) => {
-    const s = stock || 0;
-    if (s > 10) return "In Stock";
-    if (s > 0) return "Low Stock";
+  const getProductStatus = (prod: Product) => {
+    const shelfStock = prod.shelf_stock || 0;
+    const pendingStock = prod.pending_stock || 0;
+    const totalAvailable = shelfStock + pendingStock;
+
+    if (totalAvailable > 50) return "In Stock";
+    if (totalAvailable > 0) return "Low Stock";
     return "Out of Stock";
   };
 
@@ -279,8 +284,8 @@ const Product = () => {
                   <tr
                     key={product.id}
                     className={`transition-colors group ${
-                      getProductStatus(product.stock) === "Low Stock" ||
-                      getProductStatus(product.stock) === "Out of Stock"
+                      getProductStatus(product) === "Low Stock" ||
+                      getProductStatus(product) === "Out of Stock"
                         ? "bg-red-50/50 hover:bg-red-100/50"
                         : "hover:bg-gray-50/50"
                     }`}
@@ -303,14 +308,23 @@ const Product = () => {
                     <td className="px-4 sm:px-6 py-4 text-gray-600 text-sm hidden sm:table-cell">
                       {product.supplier?.name || "N/A"}
                     </td>
-                    <td className="px-4 sm:px-6 py-4 text-gray-800 font-bold text-sm">
-                      {product.stock || 0}
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-gray-900 font-bold text-sm">
+                          {product.shelf_stock || 0}
+                        </span>
+                        {Number(product.pending_stock) > 0 && (
+                          <span className="text-[10px] text-blue-500 font-black uppercase tracking-tighter">
+                            {product.pending_stock} On Truck
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 sm:px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wide ${getStatusColor(getProductStatus(product.stock))}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wide ${getStatusColor(getProductStatus(product))}`}
                       >
-                        {getProductStatus(product.stock)}
+                        {getProductStatus(product)}
                       </span>
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right">
@@ -518,10 +532,27 @@ const Product = () => {
                     </div>
                     <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                       <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
-                        Total Remain Qty
+                        Shelf Stock
                       </p>
                       <p className="text-xl font-black text-blue-700">
-                        {stockDetails.reduce((sum, b) => sum + b.remain_qty, 0)}
+                        {viewingProduct?.shelf_stock || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-1">
+                        On Truck (Pending)
+                      </p>
+                      <p className="text-xl font-black text-orange-700">
+                        {viewingProduct?.pending_stock || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                      <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                        Total Available
+                      </p>
+                      <p className="text-xl font-black text-emerald-700">
+                        {(viewingProduct?.shelf_stock || 0) +
+                          (viewingProduct?.pending_stock || 0)}
                       </p>
                     </div>
                   </div>
