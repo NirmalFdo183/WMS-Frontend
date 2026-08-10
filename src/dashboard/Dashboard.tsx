@@ -84,22 +84,20 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
-      <header className="mb-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-              Dashboard
-            </h1>
-            <p className="text-gray-500 mt-2 text-lg">
-              Welcome back,{" "}
-              <span className="font-bold text-blue-600">
-                {user?.name || "User"}
-              </span>
-              . Here's what's happening today.
-            </p>
-          </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-gray-500 mt-2 text-lg">
+            Welcome back,{" "}
+            <span className="font-bold text-blue-600">
+              {user?.name || "User"}
+            </span>
+            . Here's what's happening today.
+          </p>
         </div>
-      </header>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

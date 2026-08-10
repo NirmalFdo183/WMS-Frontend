@@ -648,10 +648,11 @@ const NewSupply = () => {
                       key={p.id}
                       id={`search-result-${index}`}
                       onClick={() => handleSelectProduct(p)}
-                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${highlightedIndex === index
-                        ? "bg-blue-600 text-white"
-                        : "hover:bg-blue-50 text-gray-700"
-                        }`}
+                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${
+                        highlightedIndex === index
+                          ? "bg-blue-600 text-white"
+                          : "hover:bg-blue-50 text-gray-700"
+                      }`}
                     >
                       <span
                         className={`${highlightedIndex === index ? "text-blue-100" : "text-gray-400"} font-mono w-24 flex-shrink-0`}

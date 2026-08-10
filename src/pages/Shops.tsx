@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 
 interface Route {
   id: number;
@@ -105,75 +106,99 @@ const Shops = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8">
+    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Shop Management</h1>
-          <p className="text-gray-500 mt-2 text-lg">Manage shops and assign routes</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+            Shop Management
+          </h1>
+          <p className="text-gray-500 mt-2 text-lg">
+            Manage shops and assign routes
+          </p>
         </div>
         <button
           onClick={() => openModal()}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-bold transition-all hover:bg-gradient-to-r hover:from-blue-700 hover:to-indigo-800 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
+          className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold transition-all hover:bg-blue-700 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
         >
-          <span>+</span> Add Shop
+          <Plus size={20} /> Add Shop
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50/50">
-            <tr>
-              <th className="px-6 py-4">Shop Code</th>
-              <th className="px-6 py-4">Shop Name</th>
-              <th className="px-6 py-4">Route</th>
-              <th className="px-6 py-4">Address</th>
-              <th className="px-6 py-4">Phone</th>
-              <th className="px-6 py-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {shops.map((shop) => (
-              <tr key={shop.id}>
-                <td className="px-6 py-4 font-mono font-medium">
-                  {shop.shop_code}
-                </td>
-                <td className="px-6 py-4">{shop.shop_name}</td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    {shop.route_code}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-gray-500">
-                  {shop.Address || "-"}
-                </td>
-                <td className="px-6 py-4 text-gray-500">
-                  {shop.phoneno || "-"}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button
-                    onClick={() => openModal(shop)}
-                    className="text-blue-600 mr-2 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(shop.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <th className="px-8 py-4">Shop Details</th>
+                <th className="px-8 py-4">Assigned Route</th>
+                <th className="px-8 py-4">Contact & Location</th>
+                <th className="px-8 py-4 text-right">Actions</th>
               </tr>
-            ))}
-            {shops.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
-                  No shops found. Add one to get started.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {shops.map((shop) => (
+                <tr
+                  key={shop.id}
+                  className="hover:bg-blue-50/30 transition-colors group"
+                >
+                  <td className="px-8 py-5">
+                    <div className="flex flex-col">
+                      <span className="font-mono font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl text-sm border border-blue-100 shadow-sm shadow-blue-50 w-fit mb-1">
+                        {shop.shop_code}
+                      </span>
+                      <p className="font-black text-gray-900 text-sm tracking-tight">
+                        {shop.shop_name}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5">
+                    <span className="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                      {shop.route_code}
+                    </span>
+                  </td>
+                  <td className="px-8 py-5">
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold text-gray-700">
+                        {shop.phoneno || "No contact"}
+                      </p>
+                      <p className="text-xs text-gray-400 font-medium">
+                        {shop.Address || "No address"}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-4 group-hover:translate-x-0">
+                      <button
+                        onClick={() => openModal(shop)}
+                        className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100 active:scale-90"
+                        title="Edit Shop"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(shop.id)}
+                        className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 active:scale-90"
+                        title="Delete Shop"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {shops.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-8 py-12 text-center text-gray-400 font-medium"
+                  >
+                    No shops found. Add one to get started.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {isModalOpen && (

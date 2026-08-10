@@ -40,7 +40,9 @@ const SupplyInvoices = () => {
   const [selectedInvoice, setSelectedInvoice] =
     useState<SupplierInvoice | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"supply" | "shop" | "loading">("supply");
+  const [activeTab, setActiveTab] = useState<"supply" | "shop" | "loading">(
+    "supply",
+  );
   const [modalLoading, setModalLoading] = useState(false);
 
   // Initial Tab Selection from Navigation State or Query Params
@@ -146,7 +148,9 @@ const SupplyInvoices = () => {
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [returnLoadingId, setReturnLoadingId] = useState<number | null>(null);
   const [returnItems, setReturnItems] = useState<any[]>([]);
-  const [returnQuantities, setReturnQuantities] = useState<{ [key: number]: string }>({});
+  const [returnQuantities, setReturnQuantities] = useState<{
+    [key: number]: string;
+  }>({});
   const [submittingReturn, setSubmittingReturn] = useState(false);
 
   const handleReturnClick = (loading: any) => {
@@ -173,9 +177,9 @@ const SupplyInvoices = () => {
             {
               batch_id: batchId,
               qty: qty,
-              return_date: new Date().toISOString().split('T')[0], // Today
-              reason: 'Returned from loading',
-            }
+              return_date: new Date().toISOString().split("T")[0], // Today
+              reason: "Returned from loading",
+            },
           );
         }
       }
@@ -266,12 +270,13 @@ const SupplyInvoices = () => {
                       handleUpdateStatus(load.id, e.target.value)
                     }
                     className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter outline-none cursor-pointer border
-                                      ${load.status === "delivered"
-                        ? "bg-green-100 text-green-700 border-green-200"
-                        : load.status === "pending"
-                          ? "bg-amber-100 text-amber-700 border-amber-200"
-                          : "bg-red-100 text-red-700 border-red-200"
-                      }`}
+                                      ${
+                                        load.status === "delivered"
+                                          ? "bg-green-100 text-green-700 border-green-200"
+                                          : load.status === "pending"
+                                            ? "bg-amber-100 text-amber-700 border-amber-200"
+                                            : "bg-red-100 text-red-700 border-red-200"
+                                      }`}
                   >
                     <option value="pending">Pending</option>
                     <option value="delivered">Delivered</option>
@@ -314,7 +319,7 @@ const SupplyInvoices = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto py-8">
+    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
@@ -341,7 +346,7 @@ const SupplyInvoices = () => {
         {[
           { id: "supply", label: "Supply Invoices" },
           { id: "shop", label: "Shop Invoices" },
-          { id: "loading", label: "Loading Invoices" }
+          { id: "loading", label: "Loading Invoices" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -465,7 +470,9 @@ const SupplyInvoices = () => {
           <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Search size={32} />
           </div>
-          <h3 className="text-lg font-bold text-gray-700 tracking-tight">Shop Invoices</h3>
+          <h3 className="text-lg font-bold text-gray-700 tracking-tight">
+            Shop Invoices
+          </h3>
           <p className="text-gray-500 mt-2">
             This module is under development. You will be able to view and
             manage shop invoices here soon.
@@ -490,8 +497,6 @@ const SupplyInvoices = () => {
         </>
       )}
 
-
-
       {/* RETURNS MODAL */}
       {returnModalOpen && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-3 sm:p-4 text-sm font-sans">
@@ -503,22 +508,36 @@ const SupplyInvoices = () => {
                   Process Returns
                 </h2>
                 <p className="text-gray-500 text-xs mt-1">
-                  Select items and quantities returned from Loading #{loadings.find(l => l.id === returnLoadingId)?.load_number}
+                  Select items and quantities returned from Loading #
+                  {loadings.find((l) => l.id === returnLoadingId)?.load_number}
                 </p>
               </div>
               <button
                 onClick={() => setReturnModalOpen(false)}
                 className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
 
             <div className="p-5 sm:p-8 overflow-y-auto max-h-[60vh]">
               {returnItems.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">No items found in this loading.</div>
+                <div className="text-center py-10 text-gray-500">
+                  No items found in this loading.
+                </div>
               ) : (
                 <div className="space-y-4">
                   <table className="w-full text-left bg-white border border-gray-100 rounded-lg overflow-hidden">
@@ -526,16 +545,21 @@ const SupplyInvoices = () => {
                       <tr>
                         <th className="px-4 py-3">Product</th>
                         <th className="px-4 py-3 text-center">Loaded Qty</th>
-                        <th className="px-4 py-3 text-center w-32">Return Qty</th>
+                        <th className="px-4 py-3 text-center w-32">
+                          Return Qty
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50 text-xs">
                       {returnItems.map((item) => (
                         <tr key={item.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3">
-                            <p className="font-bold text-gray-800">{item.batch_stock?.product?.name}</p>
+                            <p className="font-bold text-gray-800">
+                              {item.batch_stock?.product?.name}
+                            </p>
                             <p className="text-[10px] text-gray-400 font-mono">
-                              {item.batch_stock?.product?.barcode || item.batch_stock?.product?.material_code}
+                              {item.batch_stock?.product?.barcode ||
+                                item.batch_stock?.product?.material_code}
                             </p>
                           </td>
                           <td className="px-4 py-3 text-center font-bold text-gray-700">
@@ -548,7 +572,9 @@ const SupplyInvoices = () => {
                               max={item.qty}
                               className="w-full border border-gray-300 rounded px-2 py-1 text-center font-bold outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-200"
                               placeholder="0"
-                              value={returnQuantities[item.batch_stock?.id] || ''}
+                              value={
+                                returnQuantities[item.batch_stock?.id] || ""
+                              }
                               onChange={(e) => {
                                 let val = parseInt(e.target.value);
                                 if (isNaN(val) || val < 0) val = 0;
@@ -556,7 +582,7 @@ const SupplyInvoices = () => {
 
                                 setReturnQuantities({
                                   ...returnQuantities,
-                                  [item.batch_stock?.id]: val.toString()
+                                  [item.batch_stock?.id]: val.toString(),
                                 });
                               }}
                             />
@@ -566,7 +592,8 @@ const SupplyInvoices = () => {
                     </tbody>
                   </table>
                   <p className="text-[10px] text-gray-400 italic text-center">
-                    Note: Returned items will be added back to stock and prioritized for future sales.
+                    Note: Returned items will be added back to stock and
+                    prioritized for future sales.
                   </p>
                 </div>
               )}
@@ -585,7 +612,7 @@ const SupplyInvoices = () => {
                 disabled={submittingReturn}
                 className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submittingReturn ? 'Processing...' : 'Confirm Returns'}
+                {submittingReturn ? "Processing..." : "Confirm Returns"}
               </button>
             </div>
           </div>
@@ -908,7 +935,7 @@ const SupplyInvoices = () => {
                               <p className="font-bold text-gray-800">
                                 {Math.floor(
                                   (item.qty - (item.free_qty || 0)) /
-                                  (item.batch_stock?.pack_size || 1),
+                                    (item.batch_stock?.pack_size || 1),
                                 )}{" "}
                                 × {item.batch_stock?.pack_size || 1} +{" "}
                                 {(item.qty - (item.free_qty || 0)) %
@@ -963,7 +990,7 @@ const SupplyInvoices = () => {
                               (sum: number, item: any) =>
                                 sum +
                                 Number(item.free_qty || 0) *
-                                Number(item.net_price || 0),
+                                  Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
@@ -986,7 +1013,7 @@ const SupplyInvoices = () => {
                                 sum +
                                 (Number(item.qty) -
                                   Number(item.free_qty || 0)) *
-                                Number(item.net_price || 0),
+                                  Number(item.net_price || 0),
                               0,
                             )
                             .toLocaleString(undefined, {
@@ -1017,10 +1044,11 @@ const SupplyInvoices = () => {
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${statusConfirmation.status === "delivered"
-                ? "bg-green-100 text-green-600"
-                : "bg-red-100 text-red-600"
-                }`}
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
+                statusConfirmation.status === "delivered"
+                  ? "bg-green-100 text-green-600"
+                  : "bg-red-100 text-red-600"
+              }`}
             >
               {statusConfirmation.status === "delivered" ? (
                 <svg
@@ -1078,10 +1106,11 @@ const SupplyInvoices = () => {
                     statusConfirmation.status,
                   )
                 }
-                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${statusConfirmation.status === "delivered"
-                  ? "bg-green-600 hover:bg-green-700 shadow-green-200"
-                  : "bg-red-600 hover:bg-red-700 shadow-red-200"
-                  }`}
+                className={`flex-1 py-3 font-bold text-white rounded-xl shadow-lg transition-all active:scale-95 ${
+                  statusConfirmation.status === "delivered"
+                    ? "bg-green-600 hover:bg-green-700 shadow-green-200"
+                    : "bg-red-600 hover:bg-red-700 shadow-red-200"
+                }`}
               >
                 Yes, Update
               </button>
