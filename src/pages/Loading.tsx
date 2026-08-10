@@ -41,6 +41,7 @@ interface SalesRep {
 interface BatchStock {
   id: number;
   remain_qty: number; // Available quantity
+  returned_qty?: number; // Returned quantity
   free_qty: number; // Free quantity
   no_cases: number;
   pack_size: number;
@@ -184,8 +185,8 @@ const Loading = () => {
     const filtered = allBatches.filter((b) => {
       const p = b.product;
       if (!p) return false;
-      // Filter out batches with no stock at all
-      if (b.remain_qty <= 0 && (b.free_qty || 0) <= 0) return false;
+      // Filter out batches with no stock
+      if (b.remain_qty <= 0) return false;
 
       return (
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -848,7 +849,7 @@ const Loading = () => {
                                 (sum, item) =>
                                   sum +
                                   (Number(item.free_qty) || 0) *
-                                    (Number(item.net_price) || 0),
+                                  (Number(item.net_price) || 0),
                                 0,
                               )
                               .toLocaleString(undefined, {
@@ -911,11 +912,10 @@ const Loading = () => {
                       <div
                         key={batch.id}
                         onClick={() => handleSelectBatch(batch)}
-                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${
-                          selectedIndex === index
-                            ? "bg-blue-600 text-white shadow-lg"
-                            : "hover:bg-blue-50 text-gray-900"
-                        }`}
+                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${selectedIndex === index
+                          ? "bg-blue-600 text-white shadow-lg"
+                          : "hover:bg-blue-50 text-gray-900"
+                          }`}
                       >
                         <div className="flex justify-between items-start font-black text-base">
                           <div>
@@ -976,9 +976,11 @@ const Loading = () => {
                                 }
                               >
                                 Normal:{" "}
-                                {batch.remain_qty - (batch.free_qty || 0)}
+                                {batch.remain_qty -
+                                  (batch.free_qty || 0) -
+                                  (batch.returned_qty || 0)}
                               </span>
-                              {batch.free_qty > 0 && (
+                              {(batch.free_qty || 0) > 0 && (
                                 <span
                                   className={
                                     selectedIndex === index
@@ -987,6 +989,17 @@ const Loading = () => {
                                   }
                                 >
                                   Free: {batch.free_qty}
+                                </span>
+                              )}
+                              {(batch.returned_qty || 0) > 0 && (
+                                <span
+                                  className={
+                                    selectedIndex === index
+                                      ? "text-orange-200"
+                                      : "text-orange-500"
+                                  }
+                                >
+                                  Returns: {batch.returned_qty}
                                 </span>
                               )}
                             </div>
@@ -1219,9 +1232,16 @@ const Loading = () => {
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                       Total Avail.
                     </p>
-                    <p className="font-black text-blue-600">
-                      {selectedBatch?.remain_qty || 0}
-                    </p>
+                    <div className="flex flex-col items-end">
+                      <p className="font-black text-blue-600 leading-none">
+                        {selectedBatch?.remain_qty || 0}
+                      </p>
+                      {(selectedBatch?.returned_qty || 0) > 0 && (
+                        <p className="text-[9px] font-bold text-orange-500 mt-0.5">
+                          Incl. {selectedBatch?.returned_qty} Returns
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -1240,7 +1260,7 @@ const Loading = () => {
                     <option value="">-- Choose Batch --</option>
                     {productBatches.map((b) => (
                       <option key={b.id} value={b.id}>
-                        Exp: {b.expiry_date} | Avail: {b.remain_qty} units
+                        Exp: {b.expiry_date} | Avail: {b.remain_qty} units {(b.returned_qty || 0) > 0 ? `(Inc. ${b.returned_qty} Returns)` : ''}
                       </option>
                     ))}
                   </select>

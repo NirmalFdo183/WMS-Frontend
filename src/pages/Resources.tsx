@@ -4,7 +4,6 @@ import {
   Edit2,
   Trash2,
   Plus,
-  Search,
   MapPin,
   Truck as TruckIcon,
   Users,
@@ -256,11 +255,10 @@ const Resources = () => {
         ].map((tab) => (
           <button
             key={tab.id}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === tab.id
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id
                 ? "bg-blue-600 text-white shadow-md shadow-blue-100"
                 : "text-gray-500 hover:bg-gray-50"
-            }`}
+              }`}
             onClick={() => setActiveTab(tab.id as any)}
           >
             {tab.icon}
