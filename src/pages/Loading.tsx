@@ -396,7 +396,7 @@ const Loading = () => {
     <div className="max-w-7xl mx-auto py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
             New Loading Sheet
           </h1>
           <p className="text-gray-500 mt-2 text-lg">
@@ -437,7 +437,7 @@ const Loading = () => {
           <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
             <div className="px-8 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
               <div>
-                <h2 className="font-black text-gray-800 uppercase tracking-tighter text-lg leading-tight">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
                   Manifest Configuration
                 </h2>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
@@ -555,7 +555,7 @@ const Loading = () => {
                 <div className="lg:col-span-7 space-y-6 px-4 lg:lg:sticky lg:top-8 lg:h-fit">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-sm font-black text-gray-800 uppercase tracking-tight">
+                      <h3 className="text-lg font-bold text-gray-700 tracking-tight">
                         Dispatch Team
                       </h3>
                     </div>
@@ -726,7 +726,7 @@ const Loading = () => {
               {/* Manifest Summary Card */}
               <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                  <h3 className="font-black text-gray-800 tracking-tighter text-xs uppercase tracking-widest leading-none">
+                  <h3 className="text-lg font-bold text-gray-700 tracking-tight">
                     Manifest Summary
                   </h3>
                 </div>

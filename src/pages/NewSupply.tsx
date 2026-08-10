@@ -430,7 +430,7 @@ const NewSupply = () => {
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
               New Supply Entry
             </h1>
             <p className="text-sm text-gray-500">
@@ -462,7 +462,7 @@ const NewSupply = () => {
         {step === "invoice" ? (
           <div className="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="font-bold text-gray-700 uppercase tracking-wider text-xs">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
                 Invoice Preliminary Details
               </h2>
             </div>
@@ -648,11 +648,10 @@ const NewSupply = () => {
                       key={p.id}
                       id={`search-result-${index}`}
                       onClick={() => handleSelectProduct(p)}
-                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${
-                        highlightedIndex === index
-                          ? "bg-blue-600 text-white"
-                          : "hover:bg-blue-50 text-gray-700"
-                      }`}
+                      className={`px-4 py-2 cursor-pointer border-b text-xs flex items-center gap-4 font-bold transition-colors ${highlightedIndex === index
+                        ? "bg-blue-600 text-white"
+                        : "hover:bg-blue-50 text-gray-700"
+                        }`}
                     >
                       <span
                         className={`${highlightedIndex === index ? "text-blue-100" : "text-gray-400"} font-mono w-24 flex-shrink-0`}
@@ -1014,7 +1013,7 @@ const NewSupply = () => {
       {showConfirmSave && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
-            <h3 className="text-xl font-black text-gray-900 mb-2">
+            <h3 className="text-lg font-bold text-gray-700 tracking-tight mb-2">
               Finalize Entry?
             </h3>
             <p className="text-sm text-gray-500 mb-8">
@@ -1042,7 +1041,7 @@ const NewSupply = () => {
       {showConfirmCancel && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
-            <h3 className="text-xl font-black text-gray-900 mb-2">
+            <h3 className="text-lg font-bold text-gray-700 tracking-tight mb-2">
               Discard Session?
             </h3>
             <p className="text-sm text-gray-500 mb-8">
@@ -1087,7 +1086,7 @@ const NewSupply = () => {
                   />
                 </svg>
               </div>
-              <h3 className="font-bold text-gray-900 text-lg">
+              <h3 className="text-lg font-bold text-gray-700 tracking-tight">
                 Product Not Found
               </h3>
               <p className="text-gray-500 text-xs mt-1">

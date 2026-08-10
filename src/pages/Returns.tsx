@@ -119,8 +119,7 @@ const Returns = () => {
     return (
         <div className="max-w-7xl mx-auto py-4">
             <div className="mb-4">
-                <h1 className="text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-
+                <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight flex items-center gap-3">
                     Returns Management
                 </h1>
                 <p className="text-gray-500 mt-2 text-lg">
@@ -148,7 +147,7 @@ const Returns = () => {
                     {/* Left Column: Select Loading */}
                     <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-250px)]">
                         <div className="p-4 border-b border-gray-100 bg-gray-50">
-                            <h3 className="font-bold text-gray-700 mb-2">1. Select Loading Manifest</h3>
+                            <h3 className="text-lg font-bold text-gray-700 tracking-tight mb-2">1. Select Loading Manifest</h3>
                             <div className="relative">
                                 <input
                                     type="text"
@@ -192,7 +191,7 @@ const Returns = () => {
                     {/* Right Column: Return Form */}
                     <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-250px)]">
                         <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                            <h3 className="font-bold text-gray-700">2. Select Items to Return</h3>
+                            <h3 className="text-lg font-bold text-gray-700 tracking-tight">2. Select Items to Return</h3>
                             {selectedLoading && (
                                 <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
                                     Loading #{selectedLoading.load_number}
@@ -276,7 +275,7 @@ const Returns = () => {
             {activeTab === "history" && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                        <h3 className="font-bold text-gray-700">All Returns History</h3>
+                        <h3 className="text-lg font-bold text-gray-700 tracking-tight">All Returns History</h3>
                         <button
                             onClick={fetchReturns}
                             className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
