@@ -1020,7 +1020,7 @@ const Loading = () => {
                         </th>
                         <th className="px-6 py-6 text-center">Net Price</th>
                         <th className="px-6 py-6 text-center">Retail Price</th>
-                        <th className="px-6 py-6 text-center">Total Qty</th>
+                        <th className="px-6 py-6 text-center">Paid Qty</th>
                         <th className="px-6 py-6 text-right">Value (LKR)</th>
                         <th className="px-8 py-6"></th>
                       </tr>
@@ -1088,7 +1088,7 @@ const Loading = () => {
                             </span>
                           </td>
                           <td className="px-4 py-4 text-center font-black text-blue-700">
-                            {item.qty}
+                            {item.qty - (item.free_qty || 0)}
                           </td>
                           <td className="px-4 py-4 text-right font-black text-gray-900 font-mono">
                             Rs.{" "}
