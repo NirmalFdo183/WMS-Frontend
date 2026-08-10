@@ -460,21 +460,27 @@ const NewSupply = () => {
 
       <div className="max-w-7xl mx-auto">
         {step === "invoice" ? (
-          <div className="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
+          <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl shadow-blue-50/50 border border-gray-100 overflow-hidden">
+            <div className="px-8 py-6 border-b border-gray-50 bg-gray-50/30">
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight">
                 Invoice Preliminary Details
               </h2>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+                Step 1: Header Information
+              </p>
             </div>
 
-            <form className="p-6 space-y-5" onSubmit={handleProceedToItems}>
-              <div className="space-y-4 text-sm">
+            <form
+              className="p-5 sm:p-8 space-y-6"
+              onSubmit={handleProceedToItems}
+            >
+              <div className="space-y-6">
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">
                     Supplier Name
                   </label>
                   <select
-                    className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-gray-900 appearance-none"
                     value={invoiceData.supplier_id}
                     required
                     onChange={(e) => {
@@ -497,15 +503,16 @@ const NewSupply = () => {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">
                       Invoice Number
                     </label>
                     <input
                       type="text"
                       required
-                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      placeholder="e.g. INV-2024-001"
+                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-gray-900"
                       value={invoiceData.invoice_no}
                       onChange={(e) =>
                         setInvoiceData({
@@ -516,12 +523,13 @@ const NewSupply = () => {
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">
                       Invoice Date
                     </label>
                     <input
                       type="date"
-                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                      required
+                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-gray-900"
                       value={invoiceData.invoice_date}
                       onChange={(e) =>
                         setInvoiceData({
@@ -534,13 +542,15 @@ const NewSupply = () => {
                 </div>
 
                 <div>
-                  <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5">
-                    Total Bill Amount
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">
+                    Total Bill Amount (LKR)
                   </label>
                   <input
                     type="number"
                     step="0.01"
-                    className="w-full px-3 py-2.5 rounded-lg bg-white border border-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    required
+                    placeholder="0.00"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-black text-gray-900 text-lg"
                     value={invoiceData.total_bill_amount}
                     onChange={(e) =>
                       setInvoiceData({
@@ -548,18 +558,19 @@ const NewSupply = () => {
                         total_bill_amount: e.target.value,
                       })
                     }
-                    required
                   />
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? "Processing..." : "Proceed to Item Entry"}
-              </button>
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-100 transition-all active:scale-[0.98] select-none disabled:opacity-50"
+                >
+                  {loading ? "Processing..." : "Proceed to Add Items"}
+                </button>
+              </div>
             </form>
           </div>
         ) : (
@@ -870,15 +881,15 @@ const NewSupply = () => {
                     }
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="font-bold text-gray-600 ml-0.5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">
                     Units per Pack
                   </label>
                   <input
                     type="number"
                     min="0"
                     placeholder="0"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-gray-900"
                     value={batchForm.pack_size}
                     onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
@@ -886,14 +897,14 @@ const NewSupply = () => {
                     }
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="font-bold text-blue-600 ml-0.5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1 block">
                     Extra Units (Loose)
                   </label>
                   <input
                     type="number"
                     min="0"
-                    className="w-full px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 outline-none font-bold text-base text-blue-700"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-blue-50 border border-blue-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-blue-700"
                     value={batchForm.extra_units}
                     onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
@@ -906,17 +917,14 @@ const NewSupply = () => {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-bold text-green-600 ml-0.5">
-                  Free Qty{" "}
-                  <span className="text-green-400 font-normal text-xs">
-                    (Gift/Commission — not billed)
-                  </span>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-green-400 uppercase tracking-widest ml-1 block">
+                  Free Qty (Gifts/Bonus)
                 </label>
                 <input
                   type="number"
                   min="0"
-                  className="w-full px-4 py-3 rounded-xl bg-green-50 border border-green-100 outline-none font-bold text-base text-green-700"
+                  className="w-full px-5 py-3.5 rounded-2xl bg-green-50 border border-green-100 focus:ring-4 focus:ring-green-500/10 focus:border-green-500 focus:bg-white outline-none transition-all font-bold text-green-700"
                   value={batchForm.free_qty}
                   onKeyDown={handleBatchFormKeyDown}
                   onChange={(e) =>
@@ -929,15 +937,15 @@ const NewSupply = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="font-bold text-gray-600 ml-0.5">
-                    Net Unit Cost (Rs.)
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">
+                    Net Unit Cost
                   </label>
                   <input
                     type="number"
                     required
                     step="0.01"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-gray-900"
                     value={batchForm.net_price}
                     onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
@@ -945,15 +953,15 @@ const NewSupply = () => {
                     }
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="font-bold text-gray-600 ml-0.5">
-                    Retail Price (Rs.)
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">
+                    Retail Price
                   </label>
                   <input
                     type="number"
                     required
                     step="0.01"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-gray-900"
                     value={batchForm.retail_price}
                     onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
@@ -966,14 +974,13 @@ const NewSupply = () => {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-bold text-gray-600 ml-0.5">
-                  Expiry Date{" "}
-                  <span className="text-gray-400 font-normal">(Optional)</span>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 block">
+                  Expiry Date (Optional)
                 </label>
                 <input
                   type="date"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-bold text-base"
+                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-gray-900"
                   value={batchForm.expiry_date}
                   onChange={(e) =>
                     setBatchForm({ ...batchForm, expiry_date: e.target.value })
