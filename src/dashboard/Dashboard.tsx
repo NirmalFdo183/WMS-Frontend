@@ -115,9 +115,14 @@ const Dashboard = () => {
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
             Total Revenue
           </p>
-          <h3 className="text-2xl font-black text-gray-400">PENDING</h3>
-          <p className="text-[10px] text-orange-500 font-bold mt-1">
-            Logic Under Review
+          <h3 className="text-2xl font-black text-gray-900">
+            Rs.{" "}
+            {(stats?.total_revenue || 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </h3>
+          <p className="text-[10px] text-emerald-500 font-bold mt-1">
+            Total Billed From Loadings
           </p>
         </div>
 
@@ -133,9 +138,14 @@ const Dashboard = () => {
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
             Total Commission (Profit)
           </p>
-          <h3 className="text-2xl font-black text-gray-400">PENDING</h3>
-          <p className="text-[10px] text-orange-500 font-bold mt-1">
-            Logic Under Review
+          <h3 className="text-2xl font-black text-gray-900 font-mono">
+            Rs.{" "}
+            {(stats?.total_profit || 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </h3>
+          <p className="text-[10px] text-blue-500 font-bold mt-1">
+            Flat 5% Commission
           </p>
         </div>
 
@@ -151,9 +161,14 @@ const Dashboard = () => {
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
             Total Supply Cost
           </p>
-          <h3 className="text-2xl font-black text-gray-400">PENDING</h3>
-          <p className="text-[10px] text-orange-500 font-bold mt-1">
-            Logic Under Review
+          <h3 className="text-2xl font-black text-gray-900 font-mono">
+            Rs.{" "}
+            {(stats?.total_supply_cost || 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </h3>
+          <p className="text-[10px] text-gray-400 font-bold mt-1">
+            Total Supplier Billing
           </p>
         </div>
 
