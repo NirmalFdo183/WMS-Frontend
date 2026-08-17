@@ -103,6 +103,7 @@ const Login = () => {
                   Username
                 </label>
                 <input
+                  id="username"
                   type="text"
                   required
                   value={username}
@@ -128,6 +129,7 @@ const Login = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     required
+                    id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="block w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 pr-12"
