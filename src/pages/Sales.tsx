@@ -315,16 +315,24 @@ const Sales = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
-      {/* Header section matches Loading.tsx layout */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight text-left">
-            Direct Sales
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight text-left flex items-center gap-3">
+            <span>Direct Sales Register</span>
           </h1>
           <p className="text-gray-500 mt-2 text-lg">
             Create and manage point of sale transactions.
           </p>
         </div>
+
+        <button
+          onClick={() => navigate("/pos")}
+          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm px-6 py-3 rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center gap-2.5 transition-all hover:scale-[1.02] active:scale-95"
+        >
+          <ShoppingCart size={20} />
+          <span>Launch Fullscreen POS Terminal</span>
+          <ArrowRight size={18} />
+        </button>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">

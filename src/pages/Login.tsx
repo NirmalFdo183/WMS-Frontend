@@ -28,8 +28,14 @@ const Login = () => {
       );
 
       const { access_token, user } = response.data;
-      login(access_token, user || { name: "User", email: "email@example.com" });
-      navigate("/dashboard");
+      const loggedUser = user || { name: "User", email: "email@example.com" };
+      login(access_token, loggedUser);
+
+      if (loggedUser.role === "cashier") {
+        navigate("/pos");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       console.error("Login error:", err);
       setError("Invalid credentials. Please try again.");
