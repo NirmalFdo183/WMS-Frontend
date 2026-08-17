@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard,
   Users,
@@ -18,7 +19,15 @@ interface SideBarProps {
 }
 
 const SideBar = ({ isOpen, onClose }: SideBarProps) => {
+  const { user } = useAuth();
+
   const navItems = [
+    {
+      name: "POS Terminal",
+      path: "/pos",
+      icon: <ShoppingCart size={20} className="text-emerald-500" />,
+      badge: "POS",
+    },
     {
       name: "Dashboard",
       path: "/dashboard",
@@ -41,12 +50,17 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       icon: <RefreshCw size={20} />,
     },
     {
-      name: "Sales",
+      name: "Sales Register",
       path: "/sales",
       icon: <ShoppingCart size={20} />,
     },
     { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
   ];
+
+  const visibleItems =
+    user?.role === "cashier"
+      ? navItems.filter((item) => item.path === "/pos")
+      : navItems;
 
   return (
     <aside
@@ -77,7 +91,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
         </button>
       </div>
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -102,7 +116,14 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 >
                   {item.icon}
                 </span>
-                <span className="text-sm tracking-tight">{item.name}</span>
+                <span className="text-sm tracking-tight flex-1 flex items-center justify-between">
+                  <span>{item.name}</span>
+                  {item.badge && (
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow-sm">
+                      {item.badge}
+                    </span>
+                  )}
+                </span>
               </>
             )}
           </NavLink>

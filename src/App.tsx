@@ -17,22 +17,42 @@ import Suppliers from "./pages/Suppliers";
 import SupplyInvoices from "./pages/SupplyInvoices";
 import Returns from "./pages/Returns";
 import Sales from "./pages/Sales";
+import PosTerminal from "./pages/PosTerminal";
 import Layout from "./components/Layout";
 import "./App.css";
 
-// Protected Route Wrapper
+// Protected Route Wrapper for Admin & Warehouse Staff
 const ProtectedRoute = () => {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Cashiers are strictly restricted to POS Terminal only
+  if (user?.role === "cashier") {
+    return <Navigate to="/pos" replace />;
+  }
+
+  return <Layout />;
+};
+
+// Protected Route for POS Terminal
+const PosProtectedRoute = () => {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  return <Layout />;
+  return <PosTerminal />;
 };
 
 const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/pos",
+    element: <PosProtectedRoute />,
   },
   {
     path: "/",
