@@ -230,7 +230,7 @@ const Product = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
             Inventory Management
@@ -246,6 +246,54 @@ const Product = () => {
         >
           <Plus size={20} /> Add Product
         </button>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-blue-500 group hover:shadow-xl transition-all duration-300">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            Total Registered
+          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-gray-900 leading-none">
+              {loading ? "..." : products.length}
+            </span>
+            <span className="text-xs font-bold text-gray-400">products</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-red-500 group hover:shadow-xl transition-all duration-300">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            Critically Empty
+          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-red-600 leading-none">
+              {loading
+                ? "..."
+                : products.filter((p) => getProductStatus(p) === "Out of Stock")
+                    .length}
+            </span>
+            <span className="text-xs font-bold text-gray-400">Products</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-b-4 border-b-orange-500 group hover:shadow-xl transition-all duration-300">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+            Low Quantity
+          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-orange-600 leading-none">
+              {loading
+                ? "..."
+                : products.filter((p) => getProductStatus(p) === "Low Stock")
+                    .length}
+            </span>
+            <span className="text-xs font-bold text-gray-400">Alerts</span>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -695,7 +743,7 @@ const Product = () => {
             <p className="text-sm text-gray-500 mb-8">
               Are you sure you want to delete{" "}
               <span className="font-bold text-gray-800">
-                {productToDelete.name}
+                {productToDelete?.name}
               </span>
               ? This action cannot be undone and will remove all associated
               data.
