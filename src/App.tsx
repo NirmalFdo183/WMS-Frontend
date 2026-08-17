@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Suppliers from "./pages/Suppliers";
 import SupplyInvoices from "./pages/SupplyInvoices";
 import Returns from "./pages/Returns";
+import Sales from "./pages/Sales";
 import Layout from "./components/Layout";
 import "./App.css";
 
@@ -77,6 +78,10 @@ const router = createBrowserRouter([
       {
         path: "returns",
         element: <Returns />,
+      },
+      {
+        path: "sales",
+        element: <Sales />,
       },
       {
         path: "",

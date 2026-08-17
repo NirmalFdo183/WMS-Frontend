@@ -40,6 +40,11 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       path: "/returns",
       icon: <RefreshCw size={20} />,
     },
+    {
+      name: "Sales",
+      path: "/sales",
+      icon: <ShoppingCart size={20} />,
+    },
     { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
   ];
 

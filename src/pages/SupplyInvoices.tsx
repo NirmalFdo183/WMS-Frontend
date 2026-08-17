@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
-import { Eye, Search, RefreshCw } from "lucide-react";
+import { Eye, Search, RefreshCw, X, Printer } from "lucide-react";
 
 interface BatchStock {
   id: number;
@@ -40,10 +40,12 @@ const SupplyInvoices = () => {
   const [selectedInvoice, setSelectedInvoice] =
     useState<SupplierInvoice | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"supply" | "shop" | "loading">(
-    "supply",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "supply" | "shop" | "loading" | "sales"
+  >("supply");
   const [modalLoading, setModalLoading] = useState(false);
+  const [sales, setSales] = useState<any[]>([]);
+  const [selectedSale, setSelectedSale] = useState<any | null>(null);
 
   // Initial Tab Selection from Navigation State or Query Params
   useEffect(() => {
@@ -91,6 +93,16 @@ const SupplyInvoices = () => {
     } catch (err) {
       console.error("Error fetching loadings:", err);
       setLoadingError("Failed to load manifests from server.");
+    }
+
+    // Fetch Sales Invoices
+    try {
+      const salesRes = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/sales`,
+      );
+      setSales(salesRes.data);
+    } catch (err) {
+      console.error("Error fetching sales:", err);
     }
 
     setLoading(false);
@@ -200,6 +212,113 @@ const SupplyInvoices = () => {
 
   const [selectedLoading, setSelectedLoading] = useState<any | null>(null);
 
+  const brandMapping: Record<string, string> = {
+    BC: "BABY CHERAMY",
+    CL: "CLOGARD",
+    DV: "DIVA",
+    DX: "DANDEX",
+    FM: "FEMS",
+    KM: "KUMARIKA",
+    GL: "GOLD",
+    GY: "GOYA",
+    VV: "VELVET",
+    HE: "HEMAS",
+  };
+
+  const handlePrintLoading = (load: any) => {
+    setSelectedLoading(load);
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const SalesTable = () => {
+    if (loading)
+      return (
+        <div className="p-10 text-center text-gray-500">Loading sales...</div>
+      );
+    if (sales.length === 0)
+      return (
+        <div className="p-10 text-center text-gray-500">
+          No sales invoices found.
+        </div>
+      );
+
+    const filteredSales = sales.filter((s) => {
+      const searchStr = searchTerm.toLowerCase();
+      return (
+        s.id.toString().includes(searchStr) ||
+        (s.user?.name && s.user.name.toLowerCase().includes(searchStr))
+      );
+    });
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-left min-w-[800px]">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">
+              <th className="px-6 py-4 text-left">Invoice #</th>
+              <th className="px-6 py-4">Date & Time</th>
+              <th className="px-6 py-4">Cashier</th>
+              <th className="px-6 py-4 text-right">Total Amount</th>
+              <th className="px-6 py-4 text-center">Payment</th>
+              <th className="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredSales.map((sale) => (
+              <tr
+                key={sale.id}
+                className="hover:bg-blue-50/50 transition-colors"
+              >
+                <td className="px-6 py-4">
+                  <span className="font-bold text-blue-600 block">
+                    S-{sale.id.toString().padStart(6, "0")}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <p className="text-gray-800 font-medium text-sm">
+                    {new Date(sale.date_time).toLocaleString()}
+                  </p>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <p className="font-bold text-gray-800 text-sm">
+                    {sale.user?.name || "System"}
+                  </p>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <span className="font-black text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">
+                    Rs.{" "}
+                    {Number(sale.total).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${sale.payment_type === "cash" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}
+                  >
+                    {sale.payment_type}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <button
+                    onClick={() => setSelectedSale(sale)}
+                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-bold text-[10px] uppercase tracking-wider flex items-center gap-2 ml-auto"
+                  >
+                    <Eye size={14} />
+                    View Details
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   const LoadingTable = () => {
     if (loading)
       return (
@@ -294,6 +413,14 @@ const SupplyInvoices = () => {
                       Return
                     </button>
                     <button
+                      onClick={() => handlePrintLoading(load)}
+                      className="px-3 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-all font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5"
+                      title="Print Load List"
+                    >
+                      <Printer size={14} />
+                      Print
+                    </button>
+                    <button
                       onClick={() => setSelectedLoading(load)}
                       className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-bold text-[10px] uppercase tracking-wider flex items-center gap-2"
                       title="View Details"
@@ -345,8 +472,9 @@ const SupplyInvoices = () => {
       <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm mb-10 overflow-x-auto no-scrollbar max-w-fit">
         {[
           { id: "supply", label: "Supply Invoices" },
-          { id: "shop", label: "Shop Invoices" },
           { id: "loading", label: "Loading Invoices" },
+          { id: "sales", label: "Sales Invoices" },
+          { id: "shop", label: "Shop Invoices" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -461,6 +589,38 @@ const SupplyInvoices = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </>
+      )}
+
+      {activeTab === "sales" && (
+        <>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
+                Sales Invoices Report
+              </h2>
+              <p className="text-sm text-gray-500">
+                Direct customer transactions (Completed)
+              </p>
+            </div>
+
+            <div className="relative w-full sm:w-auto">
+              <input
+                type="text"
+                placeholder="Search invoice or cashier..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none w-full sm:w-80 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <Search size={18} />
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto no-scrollbar">
+            <SalesTable />
           </div>
         </>
       )}
@@ -1118,6 +1278,366 @@ const SupplyInvoices = () => {
           </div>
         </div>
       )}
+      {/* SALE DETAIL MODAL */}
+      {selectedSale && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-3 sm:p-4 text-sm font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
+            <div className="px-5 sm:px-8 py-4 sm:py-6 bg-blue-600 border-b border-blue-700 flex justify-between items-center text-white">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">
+                  Sales Invoice Detail
+                </p>
+                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+                  S-{selectedSale.id.toString().padStart(6, "0")}
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedSale(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-8 overflow-y-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 bg-blue-50/30 p-5 rounded-2xl border border-blue-100 mb-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                    Sales Date
+                  </p>
+                  <p className="font-bold text-gray-800">
+                    {new Date(selectedSale.date_time).toLocaleDateString()}
+                  </p>
+                  <p className="text-[10px] font-bold text-blue-600">
+                    {new Date(selectedSale.date_time).toLocaleTimeString()}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                    Cashier / User
+                  </p>
+                  <p className="font-bold text-gray-800">
+                    {selectedSale.user?.name || "System"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                    Payment Method
+                  </p>
+                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-black text-[10px] uppercase">
+                    {selectedSale.payment_type}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                    Grand Total
+                  </p>
+                  <p className="text-2xl font-black text-blue-700">
+                    Rs.{" "}
+                    {Number(selectedSale.total).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                  Purchased Items
+                </h3>
+                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-gray-50 text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                        <th className="px-6 py-4">Product Name</th>
+                        <th className="px-4 py-4 text-center">Qty (Units)</th>
+                        <th className="px-4 py-4 text-right">Retail Price</th>
+                        <th className="px-4 py-4 text-right">Discount</th>
+                        <th className="px-6 py-4 text-right">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 text-xs">
+                      {selectedSale.items?.map((item: any) => (
+                        <tr
+                          key={item.id}
+                          className="hover:bg-gray-50/50 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <p className="font-bold text-gray-900">
+                              {item.product?.name}
+                            </p>
+                            <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                              Batch: #{item.batch_id}
+                            </p>
+                          </td>
+                          <td className="px-4 py-4 text-center font-bold text-gray-700">
+                            {item.qty}
+                          </td>
+                          <td className="px-4 py-4 text-right font-medium text-gray-600">
+                            Rs.{" "}
+                            {Number(
+                              item.retail_price ||
+                                item.batch_stock?.retail_price ||
+                                item.unit_price,
+                            ).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </td>
+                          <td className="px-4 py-4 text-right font-bold text-red-500">
+                            - Rs.{" "}
+                            {Number(item.discount).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </td>
+                          <td className="px-6 py-4 text-right font-black text-blue-600">
+                            Rs.{" "}
+                            {Number(item.total).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button
+                onClick={() => setSelectedSale(null)}
+                className="px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-all shadow-sm active:scale-95"
+              >
+                Close Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRINTABLE LOAD LIST */}
+      <div
+        id="printable-loadlist"
+        className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 font-serif text-black overflow-y-auto"
+      >
+        {selectedLoading && (
+          <div className="w-full">
+            <div className="text-center mb-6 border-b-2 border-black pb-4">
+              <h1 className="text-2xl font-black uppercase tracking-widest">
+                THEJANI TRADERS - CHILAW
+              </h1>
+              <h2 className="text-lg font-bold uppercase mt-1">Load List</h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-12 gap-y-2 mb-6 text-[11px] font-bold">
+              <div className="space-y-1">
+                <p>
+                  <span className="w-32 inline-block">Load Number</span> :{" "}
+                  {selectedLoading.load_number}
+                </p>
+                <p>
+                  <span className="w-32 inline-block">Vehicle</span> :{" "}
+                  {selectedLoading.truck?.licence_plate_no}
+                </p>
+                <p>
+                  <span className="w-32 inline-block">Territory</span> :{" "}
+                  {selectedLoading.route?.route_code || "CHL1"}
+                </p>
+                <p>
+                  <span className="w-32 inline-block">Executive</span> :{" "}
+                  {selectedLoading.sales_rep?.name || "-"}
+                </p>
+                <p>
+                  <span className="w-32 inline-block">Town</span> :{" "}
+                  {selectedLoading.route?.route_description || "CHILAW TOWN"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p>
+                  <span className="w-32 inline-block">Created On</span> :{" "}
+                  {new Date(selectedLoading.created_at).toLocaleDateString()}{" "}
+                  {new Date(selectedLoading.created_at).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+                <p>
+                  <span className="w-32 inline-block">Delivery Date</span> :{" "}
+                  {selectedLoading.loading_date}
+                </p>
+                <p>
+                  <span className="w-32 inline-block">Created By</span> : ADMIN
+                </p>
+                <p>
+                  <span className="w-32 inline-block">Delivery Route</span> :{" "}
+                  {selectedLoading.route?.route_code}
+                </p>
+              </div>
+            </div>
+
+            <table className="w-full text-[10px] border-collapse">
+              <thead>
+                <tr className="border-y-2 border-black">
+                  <th className="py-2 text-left w-1/4">
+                    Product Code & Description
+                  </th>
+                  <th className="py-2 text-center">Case</th>
+                  <th className="py-2 text-center">Units</th>
+                  <th className="py-2 text-right">WH Price</th>
+                  <th className="py-2 text-right">RT Price</th>
+                  <th className="py-2 text-center">Free (Case)</th>
+                  <th className="py-2 text-center">Free (Units)</th>
+                  <th className="py-2 text-right">Total Qty (Units)</th>
+                  <th className="py-2 text-right">Total Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  // Group items by brand
+                  const groups: Record<string, any[]> = {};
+                  selectedLoading.loading_items?.forEach((item: any) => {
+                    const code = item.batch_stock?.product?.material_code || "";
+                    const brandKey = code.substring(0, 2).toUpperCase();
+                    const brandName = brandMapping[brandKey] || "OTHER";
+                    if (!groups[brandName]) groups[brandName] = [];
+                    groups[brandName].push(item);
+                  });
+
+                  return Object.entries(groups).map(([brand, items]) => (
+                    <React.Fragment key={brand}>
+                      <tr className="border-b border-gray-300">
+                        <td
+                          colSpan={9}
+                          className="py-2 font-black uppercase text-xs tracking-wider"
+                        >
+                          {brand}
+                        </td>
+                      </tr>
+                      {items.map((item: any) => {
+                        const packSize = item.batch_stock?.pack_size || 1;
+                        const mainQty = item.qty - (item.free_qty || 0);
+                        const cases = Math.floor(mainQty / packSize);
+                        const units = mainQty % packSize;
+
+                        const freeCases = Math.floor(
+                          (item.free_qty || 0) / packSize,
+                        );
+                        const freeUnits = (item.free_qty || 0) % packSize;
+
+                        const netPrice = Number(item.net_price || 0);
+                        const retailPrice = Number(
+                          item.batch_stock?.retail_price || 0,
+                        );
+                        const lineTotal = mainQty * netPrice;
+
+                        return (
+                          <tr
+                            key={item.id}
+                            className="border-b border-gray-100"
+                          >
+                            <td className="py-1">
+                              <p className="font-bold">
+                                {item.batch_stock?.product?.material_code}
+                              </p>
+                              <p>{item.batch_stock?.product?.name}</p>
+                            </td>
+                            <td className="py-1 text-center font-bold">
+                              {cases > 0 ? cases : ""}
+                            </td>
+                            <td className="py-1 text-center font-bold">
+                              {units > 0 ? units : ""}
+                            </td>
+                            <td className="py-1 text-right">
+                              {netPrice.toFixed(2)}
+                            </td>
+                            <td className="py-1 text-right">
+                              {retailPrice.toFixed(2)}
+                            </td>
+                            <td className="py-1 text-center">
+                              {freeCases > 0 ? freeCases : ""}
+                            </td>
+                            <td className="py-1 text-center">
+                              {freeUnits > 0 ? freeUnits : ""}
+                            </td>
+                            <td className="py-1 text-right font-black">
+                              {item.qty}
+                            </td>
+                            <td className="py-1 text-right font-black">
+                              {lineTotal.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                              })}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </React.Fragment>
+                  ));
+                })()}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-black">
+                  <td
+                    colSpan={8}
+                    className="py-3 text-right font-black text-sm uppercase"
+                  >
+                    Total Manifest Value:
+                  </td>
+                  <td className="py-3 text-right font-black text-sm">
+                    Rs.{" "}
+                    {selectedLoading.loading_items
+                      ?.reduce(
+                        (sum: number, item: any) =>
+                          sum +
+                          (item.qty - (item.free_qty || 0)) *
+                            Number(item.net_price || 0),
+                        0,
+                      )
+                      .toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div className="mt-12 flex justify-between text-xs font-bold italic">
+              <p>Prepared By: _________________</p>
+              <p>Authorized By: _________________</p>
+              <p>Received By: _________________</p>
+            </div>
+
+            <p className="text-center mt-12 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+              Generated via Thejani Traders WMS
+            </p>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-loadlist, #printable-loadlist * {
+            visibility: visible;
+          }
+          #printable-loadlist {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            visibility: visible;
+            display: block !important;
+          }
+          @page {
+            margin: 1cm;
+            size: A4 portrait;
+          }
+        }
+      `}</style>
     </div>
   );
 };
