@@ -54,6 +54,18 @@ interface BatchStock {
   };
 }
 
+const brandMapping: Record<string, string> = {
+  BC: "BABY CHERAMY",
+  CL: "CLOGARD",
+  DV: "DIVA",
+  DX: "DANDEX",
+  FM: "FEMS",
+  KM: "KUMARIKA",
+  GL: "GOLD",
+  GY: "GOYA",
+  VV: "VELVET",
+};
+
 const Product = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -217,16 +229,33 @@ const Product = () => {
   };
 
   const filteredProducts = products
-    .filter(
-      (product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.material_code
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
+    .filter((product) => {
+      const lowerSearch = searchTerm.toLowerCase();
+      const brandCode = product.name.substring(0, 2).toUpperCase();
+      const brandName = brandMapping[brandCode] || "";
+
+      return (
+        product.name.toLowerCase().includes(lowerSearch) ||
+        product.material_code.toLowerCase().includes(lowerSearch) ||
         (product.barcode &&
-          product.barcode.toLowerCase().includes(searchTerm.toLowerCase())),
-    )
+          product.barcode.toLowerCase().includes(lowerSearch)) ||
+        brandName.toLowerCase().includes(lowerSearch)
+      );
+    })
     .sort((a, b) => a.material_code.localeCompare(b.material_code));
+
+  // Group products by brand (first 2 characters of name)
+  const groupedProducts = filteredProducts.reduce(
+    (acc, product) => {
+      const brand = product.name.substring(0, 2).toUpperCase();
+      if (!acc[brand]) acc[brand] = [];
+      acc[brand].push(product);
+      return acc;
+    },
+    {} as Record<string, Product[]>,
+  );
+
+  const sortedBrands = Object.keys(groupedProducts).sort();
 
   return (
     <div className="max-w-7xl mx-auto py-8">
@@ -296,132 +325,173 @@ const Product = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100">
-          <div className="relative w-full sm:max-w-md">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              🔍
-            </span>
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 text-sm sm:text-base"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      {/* Search Bar Container */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 mb-8 flex items-center justify-between">
+        <div className="relative w-full sm:max-w-md">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            🔍
+          </span>
+          <input
+            type="text"
+            placeholder="Search products by name, code or brand..."
+            className="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 border border-transparent focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all placeholder:text-gray-400 text-sm sm:text-base outline-none"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">
-            Loading products...
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center text-red-500">{error}</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[1000px]">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  <th className="px-8 py-4">Material Code</th>
-                  <th className="px-8 py-4">Barcode</th>
-                  <th className="px-8 py-4">Description</th>
-                  <th className="px-8 py-4 hidden sm:table-cell">Supplier</th>
-                  <th className="px-8 py-4">Stock</th>
-                  <th className="px-8 py-4 text-center">Status</th>
-                  <th className="px-8 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredProducts.map((product) => (
-                  <tr
-                    key={product.id}
-                    className={`transition-colors group ${
-                      getProductStatus(product) === "Low Stock" ||
-                      getProductStatus(product) === "Out of Stock"
-                        ? "bg-red-50/20 hover:bg-red-50/40"
-                        : "hover:bg-blue-50/30"
-                    }`}
-                  >
-                    <td className="px-8 py-5">
-                      <span className="font-mono font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl text-xs border border-blue-100 shadow-sm shadow-blue-50">
-                        {product.material_code}
-                      </span>
-                    </td>
-                    <td className="px-8 py-5">
-                      <span className="font-mono font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl text-xs border border-emerald-100 shadow-sm shadow-emerald-50">
-                        {product.barcode}
-                      </span>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="font-black text-gray-900 text-sm tracking-tight">
-                        {product.name}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-gray-700 font-bold text-sm hidden sm:table-cell">
-                      {product.supplier?.name || "N/A"}
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className="flex flex-col">
-                        <span className="text-gray-900 font-black text-base tracking-tight">
-                          {product.total_units || 0}
-                        </span>
-                        {Number(product.pending_stock) > 0 && (
-                          <span className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-0.5">
-                            {product.pending_stock} On Truck
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-center">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border ${getStatusColor(getProductStatus(product))}`}
-                      >
-                        {getProductStatus(product)}
-                      </span>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-4 group-hover:translate-x-0">
-                        <button
-                          onClick={() => handleViewStock(product)}
-                          className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all border border-transparent hover:border-emerald-100 active:scale-90"
-                          title="View Stock Breakdown"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleOpenModal(product)}
-                          className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100 active:scale-90"
-                          title="Edit Product"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product)}
-                          className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 active:scale-90"
-                          title="Delete Product"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filteredProducts.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-8 py-12 text-center text-gray-400 font-medium"
-                    >
-                      No products found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {!loading && (
+          <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest px-4">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            {filteredProducts.length} Results Found
           </div>
         )}
       </div>
+
+      {loading ? (
+        <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
+          <div className="w-12 h-12 border-4 border-blue-50 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500 font-bold">Synchronizing inventory...</p>
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 p-8 rounded-3xl text-center border border-red-100 text-red-600 font-bold">
+          {error}
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="bg-white rounded-3xl p-16 text-center border border-gray-100 shadow-sm">
+          <div className="text-5xl mb-4">🔍</div>
+          <h3 className="text-xl font-black text-gray-900 tracking-tight">
+            No products found
+          </h3>
+          <p className="text-gray-500 mt-2">
+            Try adjusting your search terms or filters.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-10">
+          {sortedBrands.map((brand) => (
+            <div
+              key={brand}
+              className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
+            >
+              <div className="px-8 py-5 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-blue-100">
+                    {brand}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 tracking-tight">
+                      {brandMapping[brand] || brand}
+                    </h3>
+                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none mt-1">
+                      Brand Category
+                    </p>
+                  </div>
+                </div>
+                <div className="px-4 py-1.5 bg-white border border-gray-100 rounded-xl shadow-sm">
+                  <span className="text-xs font-black text-blue-600">
+                    {groupedProducts[brand].length}{" "}
+                    <span className="text-gray-400 ml-0.5">items</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-[1000px]">
+                  <thead>
+                    <tr className="bg-gray-50/50 border-b border-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <th className="px-8 py-4 w-48">Material Code</th>
+                      <th className="px-8 py-4 w-48">Barcode</th>
+                      <th className="px-8 py-4">Description</th>
+                      <th className="px-8 py-4 hidden sm:table-cell">
+                        Supplier
+                      </th>
+                      <th className="px-8 py-4">Stock</th>
+                      <th className="px-8 py-4 text-center">Status</th>
+                      <th className="px-8 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {groupedProducts[brand].map((product) => (
+                      <tr
+                        key={product.id}
+                        className={`transition-colors group ${
+                          getProductStatus(product) === "Low Stock" ||
+                          getProductStatus(product) === "Out of Stock"
+                            ? "bg-red-50/20 hover:bg-red-50/40"
+                            : "hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <td className="px-8 py-5">
+                          <span className="font-mono font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl text-xs border border-blue-100 shadow-sm shadow-blue-50">
+                            {product.material_code}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className="font-mono font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl text-xs border border-emerald-100 shadow-sm shadow-emerald-50">
+                            {product.barcode}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5">
+                          <div className="font-black text-gray-900 text-sm tracking-tight">
+                            {product.name}
+                          </div>
+                        </td>
+                        <td className="px-8 py-5 text-gray-700 font-bold text-sm hidden sm:table-cell">
+                          {product.supplier?.name || "N/A"}
+                        </td>
+                        <td className="px-8 py-5">
+                          <div className="flex flex-col">
+                            <span className="text-gray-900 font-black text-base tracking-tight">
+                              {product.total_units || 0}
+                            </span>
+                            {Number(product.pending_stock) > 0 && (
+                              <span className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-0.5">
+                                {product.pending_stock} On Truck
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-8 py-5 text-center">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border ${getStatusColor(getProductStatus(product))}`}
+                          >
+                            {getProductStatus(product)}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5 text-right">
+                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-4 group-hover:translate-x-0">
+                            <button
+                              onClick={() => handleViewStock(product)}
+                              className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all border border-transparent hover:border-emerald-100 active:scale-90"
+                              title="View Stock Breakdown"
+                            >
+                              <Eye size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleOpenModal(product)}
+                              className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all border border-transparent hover:border-blue-100 active:scale-90"
+                              title="Edit Product"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(product)}
+                              className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100 active:scale-90"
+                              title="Delete Product"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Product Edit/Add Modal */}
       {isModalOpen && (
