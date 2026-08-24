@@ -6,6 +6,7 @@ import { useAuth } from "./AuthContext";
 interface WarehouseContextType {
   totalValue: number;
   loading: boolean;
+  error: string | null;
   refreshTotalValue: () => Promise<void>;
 }
 
@@ -16,6 +17,7 @@ const WarehouseContext = createContext<WarehouseContextType | undefined>(
 export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
   const [totalValue, setTotalValue] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { token } = useAuth();
 
   const fetchTotalValue = async () => {
@@ -25,6 +27,7 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setLoading(true);
+      setError(null);
 
       // Ensure auth header is set if not already global
       const config = {
@@ -41,9 +44,9 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
       // Handle different possible response structures
       const val = res.data?.total !== undefined ? res.data.total : 0;
       setTotalValue(Number(val));
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching warehouse total value:", err);
-      // Optional: setTotalValue(0) on error or keep previous value
+      setError(err?.message || "Failed to load warehouse value");
     } finally {
       setLoading(false);
     }
@@ -59,7 +62,7 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <WarehouseContext.Provider
-      value={{ totalValue, loading, refreshTotalValue }}
+      value={{ totalValue, loading, error, refreshTotalValue }}
     >
       {children}
     </WarehouseContext.Provider>

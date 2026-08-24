@@ -7,15 +7,15 @@ const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#f8f9fa] text-slate-900 font-sans antialiased overflow-hidden">
       <SideBar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Main Layout Area */}
       <main
-        className={`flex-1 overflow-y-auto h-full w-full transition-all duration-300 ${isSidebarOpen ? "lg:ml-64" : ""}`}
+        className={`flex-1 overflow-y-auto h-full w-full transition-all duration-300 flex flex-col ${isSidebarOpen ? "lg:ml-64" : ""}`}
       >
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <div className="px-4 lg:px-8 pb-8">
+        <div className="flex-1 w-full pb-8">
           <Outlet />
         </div>
       </main>
