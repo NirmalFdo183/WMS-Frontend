@@ -23,6 +23,7 @@ import {
   AlertCircle,
   Maximize2,
   Minimize2,
+  Pencil,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -105,6 +106,18 @@ const PosTerminal: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [categories, setCategories] = useState<string[]>(["All"]);
   const [stockFeedback, setStockFeedback] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+
+  // Fast Item Entry Modal State
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<BatchStock | null>(null);
+  const [editingCartId, setEditingCartId] = useState<string | null>(null);
+  const [quickQty, setQuickQty] = useState<string>("1");
+  const [quickPrice, setQuickPrice] = useState<string>("");
+  const [quickDiscount, setQuickDiscount] = useState<string>("0");
+  const [quickModalError, setQuickModalError] = useState<string | null>(null);
+
+  const quickQtyInputRef = useRef<HTMLInputElement>(null);
 
   // Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -145,13 +158,29 @@ const PosTerminal: React.FC = () => {
     }
   };
 
-  // Search Input Reference
+  // Search Input Reference & Row References
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
   // Initial focus on search input without stealing active edit focus
   useEffect(() => {
     searchInputRef.current?.focus();
   }, []);
+
+  // Reset selected index when filters change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchTerm, selectedCategory]);
+
+  // Scroll active batch row into view
+  useEffect(() => {
+    if (rowRefs.current[selectedIndex]) {
+      rowRefs.current[selectedIndex]?.scrollIntoView({
+        block: "nearest",
+        behavior: "smooth",
+      });
+    }
+  }, [selectedIndex]);
 
   // Fetch Inventory Data
   const fetchInventory = async () => {
@@ -164,7 +193,7 @@ const PosTerminal: React.FC = () => {
         (b: BatchStock) => b.remain_qty > 0 && b.product
       );
       setAllBatches(batches);
-      setFilteredBatches(batches);
+      setFilteredBatches([]);
 
       // Extract unique categories
       const cats = Array.from(
@@ -279,6 +308,13 @@ const PosTerminal: React.FC = () => {
       }
 
       if (e.key === 'Escape') {
+        if (quickAddOpen) {
+          e.preventDefault();
+          setQuickAddOpen(false);
+          setQuickModalError(null);
+          searchInputRef.current?.focus();
+          return;
+        }
         if (isCheckoutOpen) {
           e.preventDefault();
           setIsCheckoutOpen(false);
@@ -291,85 +327,66 @@ const PosTerminal: React.FC = () => {
         }
         if (document.activeElement === searchInputRef.current) {
           setSearchTerm('');
-          searchInputRef.current?.blur();
         }
         return;
       }
 
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        if (isCheckoutOpen || isHistoryOpen) return;
+      // Arrow navigation for batch rows (when no modal is open)
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (isCheckoutOpen || isHistoryOpen || quickAddOpen) return;
         
         const activeElement = document.activeElement as HTMLElement;
-        const tagName = activeElement?.tagName;
-        if (tagName === 'INPUT' || tagName === 'TEXTAREA') return;
-        
-        if (activeElement?.classList.contains('category-btn')) {
-          const categories = Array.from(document.querySelectorAll<HTMLElement>('.category-btn'));
-          const index = categories.indexOf(activeElement);
-          if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            categories[(index + 1) % categories.length]?.focus();
-          } else if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            categories[(index - 1 + categories.length) % categories.length]?.focus();
-          } else if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            document.querySelector<HTMLElement>('.product-add-btn')?.focus();
-          }
-        } else if (activeElement?.classList.contains('product-add-btn')) {
-          const products = Array.from(document.querySelectorAll<HTMLElement>('.product-add-btn'));
-          const index = products.indexOf(activeElement);
-          
-          let nextEl: HTMLElement | null = null;
-          if (e.key === 'ArrowRight') nextEl = products[index + 1];
-          if (e.key === 'ArrowLeft') nextEl = products[index - 1];
-          if (e.key === 'ArrowUp') {
-              const rect = activeElement.getBoundingClientRect();
-              let minDistance = Infinity;
-              for (let i = index - 1; i >= 0; i--) {
-                  const pRect = products[i].getBoundingClientRect();
-                  if (pRect.bottom < rect.top) {
-                      const dist = Math.abs(pRect.left - rect.left);
-                      if (dist < minDistance) {
-                          minDistance = dist;
-                          nextEl = products[i];
-                      }
-                  }
-              }
-              if (!nextEl) {
-                  document.querySelector<HTMLElement>('.category-btn')?.focus();
-                  e.preventDefault();
-                  return;
-              }
-          }
+        if (activeElement?.classList.contains('cart-qty-input')) return;
+
+        if (filteredBatches.length > 0) {
+          e.preventDefault();
           if (e.key === 'ArrowDown') {
-              const rect = activeElement.getBoundingClientRect();
-              let minDistance = Infinity;
-              for (let i = index + 1; i < products.length; i++) {
-                  const pRect = products[i].getBoundingClientRect();
-                  if (pRect.top > rect.bottom) {
-                      const dist = Math.abs(pRect.left - rect.left);
-                      if (dist < minDistance) {
-                          minDistance = dist;
-                          nextEl = products[i];
-                      }
-                  }
-              }
+            setSelectedIndex((prev) => (prev < filteredBatches.length - 1 ? prev + 1 : prev));
+          } else if (e.key === 'ArrowUp') {
+            setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
           }
-          
-          if (nextEl) {
-            e.preventDefault();
-            nextEl.focus();
-          }
+        }
+        return;
+      }
+
+      // Enter key to open Fast Item Entry Modal for highlighted row
+      if (e.key === 'Enter') {
+        if (isCheckoutOpen || isHistoryOpen || quickAddOpen) return;
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement?.classList.contains('cart-qty-input')) return;
+
+        if (filteredBatches.length > 0 && selectedIndex >= 0 && selectedIndex < filteredBatches.length) {
+          e.preventDefault();
+          openQuickAddModal(filteredBatches[selectedIndex]);
         }
       }
     };
     window.addEventListener('keydown', handleGlobalShortcuts);
     return () => window.removeEventListener('keydown', handleGlobalShortcuts);
-  }, [cart.length, isCheckoutOpen, isHistoryOpen]);
+  }, [cart.length, isCheckoutOpen, isHistoryOpen, quickAddOpen, filteredBatches, selectedIndex]);
 
-  // Filter batches by search query & category
+  // Filter batches by search query & category (Only show matching rows when typing)
   useEffect(() => {
+    if (searchTerm.trim() === "") {
+      if (selectedCategory !== "All") {
+        const result = allBatches.filter(
+          (b) => (b.product?.category || "General") === selectedCategory
+        );
+        result.sort((a, b) => {
+          if (a.expiry_date && b.expiry_date) {
+            return (
+              new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime()
+            );
+          }
+          return a.id - b.id;
+        });
+        setFilteredBatches(result);
+      } else {
+        setFilteredBatches([]);
+      }
+      return;
+    }
+
     let result = allBatches;
 
     if (selectedCategory !== "All") {
@@ -378,15 +395,15 @@ const PosTerminal: React.FC = () => {
       );
     }
 
-    if (searchTerm.trim() !== "") {
-      const query = searchTerm.toLowerCase();
-      result = result.filter(
-        (b) =>
-          b.product?.name.toLowerCase().includes(query) ||
-          b.product?.barcode?.toLowerCase().includes(query) ||
-          b.product?.material_code?.toLowerCase().includes(query)
-      );
-    }
+    const query = searchTerm.toLowerCase().trim();
+    result = result.filter(
+      (b) =>
+        b.product?.name.toLowerCase().includes(query) ||
+        b.product?.barcode?.toLowerCase().includes(query) ||
+        b.product?.material_code?.toLowerCase().includes(query) ||
+        b.product?.id?.toString().includes(query) ||
+        b.id?.toString().includes(query)
+    );
 
     // FEFO (First Expiry First Out) sorting, then FIFO by ID
     result.sort((a, b) => {
@@ -401,10 +418,182 @@ const PosTerminal: React.FC = () => {
     setFilteredBatches(result);
   }, [searchTerm, selectedCategory, allBatches]);
 
+  // Open Fast Item Entry Modal (from Search / Catalog)
+  const openQuickAddModal = (batch: BatchStock) => {
+    if (!batch.product) return;
+    setSelectedBatch(batch);
+    setEditingCartId(null);
+    setQuickQty("1");
+    setQuickPrice(Number(batch.retail_price).toFixed(2));
+    setQuickDiscount("0");
+    setQuickModalError(null);
+    setQuickAddOpen(true);
+
+    setTimeout(() => {
+      quickQtyInputRef.current?.focus();
+      quickQtyInputRef.current?.select();
+    }, 50);
+  };
+
+  // Open Fast Item Entry Modal for editing existing Cart row
+  const openEditCartItemModal = (item: CartItem) => {
+    const batch = allBatches.find((b) => b.id === item.batch_id) || {
+      id: item.batch_id,
+      remain_qty: item.available_qty,
+      retail_price: item.retail_price,
+      netprice: 0,
+      pack_size: item.pack_size,
+      product: {
+        id: item.product_id,
+        name: item.product_name,
+        material_code: item.material_code,
+        barcode: item.barcode,
+      },
+    };
+
+    setSelectedBatch(batch);
+    setEditingCartId(item.cart_id);
+    setQuickQty(item.total_qty.toString());
+    setQuickPrice(Number(item.retail_price).toFixed(2));
+    setQuickDiscount((item.discount_percentage || 0).toString());
+    setQuickModalError(null);
+    setQuickAddOpen(true);
+
+    setTimeout(() => {
+      quickQtyInputRef.current?.focus();
+      quickQtyInputRef.current?.select();
+    }, 50);
+  };
+
+  // Submit Quick Add to Cart or Update Existing Row
+  const submitQuickAdd = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!selectedBatch || !selectedBatch.product) return;
+
+    const qty = parseInt(quickQty, 10);
+    if (isNaN(qty) || qty <= 0) {
+      setQuickModalError("Please enter a valid quantity of at least 1 unit.");
+      quickQtyInputRef.current?.focus();
+      return;
+    }
+
+    if (qty > selectedBatch.remain_qty) {
+      setQuickModalError(
+        `Insufficient stock! Only ${selectedBatch.remain_qty} units available in Batch #${selectedBatch.id}.`
+      );
+      quickQtyInputRef.current?.focus();
+      return;
+    }
+
+    const price = parseFloat(quickPrice);
+    if (isNaN(price) || price < 0) {
+      setQuickModalError("Please enter a valid selling price.");
+      return;
+    }
+
+    const discPercent = Math.min(100, Math.max(0, parseFloat(quickDiscount) || 0));
+    const grossTotal = qty * price;
+    const discountAmt = (grossTotal * discPercent) / 100;
+    const lineTotal = grossTotal - discountAmt;
+    const unitPrice = qty > 0 ? lineTotal / qty : price;
+
+    if (editingCartId) {
+      // Editing existing cart item directly
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.cart_id === editingCartId
+            ? {
+                ...item,
+                total_qty: qty,
+                cases: Math.floor(qty / (item.pack_size || 1)),
+                units: qty % (item.pack_size || 1),
+                retail_price: price,
+                discount_percentage: discPercent,
+                discount_amount: discountAmt,
+                unit_price: unitPrice,
+                line_total: lineTotal,
+              }
+            : item
+        )
+      );
+    } else {
+      // Adding from Search or Catalog
+      const existingIndex = cart.findIndex(
+        (item) => item.batch_id === selectedBatch.id
+      );
+
+      if (existingIndex > -1) {
+        const existing = cart[existingIndex];
+        const newTotalQty = existing.total_qty + qty;
+        if (newTotalQty > selectedBatch.remain_qty) {
+          setStockFeedback(
+            `Cannot add! Combined cart quantity (${newTotalQty}) exceeds available stock (${selectedBatch.remain_qty}) for ${selectedBatch.product.name}.`
+          );
+          setTimeout(() => setStockFeedback(null), 4000);
+          setQuickAddOpen(false);
+          setSearchTerm("");
+          searchInputRef.current?.focus();
+          return;
+        }
+
+        const newGross = newTotalQty * price;
+        const newDisc = (newGross * discPercent) / 100;
+        const newLineTotal = newGross - newDisc;
+        const newUnitPrice = newTotalQty > 0 ? newLineTotal / newTotalQty : price;
+
+        setCart((prevCart) =>
+          prevCart.map((item, idx) =>
+            idx === existingIndex
+              ? {
+                  ...item,
+                  total_qty: newTotalQty,
+                  cases: Math.floor(newTotalQty / (item.pack_size || 1)),
+                  units: newTotalQty % (item.pack_size || 1),
+                  retail_price: price,
+                  discount_percentage: discPercent,
+                  discount_amount: newDisc,
+                  unit_price: newUnitPrice,
+                  line_total: newLineTotal,
+                }
+              : item
+          )
+        );
+      } else {
+        const newCartItem: CartItem = {
+          cart_id: `${selectedBatch.id}-${Date.now()}`,
+          batch_id: selectedBatch.id,
+          product_id: selectedBatch.product.id,
+          product_name: selectedBatch.product.name,
+          material_code: selectedBatch.product.material_code,
+          barcode: selectedBatch.product.barcode,
+          pack_size: selectedBatch.pack_size || 1,
+          cases: Math.floor(qty / (selectedBatch.pack_size || 1)),
+          units: qty % (selectedBatch.pack_size || 1),
+          total_qty: qty,
+          retail_price: price,
+          unit_price: unitPrice,
+          discount_percentage: discPercent,
+          discount_amount: discountAmt,
+          line_total: lineTotal,
+          available_qty: selectedBatch.remain_qty,
+        };
+        setCart((prev) => [...prev, newCartItem]);
+      }
+    }
+
+    setQuickAddOpen(false);
+    setEditingCartId(null);
+    setSearchTerm("");
+    setQuickModalError(null);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
+  };
+
   // Handle Barcode Scanner / Search Form Submit
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchTerm.trim()) return;
+    if (filteredBatches.length === 0) return;
 
     // Check for exact barcode or material code match
     const exactMatch = filteredBatches.find(
@@ -414,11 +603,11 @@ const PosTerminal: React.FC = () => {
     );
 
     if (exactMatch) {
-      addToCart(exactMatch);
-      setSearchTerm("");
+      openQuickAddModal(exactMatch);
+    } else if (selectedIndex >= 0 && selectedIndex < filteredBatches.length) {
+      openQuickAddModal(filteredBatches[selectedIndex]);
     } else if (filteredBatches.length > 0) {
-      addToCart(filteredBatches[0]);
-      setSearchTerm("");
+      openQuickAddModal(filteredBatches[0]);
     }
   };
 
@@ -671,9 +860,13 @@ const PosTerminal: React.FC = () => {
   };
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden bg-[#f8f9fa] text-slate-900 flex flex-col font-sans select-none antialiased">
-      {/* 1. Header Workspace Bar */}
-      <header className="h-16 bg-white border-b border-stone-200 px-4 md:px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
+    <>
+      {/* ---------------------------------------------------------
+          POS Terminal Screen Interface (Completely hidden on print)
+         --------------------------------------------------------- */}
+      <div className="h-screen max-h-screen overflow-hidden bg-[#f8f9fa] text-slate-900 flex flex-col font-sans select-none antialiased print:hidden">
+        {/* 1. Header Workspace Bar */}
+        <header className="h-16 bg-white border-b border-stone-200 px-4 md:px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
         {/* Brand & Connection Status */}
         <div className="flex items-center gap-4">
           <div>
@@ -851,108 +1044,247 @@ const PosTerminal: React.FC = () => {
               </div>
 
               <span className="text-xs text-slate-500 font-medium shrink-0">
-                {filteredBatches.length} available items
+                {searchTerm.trim() || selectedCategory !== "All"
+                  ? `${filteredBatches.length} matching ${filteredBatches.length === 1 ? "batch" : "batches"}`
+                  : `Ready to search · ${allBatches.length} stock items`}
               </span>
             </div>
           </div>
 
-          {/* Product Catalog Grid (Independently Scrollable) */}
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar min-h-0">
+          {/* Batch Rows Table (Independently Scrollable) */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 bg-white">
             {loading && allBatches.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-slate-500 gap-2">
+              <div className="h-full flex items-center justify-center text-slate-500 gap-2 p-8">
                 <div className="w-5 h-5 border-2 border-teal-700 border-t-transparent rounded-full animate-spin" />
                 <span className="text-xs font-medium">Loading inventory catalog...</span>
+              </div>
+            ) : !searchTerm.trim() && selectedCategory === "All" ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 text-center select-none">
+                <div className="w-16 h-16 rounded-2xl bg-stone-100 border border-stone-200 flex items-center justify-center mb-4 text-teal-800 shadow-xs">
+                  <Barcode size={32} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800 mb-1">
+                  Ready to Scan or Search
+                </h3>
+                <p className="text-xs text-slate-500 max-w-sm mb-6">
+                  Scan a barcode or type a product name, material SKU, or ID above to view matching stock batches.
+                </p>
+
+                {/* Quick start helper shortcuts */}
+                <div className="grid grid-cols-2 gap-3 max-w-sm w-full text-left">
+                  <div className="p-3 rounded-lg bg-stone-50 border border-stone-200">
+                    <p className="text-[11px] font-bold text-slate-700 flex items-center gap-1 mb-1">
+                      <kbd className="px-1 py-0.5 bg-white rounded border border-stone-300 font-mono text-[10px]">F2</kbd>
+                      <span>Focus Search</span>
+                    </p>
+                    <p className="text-[10px] text-slate-500">Jump directly to barcode / product search</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-stone-50 border border-stone-200">
+                    <p className="text-[11px] font-bold text-slate-700 flex items-center gap-1 mb-1">
+                      <kbd className="px-1 py-0.5 bg-white rounded border border-stone-300 font-mono text-[10px]">↵ Enter</kbd>
+                      <span>Quick Add</span>
+                    </p>
+                    <p className="text-[10px] text-slate-500">Add top match directly to customer sale</p>
+                  </div>
+                </div>
               </div>
             ) : filteredBatches.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
                 <Package size={40} className="text-stone-300 mb-2" />
                 <p className="text-sm font-semibold text-slate-700">
-                  No Matching Products Found
+                  No Matching Batches Found
                 </p>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                  Try scanning a barcode or clearing search keywords.
+                  No items matched &ldquo;{searchTerm}&rdquo;. Please verify barcode or spelling.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                {filteredBatches.map((batch) => {
-                  const p = batch.product!;
-                  const isLowStock = batch.remain_qty <= 10;
-                  const hasReturns = (batch.returned_qty || 0) > 0;
+              <div className="min-w-full inline-block align-middle">
+                <table className="min-w-full divide-y divide-stone-200 text-left text-xs">
+                  <thead className="bg-stone-50 sticky top-0 z-10 border-b border-stone-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none shadow-xs">
+                    <tr>
+                      <th className="py-2.5 pl-3 pr-2 w-10 text-center">#</th>
+                      <th className="py-2.5 px-3">Product Description</th>
+                      <th className="py-2.5 px-3">SKU / Barcode</th>
+                      <th className="py-2.5 px-3">Batch Info</th>
+                      <th className="py-2.5 px-3 text-center">Pack</th>
+                      <th className="py-2.5 px-3 text-center">Stock</th>
+                      <th className="py-2.5 px-3 text-right">Retail Price</th>
+                      <th className="py-2.5 pr-4 pl-3 text-center w-28">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-200/80 bg-white">
+                    {filteredBatches.map((batch, idx) => {
+                      const p = batch.product!;
+                      const isSelected = selectedIndex === idx;
+                      const isLowStock = batch.remain_qty <= 10;
+                      const hasReturns = (batch.returned_qty || 0) > 0;
 
-                  return (
-                    <div
-                      key={batch.id}
-                      onClick={() => addToCart(batch)}
-                      className="bg-white border border-stone-200 hover:border-teal-700/60 rounded-lg p-3.5 flex flex-col justify-between transition-colors shadow-sm group relative cursor-pointer"
-                    >
-                      {hasReturns && (
-                        <span className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-200">
-                          Return Pool
-                        </span>
-                      )}
-
-                      <div>
-                        {/* Title */}
-                        <h3 className="text-xs font-bold text-slate-900 group-hover:text-teal-800 line-clamp-2 leading-snug mb-1">
-                          {p.name}
-                        </h3>
-
-                        {/* Pack size & Codes */}
-                        <div className="space-y-0.5 text-[11px] text-slate-500 font-medium">
-                          <p>Pack size: {batch.pack_size || 1}</p>
-                          <p className="font-mono text-[10px] text-slate-400 truncate">
-                            SKU: {p.material_code}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Bottom Price & Add Hit Target */}
-                      <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-end justify-between gap-2">
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                            Price
-                          </p>
-                          <p className="text-xs font-bold text-slate-900 tabular-nums">
-                            {formatCurrency(Number(batch.retail_price))}
-                          </p>
-                          <p
-                            className={`text-[10px] font-medium ${
-                              isLowStock ? "text-red-600 font-semibold" : "text-slate-500"
-                            }`}
-                          >
-                            {batch.remain_qty} in stock
-                          </p>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(batch);
+                      return (
+                        <tr
+                          key={batch.id}
+                          ref={(el) => (rowRefs.current[idx] = el)}
+                          onClick={() => {
+                            setSelectedIndex(idx);
+                            openQuickAddModal(batch);
                           }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.repeat) {
-                              e.preventDefault();
-                            }
-                          }}
-                          className="product-add-btn min-h-[36px] min-w-[56px] px-3 py-1.5 bg-stone-100 text-teal-800 group-hover:bg-teal-800 group-hover:text-white group-hover:border-teal-800 focus:bg-teal-800 focus:text-white focus:border-teal-800 font-bold text-xs rounded border border-stone-300 transition-colors flex items-center justify-center gap-1 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-teal-700/50"
-                          aria-label={`Add ${p.name} to cart`}
+                          onMouseEnter={() => setSelectedIndex(idx)}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected
+                              ? "bg-teal-50/90 text-slate-900 border-l-4 border-l-teal-800 font-medium"
+                              : "hover:bg-stone-50/80 text-slate-700 border-l-4 border-l-transparent"
+                          }`}
                         >
-                          <Plus size={14} />
-                          <span>Add</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                          {/* Row Indicator / Number */}
+                          <td className="py-2.5 pl-3 pr-2 text-center whitespace-nowrap">
+                            {isSelected ? (
+                              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-teal-800 text-white text-[10px] font-bold shadow-xs">
+                                ▶
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 font-mono text-[11px]">
+                                {idx + 1}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Product Description */}
+                          <td className="py-2.5 px-3">
+                            <div className="flex flex-col">
+                              <span className={`text-xs font-bold leading-tight ${isSelected ? "text-teal-950" : "text-slate-900"}`}>
+                                {p.name}
+                              </span>
+                              {p.category && (
+                                <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                  {p.category}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* SKU & Barcode */}
+                          <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-slate-700 font-semibold">
+                                {p.material_code || "-"}
+                              </span>
+                              {p.barcode && (
+                                <span className="text-[10px] text-slate-400">
+                                  {p.barcode}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Batch Info & Expiry */}
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="bg-stone-100 text-slate-700 font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded border border-stone-200">
+                                Batch #{batch.id}
+                              </span>
+                              {hasReturns && (
+                                <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-200">
+                                  Return Pool
+                                </span>
+                              )}
+                            </div>
+                            {batch.expiry_date && (
+                              <p className="text-[10px] text-slate-500 mt-0.5">
+                                Exp: {batch.expiry_date}
+                              </p>
+                            )}
+                          </td>
+
+                          {/* Pack Size */}
+                          <td className="py-2.5 px-3 text-center whitespace-nowrap font-mono text-xs text-slate-600">
+                            {batch.pack_size || 1}
+                          </td>
+
+                          {/* Stock */}
+                          <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold font-mono ${
+                                isLowStock
+                                  ? "bg-red-50 text-red-700 border border-red-200"
+                                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              }`}
+                            >
+                              {batch.remain_qty}
+                            </span>
+                          </td>
+
+                          {/* Retail Price */}
+                          <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                            <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">
+                              {formatCurrency(Number(batch.retail_price))}
+                            </span>
+                          </td>
+
+                          {/* Action Button */}
+                          <td className="py-2.5 pr-4 pl-3 text-center whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openQuickAddModal(batch);
+                              }}
+                              className={`inline-flex items-center justify-center gap-1 px-2.5 py-1 text-xs font-bold rounded transition-colors shadow-xs ${
+                                isSelected
+                                  ? "bg-teal-800 text-white hover:bg-teal-900"
+                                  : "bg-stone-100 text-slate-700 hover:bg-teal-800 hover:text-white border border-stone-300"
+                              }`}
+                            >
+                              <Plus size={13} />
+                              <span>Add</span>
+                              {isSelected && (
+                                <span className="text-[10px] bg-teal-950/60 px-1 py-0.2 rounded font-mono ml-0.5">
+                                  ↵ Enter
+                                </span>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
+          </div>
+
+          {/* Bottom Keyboard Shortcut Hint Bar */}
+          <div className="px-4 py-2 bg-stone-100 border-t border-stone-200 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600 font-medium shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">↑</kbd>
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">↓</kbd>
+                <span>Navigate</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">↵ Enter</kbd>
+                <span>Add Item</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">F2</kbd>
+                <span>Search</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">F8</kbd>
+                <span>Cart Qty</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">F9</kbd>
+                <span>Pay</span>
+              </span>
+            </div>
+            <span className="text-slate-500 font-mono text-[10px]">
+              {filteredBatches.length > 0 ? `Row ${selectedIndex + 1} of ${filteredBatches.length}` : '0 results'}
+            </span>
           </div>
         </div>
 
         {/* Right Section: Current Sale Cart & Checkout Panel */}
-        <div className="w-full lg:w-[420px] xl:w-[440px] bg-white flex flex-col border-l border-stone-200 shrink-0 overflow-hidden shadow-sm h-full min-h-0">
+        <div className="w-full lg:w-[480px] xl:w-[540px] bg-white flex flex-col border-l border-stone-200 shrink-0 overflow-hidden shadow-sm h-full min-h-0">
           {/* Cart Header */}
           <div className="p-4 border-b border-stone-200 flex items-center justify-between bg-stone-50 shrink-0">
             <div>
@@ -971,7 +1303,7 @@ const PosTerminal: React.FC = () => {
               <button
                 type="button"
                 onClick={clearCart}
-                className="text-xs text-slate-500 hover:text-red-700 font-medium flex items-center gap-1 px-2 py-1 rounded hover:bg-stone-200 transition-colors"
+                className="text-xs text-slate-500 hover:text-red-700 font-medium flex items-center gap-1 px-2.5 py-1 rounded hover:bg-stone-200 transition-colors cursor-pointer"
                 title="Clear current cart"
               >
                 <Trash2 size={14} />
@@ -980,8 +1312,18 @@ const PosTerminal: React.FC = () => {
             )}
           </div>
 
+          {/* Cart Table Header */}
+          {cart.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-2 border-b border-stone-200 bg-stone-100/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
+              <span className="flex-1">Item</span>
+              <span className="w-32 text-center">Qty</span>
+              <span className="w-28 text-right pr-2">Total</span>
+              <span className="w-8 text-center"></span>
+            </div>
+          )}
+
           {/* Cart Row Items (Independently Scrollable) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-white min-h-0">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-white min-h-0">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center">
                 <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-3 border border-stone-200">
@@ -998,41 +1340,40 @@ const PosTerminal: React.FC = () => {
               cart.map((item) => (
                 <div
                   key={item.cart_id}
-                  className="bg-stone-50/70 border border-stone-200 rounded-lg p-3 flex flex-col gap-2 transition-colors hover:border-stone-300"
+                  className="flex items-center justify-between p-2.5 rounded-lg border border-stone-200 bg-stone-50/60 hover:bg-stone-50 hover:border-stone-300 transition-colors gap-2"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900 leading-snug">
-                        {item.product_name}
-                      </h4>
-                      <p className="text-[10px] text-slate-500 font-mono">
-                        SKU: {item.material_code} | Batch #{item.batch_id}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => removeFromCart(item.cart_id)}
-                      className="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-stone-200 transition-colors"
-                      aria-label={`Remove ${item.product_name} from cart`}
+                  {/* 1. Item Name & Unit Price */}
+                  <div className="flex-1 min-w-0 pr-1">
+                    <h4
+                      className="text-xs sm:text-sm font-bold text-slate-900 truncate cursor-pointer hover:text-teal-700 transition-colors"
+                      title={`${item.product_name} (Click to edit)`}
+                      onClick={() => openEditCartItemModal(item)}
                     >
-                      <X size={15} />
-                    </button>
+                      {item.product_name}
+                    </h4>
+                    <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                      <span>{formatCurrency(item.retail_price)}</span>
+                      {item.discount_percentage > 0 && (
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 py-0.2 rounded border border-amber-200">
+                          -{item.discount_percentage}%
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Quantity Controls & Line Pricing */}
-                  <div className="flex items-center justify-between pt-1 border-t border-stone-200">
-                    {/* Qty +/- Input */}
-                    <div className="flex items-center gap-1 bg-white rounded border border-stone-300 p-0.5">
+                  {/* 2. Quantity (Editable Input + Steppers + Edit Modal Button) */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center bg-white rounded-md border border-stone-300 p-0.5 shadow-2xs">
                       <button
                         type="button"
                         onClick={() =>
                           updateCartItemQty(item.cart_id, item.total_qty - 1)
                         }
-                        className="min-w-[28px] min-h-[28px] rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+                        className="w-6 h-6 rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
                         aria-label="Decrease quantity"
+                        title="Decrease quantity"
                       >
-                        <Minus size={12} />
+                        <Minus size={11} />
                       </button>
                       <input
                         type="number"
@@ -1045,51 +1386,57 @@ const PosTerminal: React.FC = () => {
                             parseInt(e.target.value) || 1
                           )
                         }
-                        className="cart-qty-input w-10 text-center text-xs font-bold text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-teal-700/50 focus:bg-white rounded"
+                        className="cart-qty-input w-10 text-center text-xs font-bold text-slate-900 font-mono focus:outline-none"
+                        title="Edit quantity"
                       />
                       <button
                         type="button"
                         onClick={() =>
                           updateCartItemQty(item.cart_id, item.total_qty + 1)
                         }
-                        className="min-w-[28px] min-h-[28px] rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+                        className="w-6 h-6 rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
                         aria-label="Increase quantity"
+                        title="Increase quantity"
                       >
-                        <Plus size={12} />
+                        <Plus size={11} />
                       </button>
                     </div>
 
-                    {/* Per-item Discount Input */}
-                    <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                      <span>Disc:</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={item.discount_percentage || ""}
-                        onChange={(e) =>
-                          updateItemDiscount(
-                            item.cart_id,
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                        placeholder="0"
-                        className="w-10 bg-white text-center text-xs font-bold text-slate-900 rounded border border-stone-300 py-0.5 focus:outline-none focus:border-teal-700"
-                      />
-                      <span>%</span>
-                    </div>
+                    {/* Quick Edit Pencil Icon to edit price/discount/qty in modal */}
+                    <button
+                      type="button"
+                      onClick={() => openEditCartItemModal(item)}
+                      className="p-1.5 text-slate-400 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors cursor-pointer"
+                      title="Edit Price, Discount or Qty"
+                      aria-label="Edit item details"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                  </div>
 
-                    {/* Line Total */}
-                    <div className="text-right">
-                      <p className="text-xs font-bold text-slate-900 tabular-nums">
-                        {formatCurrency(item.line_total)}
+                  {/* 3. Total Value */}
+                  <div className="w-24 sm:w-28 text-right shrink-0 pr-1">
+                    <p className="text-xs sm:text-sm font-bold text-slate-900 font-mono tabular-nums">
+                      {formatCurrency(item.line_total)}
+                    </p>
+                    {item.discount_amount > 0 && (
+                      <p className="text-[10px] text-amber-700 font-medium font-mono line-through">
+                        {formatCurrency(item.total_qty * item.retail_price)}
                       </p>
-                      {item.discount_amount > 0 && (
-                        <p className="text-[10px] text-amber-700 font-medium line-through">
-                          {formatCurrency(item.total_qty * item.retail_price)}
-                        </p>
-                      )}
-                    </div>
+                    )}
+                  </div>
+
+                  {/* 4. Delete Button at End */}
+                  <div className="w-8 flex justify-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.cart_id)}
+                      className="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors cursor-pointer"
+                      aria-label={`Remove ${item.product_name} from cart`}
+                      title="Remove from cart"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
               ))
@@ -1172,6 +1519,234 @@ const PosTerminal: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 2.5 Fast Item Entry Modal (Quick Add to Cart) */}
+      {quickAddOpen && selectedBatch && selectedBatch.product && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-stone-300 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="px-5 py-4 bg-teal-900 text-white flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="bg-teal-800 text-teal-100 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-700/60 uppercase tracking-wider">
+                    {selectedBatch.product.category || "General"}
+                  </span>
+                  <span className="bg-teal-800 text-teal-100 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-700/60 font-mono">
+                    Batch #{selectedBatch.id}
+                  </span>
+                  {selectedBatch.expiry_date && (
+                    <span className="text-[10px] text-teal-200/90 font-mono">
+                      Exp: {selectedBatch.expiry_date}
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-base font-bold text-white leading-tight">
+                  {selectedBatch.product.name}
+                </h3>
+                <p className="text-xs text-teal-200/80 font-mono mt-0.5">
+                  SKU: {selectedBatch.product.material_code} {selectedBatch.product.barcode ? `| Barcode: ${selectedBatch.product.barcode}` : ""}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickAddOpen(false);
+                  setQuickModalError(null);
+                  searchInputRef.current?.focus();
+                }}
+                className="text-teal-200 hover:text-white p-1.5 rounded-lg hover:bg-teal-800/60 transition-colors cursor-pointer"
+                aria-label="Close fast item entry modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={submitQuickAdd} className="p-5 space-y-4">
+              {/* Stock & Pack Info Badges */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-800">Available Stock:</span>
+                  <span className="text-sm font-black text-emerald-900 font-mono">
+                    {selectedBatch.remain_qty} units
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700">Pack Size:</span>
+                  <span className="text-sm font-bold text-slate-900 font-mono">
+                    {selectedBatch.pack_size || 1}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quantity & Selling Price Inputs */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                {/* Quantity Input */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Quantity (Units) *
+                  </label>
+                  <div className="flex items-center rounded-lg border border-stone-300 bg-stone-50 focus-within:bg-white focus-within:border-teal-700 focus-within:ring-2 focus-within:ring-teal-700/20 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const q = parseInt(quickQty, 10) || 1;
+                        if (q > 1) setQuickQty((q - 1).toString());
+                      }}
+                      className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-stone-200 rounded-md font-bold transition-colors cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <input
+                      ref={quickQtyInputRef}
+                      type="number"
+                      min="1"
+                      max={selectedBatch.remain_qty}
+                      value={quickQty}
+                      onChange={(e) => setQuickQty(e.target.value)}
+                      className="w-full text-center text-base font-bold font-mono text-slate-900 bg-transparent focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const q = parseInt(quickQty, 10) || 0;
+                        if (q < selectedBatch.remain_qty) setQuickQty((q + 1).toString());
+                      }}
+                      className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-stone-200 rounded-md font-bold transition-colors cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selling Price Input (Editable) */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Selling Price (LKR) *
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      LKR
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={quickPrice}
+                      onChange={(e) => setQuickPrice(e.target.value)}
+                      className="w-full pl-12 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-sm font-bold font-mono text-slate-900 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 tabular-nums transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Discount % Input & Presets */}
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Item Discount (%)
+                  </label>
+                  <div className="flex gap-1">
+                    {[0, 5, 10, 15].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => setQuickDiscount(pct.toString())}
+                        className={`px-2 py-0.5 text-[10px] font-bold rounded border transition-colors cursor-pointer ${
+                          parseFloat(quickDiscount) === pct
+                            ? "bg-teal-800 text-white border-teal-800"
+                            : "bg-stone-100 text-slate-600 border-stone-200 hover:bg-stone-200"
+                        }`}
+                        tabIndex={-1}
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={quickDiscount}
+                    onChange={(e) => setQuickDiscount(e.target.value)}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold font-mono text-slate-900 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 transition-colors"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                    %
+                  </span>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {quickModalError && (
+                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2 text-red-800 text-xs font-medium animate-in fade-in duration-100">
+                  <AlertCircle size={15} className="text-red-600 shrink-0" />
+                  <span>{quickModalError}</span>
+                </div>
+              )}
+
+              {/* Live Calculation Total Box */}
+              {(() => {
+                const modalQtyNum = parseInt(quickQty, 10) || 0;
+                const modalPriceNum = parseFloat(quickPrice) || 0;
+                const modalDiscPercent = Math.min(100, Math.max(0, parseFloat(quickDiscount) || 0));
+                const modalGross = modalQtyNum * modalPriceNum;
+                const modalDiscAmt = (modalGross * modalDiscPercent) / 100;
+                const modalLineTotal = Math.max(0, modalGross - modalDiscAmt);
+
+                return (
+                  <div className="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-1 text-xs">
+                    <div className="flex justify-between text-slate-600">
+                      <span>Gross: {modalQtyNum} × {formatCurrency(modalPriceNum)}</span>
+                      <span className="font-mono">{formatCurrency(modalGross)}</span>
+                    </div>
+                    {modalDiscAmt > 0 && (
+                      <div className="flex justify-between text-amber-700 font-medium">
+                        <span>Discount ({modalDiscPercent}%):</span>
+                        <span className="font-mono">- {formatCurrency(modalDiscAmt)}</span>
+                      </div>
+                    )}
+                    <div className="pt-2 border-t border-stone-200 flex justify-between items-baseline font-bold text-slate-900">
+                      <span className="text-sm">Line Total:</span>
+                      <span className="text-lg font-black font-mono text-teal-900 tabular-nums">
+                        {formatCurrency(modalLineTotal)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Modal Footer Actions */}
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuickAddOpen(false);
+                    setQuickModalError(null);
+                    searchInputRef.current?.focus();
+                  }}
+                  className="px-4 py-2.5 rounded-lg border border-stone-300 text-xs font-semibold text-slate-700 hover:bg-stone-100 transition-colors"
+                >
+                  Cancel (Esc)
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50 cursor-pointer"
+                >
+                  <Plus size={15} />
+                  <span>Add to Cart (↵ Enter)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 3. Payment Checkout Dialog */}
       {isCheckoutOpen && (
@@ -1335,47 +1910,155 @@ const PosTerminal: React.FC = () => {
         </div>
       )}
 
-      {/* 4. Thermal Receipt View (Print Only) */}
+        {/* 5. Recent Sales History Modal */}
+        {isHistoryOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white border border-stone-300 rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-xl">
+              <div className="px-5 py-3.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="text-teal-800" size={18} />
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Recent sales register history
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsHistoryOpen(false)}
+                  className="text-slate-400 hover:text-slate-700 p-1 rounded cursor-pointer"
+                  aria-label="Close sales history modal"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar">
+                {recentSales.length === 0 ? (
+                  <p className="text-center text-slate-500 py-8 text-xs">
+                    No sales recorded yet.
+                  </p>
+                ) : (
+                  recentSales.map((sale) => (
+                    <div
+                      key={sale.id}
+                      className="bg-stone-50 border border-stone-200 rounded-md p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-teal-800 text-xs">
+                            Sale #{sale.id}
+                          </span>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-xs text-slate-500">
+                            {sale.date_time}
+                          </span>
+                          <span className="bg-stone-200 text-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">
+                            {sale.payment_type || "cash"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Cashier: {sale.user?.name || "System"} | {sale.items?.length || 0} items
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-[10px] uppercase font-bold text-slate-400">
+                            Total
+                          </p>
+                          <p className="text-xs font-bold text-slate-900 tabular-nums">
+                            {formatCurrency(Number(sale.total))}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCompletedSale(sale);
+                              setTimeout(() => window.print(), 300);
+                            }}
+                            className="p-1.5 bg-white hover:bg-stone-100 text-slate-700 rounded border border-stone-300 cursor-pointer"
+                            title="Print Receipt"
+                            aria-label="Print receipt"
+                          >
+                            <Printer size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleVoidSale(sale.id)}
+                            className="p-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded border border-red-200 cursor-pointer"
+                            title="Void Sale & Restore Inventory"
+                            aria-label="Void transaction"
+                          >
+                            <RotateCcw size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* -------------------------------------------------------------
+          Thermal POS Cashier Receipt (Visible ONLY during print)
+         ------------------------------------------------------------- */}
       {completedSale && (
-        <div id="printable-receipt" className="hidden print:block text-black p-4 font-mono text-xs leading-snug">
-          <div className="text-center font-bold mb-2">
-            <h2 className="text-base uppercase tracking-widest">THEJANI TRADERS</h2>
+        <div
+          id="printable-receipt"
+          className="hidden print:block text-black bg-white font-mono text-[11px] leading-tight select-text w-[76mm] mx-auto p-2"
+        >
+          {/* Shop Header Details */}
+          <div className="text-center font-bold space-y-0.5 mb-1">
+            <h2 className="text-sm font-black tracking-wider uppercase">
+              THEJANI TRADERS
+            </h2>
             <p className="text-[10px]">Sales Counter & Warehouse</p>
             <p className="text-[10px]">Tel: 077-1234567 | Colombo, Sri Lanka</p>
-            <div className="border-b border-black my-2" />
-            <p className="text-xs uppercase">POS RECEIPT</p>
-            <p className="text-[10px]">Receipt #: {completedSale.id}</p>
-            <p className="text-[10px]">
-              Date: {completedSale.date_time || new Date().toLocaleString()}
-            </p>
-            <p className="text-[10px]">
-              Cashier: {completedSale.user?.name || user?.name || "Cashier"}
-            </p>
           </div>
 
-          <div className="border-b border-black my-2" />
+          <div className="border-b border-dashed border-black my-1.5" />
 
-          {/* Items */}
-          <table className="w-full text-left text-[10px] mb-2">
+          {/* Receipt Info */}
+          <div className="text-[10px] space-y-0.5">
+            <div className="flex justify-between font-bold">
+              <span>RECEIPT #: {completedSale.id}</span>
+              <span>POS: #01</span>
+            </div>
+            <div className="flex justify-between text-[9px] text-gray-800">
+              <span>Date: {completedSale.date_time || new Date().toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-[9px]">
+              <span>Cashier: {completedSale.user?.name || user?.name || "Cashier"}</span>
+            </div>
+          </div>
+
+          <div className="border-b border-black my-1.5" />
+
+          {/* Purchased Items Table */}
+          <table className="w-full text-left text-[10px] mb-1">
             <thead>
-              <tr className="border-b border-black">
-                <th className="py-1">ITEM</th>
-                <th className="py-1 text-center">QTY</th>
-                <th className="py-1 text-right">PRICE</th>
-                <th className="py-1 text-right">TOTAL</th>
+              <tr className="border-b border-black text-[9px] uppercase font-bold">
+                <th className="py-0.5">ITEM</th>
+                <th className="py-0.5 text-center">QTY</th>
+                <th className="py-0.5 text-right">PRICE</th>
+                <th className="py-0.5 text-right">TOTAL</th>
               </tr>
             </thead>
             <tbody>
               {completedSale.items?.map((item: any, idx: number) => (
-                <tr key={idx} className="border-b border-dashed border-gray-400">
-                  <td className="py-1 max-w-[120px] truncate">
+                <tr key={idx} className="border-b border-dashed border-gray-300">
+                  <td className="py-1 pr-1 break-words font-medium">
                     {item.product?.name || item.product_name || "Product"}
                   </td>
-                  <td className="py-1 text-center">{item.qty}</td>
+                  <td className="py-1 text-center font-bold">{item.qty}</td>
                   <td className="py-1 text-right">
                     {formatCurrency(Number(item.retail_price || item.unit_price))}
                   </td>
-                  <td className="py-1 text-right">
+                  <td className="py-1 text-right font-bold">
                     {formatCurrency(Number(item.total))}
                   </td>
                 </tr>
@@ -1383,143 +2066,70 @@ const PosTerminal: React.FC = () => {
             </tbody>
           </table>
 
-          <div className="border-b border-black my-2" />
+          <div className="border-b border-black my-1.5" />
 
-          {/* Totals */}
-          <div className="space-y-1 text-right text-[11px] font-bold">
+          {/* Totals & Breakdown */}
+          <div className="space-y-1 text-right text-[10px]">
             <div className="flex justify-between">
-              <span>Subtotal:</span>
+              <span>Gross Subtotal:</span>
               <span>
                 {formatCurrency(
                   Number(completedSale.total) + Number(completedSale.discount || 0)
                 )}
               </span>
             </div>
-            {completedSale.discount > 0 && (
-              <div className="flex justify-between">
+
+            {Number(completedSale.discount) > 0 && (
+              <div className="flex justify-between text-gray-800">
                 <span>Discount:</span>
                 <span>- {formatCurrency(Number(completedSale.discount))}</span>
               </div>
             )}
-            <div className="flex justify-between text-xs font-black border-t border-black pt-1">
-              <span>TOTAL:</span>
+
+            <div className="flex justify-between text-xs font-black border-t border-b border-black py-1 my-1">
+              <span>NET TOTAL:</span>
               <span>{formatCurrency(Number(completedSale.total))}</span>
             </div>
-            <div className="flex justify-between text-[10px] pt-1">
-              <span>Payment ({completedSale.payment_type?.toUpperCase()}):</span>
+
+            <div className="flex justify-between">
+              <span>Paid ({completedSale.payment_type?.toUpperCase() || "CASH"}):</span>
               <span>
                 {formatCurrency(
                   Number(completedSale.cashTendered || completedSale.total)
                 )}
               </span>
             </div>
-            {completedSale.changeDue !== undefined && (
-              <div className="flex justify-between text-[10px]">
+
+            {completedSale.changeDue !== undefined && Number(completedSale.changeDue) > 0 && (
+              <div className="flex justify-between font-bold">
                 <span>Change Due:</span>
                 <span>{formatCurrency(Number(completedSale.changeDue))}</span>
               </div>
             )}
+
+            <div className="flex justify-between text-[9px] text-gray-600 pt-0.5">
+              <span>Items: {completedSale.items?.length || 0}</span>
+              <span>
+                Total Units:{" "}
+                {completedSale.items?.reduce(
+                  (sum: number, it: any) => sum + (Number(it.qty) || 0),
+                  0
+                ) || 0}
+              </span>
+            </div>
           </div>
 
-          <div className="border-b border-black my-2" />
-          <div className="text-center text-[10px] mt-3">
-            <p>Thank you for shopping with us!</p>
+          <div className="border-b border-dashed border-black my-2" />
+
+          {/* Receipt Footer */}
+          <div className="text-center text-[10px] space-y-0.5">
+            <p className="font-bold">THANK YOU FOR SHOPPING WITH US!</p>
+            <p className="text-[9px]">Exchange possible within 7 days with bill.</p>
+            <p className="text-[8px] text-gray-500 mt-1">*** HAVE A GREAT DAY ***</p>
           </div>
         </div>
       )}
-
-      {/* 5. Recent Sales History Modal */}
-      {isHistoryOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-stone-300 rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-xl">
-            <div className="px-5 py-3.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <History className="text-teal-800" size={18} />
-                <h3 className="text-sm font-bold text-slate-900">
-                  Recent sales register history
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsHistoryOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded"
-                aria-label="Close sales history modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar">
-              {recentSales.length === 0 ? (
-                <p className="text-center text-slate-500 py-8 text-xs">
-                  No sales recorded yet.
-                </p>
-              ) : (
-                recentSales.map((sale) => (
-                  <div
-                    key={sale.id}
-                    className="bg-stone-50 border border-stone-200 rounded-md p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-teal-800 text-xs">
-                          Sale #{sale.id}
-                        </span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-xs text-slate-500">
-                          {sale.date_time}
-                        </span>
-                        <span className="bg-stone-200 text-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">
-                          {sale.payment_type || "cash"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Cashier: {sale.user?.name || "System"} | {sale.items?.length || 0} items
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="text-[10px] uppercase font-bold text-slate-400">
-                          Total
-                        </p>
-                        <p className="text-xs font-bold text-slate-900 tabular-nums">
-                          {formatCurrency(Number(sale.total))}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCompletedSale(sale);
-                            setTimeout(() => window.print(), 300);
-                          }}
-                          className="p-1.5 bg-white hover:bg-stone-100 text-slate-700 rounded border border-stone-300"
-                          title="Print Receipt"
-                          aria-label="Print receipt"
-                        >
-                          <Printer size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleVoidSale(sale.id)}
-                          className="p-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded border border-red-200"
-                          title="Void Sale & Restore Inventory"
-                          aria-label="Void transaction"
-                        >
-                          <RotateCcw size={15} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
