@@ -537,11 +537,14 @@ const Suppliers = () => {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <div className="text-xs font-semibold uppercase tracking-wider text-teal-800 mb-1">
+              Supplier Directory
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
               Suppliers
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Manage supplier details and contact information
+            <p className="text-sm text-slate-500 mt-0.5">
+              Manage supplier catalog, contact directory, and distributor information.
             </p>
           </div>
 

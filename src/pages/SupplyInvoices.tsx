@@ -517,11 +517,14 @@ const SupplyInvoices: React.FC = () => {
         {/* Page Top Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">
+            <div className="text-xs font-semibold uppercase tracking-wider text-teal-800 mb-1">
+              Billing & Documentation
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
               Invoices & Manifests
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Review supplier stock receipts, outbound loading manifests, and POS sales logs
+            <p className="text-sm text-slate-500 mt-0.5">
+              Review supplier stock receipts, outbound loading manifests, and POS sales logs.
             </p>
           </div>
 
@@ -1095,14 +1098,14 @@ const SupplyInvoices: React.FC = () => {
 
       {/* DETAIL MODAL: SUPPLY INVOICE */}
       {selectedInvoice && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
-          <div className="bg-white rounded-xl shadow-xl border border-stone-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-5 py-3.5 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 sm:p-6 font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
               <div>
                 <p className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">
                   Supply Invoice Details
                 </p>
-                <h3 className="text-xs font-bold text-slate-900 font-mono">
+                <h3 className="text-sm font-bold text-slate-900 font-mono">
                   #{selectedInvoice.invoice_number}
                 </h3>
               </div>
@@ -1115,7 +1118,7 @@ const SupplyInvoices: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto space-y-4">
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
               {modalLoading ? (
                 <div className="py-16 text-center">
                   <Loader2 size={24} className="animate-spin text-teal-800 mx-auto mb-2" />
@@ -1124,12 +1127,12 @@ const SupplyInvoices: React.FC = () => {
               ) : (
                 <>
                   {/* Summary Bar */}
-                  <div className="grid grid-cols-3 gap-4 bg-stone-50 p-3.5 rounded-lg border border-stone-200 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-stone-50 p-4 rounded-xl border border-stone-200 text-xs">
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase">
                         Supplier
                       </p>
-                      <p className="font-bold text-slate-900 truncate">
+                      <p className="font-bold text-slate-900 text-sm truncate">
                         {selectedInvoice.supplier?.name || `Supplier #${selectedInvoice.supplier_id}`}
                       </p>
                     </div>
@@ -1137,25 +1140,26 @@ const SupplyInvoices: React.FC = () => {
                       <p className="text-[10px] font-bold text-slate-400 uppercase">
                         Invoice Date
                       </p>
-                      <p className="font-bold text-slate-900">
+                      <p className="font-bold text-slate-900 text-sm">
                         {selectedInvoice.invoice_date}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <p className="text-[10px] font-bold text-slate-400 uppercase">
                         Declared Total
                       </p>
-                      <p className="font-bold text-teal-900 font-mono text-sm">
+                      <p className="font-bold text-teal-900 font-mono text-base">
                         {formatCurrency(Number(selectedInvoice.total_bill_amount))}
                       </p>
                     </div>
                   </div>
 
-                  {/* Stocked Items Table */}
-                  <div className="border border-stone-200 rounded-lg overflow-hidden">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-stone-50 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                  {/* Stocked Items Table with max-h and scroll-y */}
+                  <div className="border border-stone-200 rounded-xl overflow-hidden shadow-xs">
+                    <div className="overflow-x-auto max-h-[50vh] overflow-y-auto custom-scrollbar">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead className="sticky top-0 bg-stone-50 z-10">
+                          <tr className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
                           <th className="px-3.5 py-2">Product & Code</th>
                           <th className="px-3 py-2 text-center">Breakdown</th>
                           <th className="px-3 py-2 text-center">Free Units</th>
@@ -1205,7 +1209,8 @@ const SupplyInvoices: React.FC = () => {
                           </tr>
                         ))}
                       </tbody>
-                    </table>
+                      </table>
+                    </div>
                   </div>
                 </>
               )}
@@ -1234,15 +1239,15 @@ const SupplyInvoices: React.FC = () => {
 
       {/* DETAIL MODAL: LOADING MANIFEST */}
       {selectedLoading && printMode !== "load-list" && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
-          <div className="bg-white rounded-xl shadow-xl border border-stone-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-5 py-3.5 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 sm:p-6 font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
               <div>
                 <p className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">
                   Loading Manifest Details
                 </p>
-                <h3 className="text-xs font-bold text-slate-900 font-mono">
-                  {selectedLoading.load_number}
+                <h3 className="text-sm font-bold text-slate-900 font-mono">
+                  #{selectedLoading.load_number}
                 </h3>
               </div>
               <button
@@ -1254,13 +1259,13 @@ const SupplyInvoices: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-50 p-3.5 rounded-lg border border-stone-200 text-xs">
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-stone-50 p-4 rounded-xl border border-stone-200 text-xs">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Vehicle
                   </p>
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-slate-900 text-sm">
                     {selectedLoading.truck?.licence_plate_no || "-"}
                   </p>
                 </div>
@@ -1268,7 +1273,7 @@ const SupplyInvoices: React.FC = () => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Route
                   </p>
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-slate-900 text-sm">
                     {selectedLoading.route?.route_code || "-"}
                   </p>
                 </div>
@@ -1276,7 +1281,7 @@ const SupplyInvoices: React.FC = () => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Sales Rep
                   </p>
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-slate-900 text-sm">
                     {selectedLoading.sales_rep?.name || "-"}
                   </p>
                 </div>
@@ -1284,74 +1289,76 @@ const SupplyInvoices: React.FC = () => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Date
                   </p>
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-slate-900 text-sm">
                     {selectedLoading.loading_date}
                   </p>
                 </div>
               </div>
 
-              {/* Items */}
-              <div className="border border-stone-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-stone-50 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
-                      <th className="px-3.5 py-2">Product</th>
-                      <th className="px-3 py-2 text-center">Unit Breakdown</th>
-                      <th className="px-3 py-2 text-center">Free Qty</th>
-                      <th className="px-3 py-2 text-right">Net Price</th>
-                      <th className="px-3 py-2 text-right">Retail</th>
-                      <th className="px-3.5 py-2 text-right">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {selectedLoading.loading_items?.map((item: any) => {
-                      const netPrice = Number(item.net_price || 0);
-                      const retailPrice = Number(item.batch_stock?.retail_price || 0);
-                      const paidUnits = Number(item.qty) - Number(item.free_qty || 0);
-                      return (
-                        <tr key={item.id} className="hover:bg-stone-50/60">
-                          <td className="px-3.5 py-2">
-                            <p className="font-semibold text-slate-900">
-                              {item.batch_stock?.product?.name}
-                            </p>
-                            <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                              {item.batch_stock?.product?.material_code}
-                            </p>
-                          </td>
-                          <td className="px-3 py-2 text-center font-mono text-[11px] text-slate-600">
-                            {item.qty} units
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            {item.free_qty > 0 ? (
-                              <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200">
-                                +{item.free_qty}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-right font-mono text-slate-800">
-                            {formatCurrency(netPrice)}
-                          </td>
-                          <td className="px-3 py-2 text-right font-mono text-slate-500">
-                            {formatCurrency(retailPrice)}
-                          </td>
-                          <td className="px-3.5 py-2 text-right font-mono font-bold text-slate-900">
-                            {formatCurrency(paidUnits * netPrice)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              {/* Items Table with sticky header & scroll-y */}
+              <div className="border border-stone-200 rounded-xl overflow-hidden shadow-xs">
+                <div className="overflow-x-auto max-h-[50vh] overflow-y-auto custom-scrollbar">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-stone-50 z-10">
+                      <tr className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                        <th className="px-4 py-2.5">Product & Material Code</th>
+                        <th className="px-3 py-2.5 text-center">Allocated Units</th>
+                        <th className="px-3 py-2.5 text-center">Free Qty</th>
+                        <th className="px-4 py-2.5 text-right">Net Price</th>
+                        <th className="px-4 py-2.5 text-right">Retail</th>
+                        <th className="px-4 py-2.5 text-right">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {selectedLoading.loading_items?.map((item: any) => {
+                        const netPrice = Number(item.net_price || 0);
+                        const retailPrice = Number(item.batch_stock?.retail_price || 0);
+                        const paidUnits = Number(item.qty) - Number(item.free_qty || 0);
+                        return (
+                          <tr key={item.id} className="hover:bg-stone-50/60">
+                            <td className="px-4 py-2.5">
+                              <p className="font-semibold text-slate-900">
+                                {item.batch_stock?.product?.name}
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                {item.batch_stock?.product?.material_code}
+                              </p>
+                            </td>
+                            <td className="px-3 py-2.5 text-center font-mono text-[11px] text-slate-600 font-semibold">
+                              {item.qty} units
+                            </td>
+                            <td className="px-3 py-2.5 text-center">
+                              {item.free_qty > 0 ? (
+                                <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200">
+                                  +{item.free_qty}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono text-slate-800">
+                              {formatCurrency(netPrice)}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono text-slate-500">
+                              {formatCurrency(retailPrice)}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                              {formatCurrency(paidUnits * netPrice)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div className="px-5 py-3 bg-stone-50/70 border-t border-stone-200 flex justify-end gap-2">
+            <div className="px-6 py-3.5 bg-stone-50/70 border-t border-stone-200 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => handlePrintLoading(selectedLoading)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
               >
                 <Printer size={14} />
                 <span>Print Manifest</span>
@@ -1359,7 +1366,7 @@ const SupplyInvoices: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLoading(null)}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
+                className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
               >
                 Close
               </button>
@@ -1370,14 +1377,14 @@ const SupplyInvoices: React.FC = () => {
 
       {/* DETAIL MODAL: SALES INVOICE */}
       {selectedSale && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
-          <div className="bg-white rounded-xl shadow-xl border border-stone-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-5 py-3.5 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 sm:p-6 font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-5xl xl:max-w-6xl 2xl:max-w-7xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
               <div>
                 <p className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">
                   Sales Transaction Details
                 </p>
-                <h3 className="text-xs font-bold text-slate-900 font-mono">
+                <h3 className="text-sm font-bold text-slate-900 font-mono">
                   S-{selectedSale.id.toString().padStart(6, "0")}
                 </h3>
               </div>
@@ -1390,13 +1397,13 @@ const SupplyInvoices: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-50 p-3.5 rounded-lg border border-stone-200 text-xs">
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-stone-50 p-4 rounded-xl border border-stone-200 text-xs">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Date & Time
                   </p>
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-slate-900 text-sm">
                     {new Date(selectedSale.date_time).toLocaleDateString()}
                   </p>
                   <p className="text-[10px] text-slate-500">
@@ -1407,7 +1414,7 @@ const SupplyInvoices: React.FC = () => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Cashier
                   </p>
-                  <p className="font-bold text-slate-900">
+                  <p className="font-bold text-slate-900 text-sm">
                     {selectedSale.user?.name || "Cashier"}
                   </p>
                 </div>
@@ -1415,7 +1422,7 @@ const SupplyInvoices: React.FC = () => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Payment Method
                   </p>
-                  <p className="font-bold text-slate-900 capitalize">
+                  <p className="font-bold text-slate-900 text-sm capitalize">
                     {selectedSale.payment_type}
                   </p>
                 </div>
@@ -1423,60 +1430,62 @@ const SupplyInvoices: React.FC = () => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Grand Total
                   </p>
-                  <p className="font-bold text-teal-900 font-mono text-sm">
+                  <p className="font-bold text-teal-900 font-mono text-base">
                     {formatCurrency(Number(selectedSale.total))}
                   </p>
                 </div>
               </div>
 
-              {/* Items */}
-              <div className="border border-stone-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-stone-50 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
-                      <th className="px-3.5 py-2">Product Name</th>
-                      <th className="px-3 py-2 text-center">Qty (Units)</th>
-                      <th className="px-3 py-2 text-right">Retail Price</th>
-                      <th className="px-3 py-2 text-right">Discount</th>
-                      <th className="px-3.5 py-2 text-right">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {selectedSale.items?.map((item: any) => (
-                      <tr key={item.id} className="hover:bg-stone-50/60">
-                        <td className="px-3.5 py-2 font-medium text-slate-900">
-                          {item.product?.name}
-                        </td>
-                        <td className="px-3 py-2 text-center font-bold">
-                          {item.qty}
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono text-slate-600">
-                          {formatCurrency(
-                            Number(
-                              item.retail_price ||
-                                item.batch_stock?.retail_price ||
-                                item.unit_price
-                            )
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono text-rose-600">
-                          - {formatCurrency(Number(item.discount || 0))}
-                        </td>
-                        <td className="px-3.5 py-2 text-right font-mono font-bold text-slate-900">
-                          {formatCurrency(Number(item.total))}
-                        </td>
+              {/* Items Table with sticky header & scroll-y */}
+              <div className="border border-stone-200 rounded-xl overflow-hidden shadow-xs">
+                <div className="overflow-x-auto max-h-[50vh] overflow-y-auto custom-scrollbar">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-stone-50 z-10">
+                      <tr className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                        <th className="px-4 py-2.5">Product Name</th>
+                        <th className="px-3 py-2.5 text-center">Qty (Units)</th>
+                        <th className="px-4 py-2.5 text-right">Retail Price</th>
+                        <th className="px-4 py-2.5 text-right">Discount</th>
+                        <th className="px-4 py-2.5 text-right">Subtotal</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {selectedSale.items?.map((item: any) => (
+                        <tr key={item.id} className="hover:bg-stone-50/60">
+                          <td className="px-4 py-2.5 font-medium text-slate-900">
+                            {item.product?.name}
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-bold font-mono">
+                            {item.qty}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono text-slate-600">
+                            {formatCurrency(
+                              Number(
+                                item.retail_price ||
+                                  item.batch_stock?.retail_price ||
+                                  item.unit_price
+                              )
+                            )}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono text-rose-600">
+                            - {formatCurrency(Number(item.discount || 0))}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                            {formatCurrency(Number(item.total))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            <div className="px-5 py-3 bg-stone-50/70 border-t border-stone-200 flex justify-end">
+            <div className="px-6 py-3.5 bg-stone-50/70 border-t border-stone-200 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedSale(null)}
-                className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
               >
                 Close
               </button>
@@ -1487,16 +1496,15 @@ const SupplyInvoices: React.FC = () => {
 
       {/* RETURNS MODAL */}
       {returnModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
-          <div className="bg-white rounded-xl shadow-xl border border-stone-200 w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-5 py-3.5 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 sm:p-6 font-sans">
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
               <div>
                 <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
                   Process Loading Returns
                 </p>
-                <h3 className="text-xs font-bold text-slate-900">
-                  Load #
-                  {loadings.find((l) => l.id === returnLoadingId)?.load_number}
+                <h3 className="text-sm font-bold text-slate-900 font-mono">
+                  #{loadings.find((l) => l.id === returnLoadingId)?.load_number}
                 </h3>
               </div>
               <button
@@ -1508,14 +1516,15 @@ const SupplyInvoices: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto space-y-3">
+            <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar">
               {returnItems.length === 0 ? (
                 <p className="text-center py-8 text-slate-400 text-xs">
                   No items found in this loading manifest.
                 </p>
               ) : (
-                <div className="border border-stone-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-left text-xs border-collapse">
+                <div className="border border-stone-200 rounded-xl overflow-hidden shadow-xs">
+                  <div className="overflow-x-auto max-h-[50vh] overflow-y-auto custom-scrollbar">
+                    <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="bg-stone-50 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
                         <th className="px-3.5 py-2">Product</th>
@@ -1560,7 +1569,8 @@ const SupplyInvoices: React.FC = () => {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                    </table>
+                  </div>
                 </div>
               )}
               <p className="text-[10px] text-slate-400 italic">
