@@ -92,6 +92,10 @@ const router = createBrowserRouter([
         element: <Settings />,
       },
       {
+        path: "settings/:tab",
+        element: <Settings />,
+      },
+      {
         path: "supply-invoices",
         element: <SupplyInvoices />,
       },
