@@ -19,10 +19,7 @@ import {
   Store,
   Layers,
   CheckCircle2,
-  AlertTriangle,
-  Clock,
   Plus,
-  ArrowRight,
 } from "lucide-react";
 
 interface ProductInfo {
