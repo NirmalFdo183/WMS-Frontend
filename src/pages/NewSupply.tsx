@@ -484,16 +484,19 @@ const NewSupply: React.FC = () => {
         {/* Page Top Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-stone-200">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">
-                {editInvoiceId ? "Edit Supply Invoice" : "New Supply Entry"}
-              </h1>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-teal-800">
+                Stock Intake & Batching
+              </span>
               <span className="inline-flex items-center gap-1 bg-stone-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-200 uppercase tracking-wide">
                 {step === "invoice" ? "Step 1: Header" : "Step 2: Items"}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Record incoming vendor invoices, verify stock batches and bill balances
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+              {editInvoiceId ? "Edit Supply Invoice" : "New Supply Entry"}
+            </h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Record incoming vendor invoices, verify stock batches and bill balances.
             </p>
           </div>
 
