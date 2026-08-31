@@ -1,37 +1,57 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useWarehouse } from "../context/WarehouseContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import EmployeeSelect from "../components/EmployeeSelect";
+import {
+  Truck,
+  Search,
+  Trash2,
+  Edit2,
+  CheckCircle2,
+  AlertTriangle,
+  X,
+  ArrowRight,
+  ArrowLeft,
+  Calendar,
+  Hash,
+  MapPin,
+  User,
+  Users,
+  Check,
+  RotateCcw,
+  Boxes,
+  ShieldAlert,
+} from "lucide-react";
 
 interface Product {
   id: number;
   name: string;
   material_code: string;
   barcode: string;
-  category: string;
+  category?: string;
 }
 
-interface Truck {
+interface TruckType {
   id: number;
   licence_plate_no: string;
   description: string;
 }
 
-interface Route {
+interface RouteType {
   id: number;
   route_code: string;
   route_description: string;
 }
 
-interface Employee {
+interface EmployeeType {
   id: number;
   name: string;
   nic: string;
   phoneno: string;
 }
 
-interface SalesRep {
+interface SalesRepType {
   id: number;
   name: string;
   rep_id: string;
@@ -40,9 +60,9 @@ interface SalesRep {
 
 interface BatchStock {
   id: number;
-  remain_qty: number; // Available quantity
-  returned_qty?: number; // Returned quantity
-  free_qty: number; // Free quantity
+  remain_qty: number;
+  returned_qty?: number;
+  free_qty: number;
   no_cases: number;
   pack_size: number;
   extra_units: number;
@@ -55,12 +75,12 @@ interface BatchStock {
     invoice_number: string;
     invoice_date: string;
   };
-  created_at: string;
+  created_at?: string;
 }
 
 interface LoadingItem {
   id: number;
-  loading_id: number;
+  loading_id?: number;
   batch_id: number;
   qty: number;
   free_qty: number;
@@ -70,7 +90,15 @@ interface LoadingItem {
   loading?: any;
 }
 
-const Loading = () => {
+const formatCurrency = (amount: number): string => {
+  const safe = isNaN(amount) ? 0 : amount;
+  return `LKR ${safe.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const Loading: React.FC = () => {
   const navigate = useNavigate();
   const { refreshTotalValue } = useWarehouse();
 
@@ -81,10 +109,10 @@ const Loading = () => {
   const [showConfirmSave, setShowConfirmSave] = useState(false);
 
   // Data Source State
-  const [trucks, setTrucks] = useState<Truck[]>([]);
-  const [routes, setRoutes] = useState<Route[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [salesReps, setSalesReps] = useState<SalesRep[]>([]);
+  const [trucks, setTrucks] = useState<TruckType[]>([]);
+  const [routes, setRoutes] = useState<RouteType[]>([]);
+  const [employees, setEmployees] = useState<EmployeeType[]>([]);
+  const [salesReps, setSalesReps] = useState<SalesRepType[]>([]);
 
   // Loading Header State
   const [loadingData, setLoadingData] = useState({
@@ -122,19 +150,9 @@ const Loading = () => {
     net_price: "",
   });
 
-  // Calculate totals for selected batch in modal
-  const selectedBatch = productBatches.find(
-    (b) => b.id.toString() === itemForm.batch_id,
-  );
-  const currentPackSize = selectedBatch?.pack_size || 0;
-  const currentTotalQty =
-    Number(itemForm.no_cases) * currentPackSize +
-    Number(itemForm.loose_qty || 0) +
-    Number(itemForm.free_qty || 0);
-
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
-  // Auto-focus logic
+  // Auto-focus search input
   useEffect(() => {
     if (
       step === "items" &&
@@ -181,19 +199,15 @@ const Loading = () => {
       return;
     }
 
-    // Filter batches where product name or code matches
+    const query = searchTerm.toLowerCase();
     const filtered = allBatches.filter((b) => {
       const p = b.product;
-      if (!p) return false;
-      // Filter out batches with no stock
-      if (b.remain_qty <= 0) return false;
+      if (!p || b.remain_qty <= 0) return false;
 
       return (
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.barcode && p.barcode.toLowerCase() === searchTerm.toLowerCase()) ||
-        (p.barcode &&
-          p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        p.material_code.toLowerCase().includes(searchTerm.toLowerCase())
+        p.name.toLowerCase().includes(query) ||
+        (p.barcode && p.barcode.toLowerCase().includes(query)) ||
+        p.material_code.toLowerCase().includes(query)
       );
     });
 
@@ -205,26 +219,30 @@ const Loading = () => {
     if (searchResults.length === 0) return;
 
     if (e.key === "ArrowDown") {
+      e.preventDefault();
       setSelectedIndex((prev) => (prev + 1) % searchResults.length);
-      e.preventDefault();
     } else if (e.key === "ArrowUp") {
-      setSelectedIndex((prev) =>
-        prev <= 0 ? searchResults.length - 1 : prev - 1,
-      );
       e.preventDefault();
+      setSelectedIndex((prev) =>
+        prev <= 0 ? searchResults.length - 1 : prev - 1
+      );
     } else if (e.key === "Enter") {
+      e.preventDefault();
       if (selectedIndex >= 0) {
         handleSelectBatch(searchResults[selectedIndex]);
       } else if (searchResults.length > 0) {
         handleSelectBatch(searchResults[0]);
       }
+    } else if (e.key === "Escape") {
+      setSearchResults([]);
+      setSelectedIndex(-1);
     }
   };
 
   const handleSelectBatch = (batch: BatchStock) => {
     if (!batch.product) return;
 
-    setProductBatches([batch]); // Only one batch selected
+    setProductBatches([batch]);
     setActiveProduct(batch.product);
     setSearchTerm("");
     setSearchResults([]);
@@ -233,14 +251,14 @@ const Loading = () => {
       no_cases: "",
       loose_qty: "0",
       free_qty: "0",
-      wh_price: "", // Not used anymore
-      net_price: batch.netprice?.toString() || "", // Buying price
+      wh_price: "",
+      net_price: batch.netprice?.toString() || "",
     });
   };
 
   const handleRouteChange = (routeId: string) => {
     const selectedRep = salesReps.find(
-      (r) => r.route_id.toString() === routeId,
+      (r) => r.route_id.toString() === routeId
     );
     setLoadingData({
       ...loadingData,
@@ -254,14 +272,14 @@ const Loading = () => {
   const handleCreateLoading = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if at least one employee is selected (1-3 employees)
+    // Check if at least one employee is selected (Driver, Helper, or Cash Collector)
     if (
       !loadingData.driver_id &&
       !loadingData.helper_id &&
       !loadingData.cash_collector_id
     ) {
       alert(
-        "Please select at least one employee (Driver, Helper, or Cash Collector).",
+        "Please select at least one crew member (Driver, Helper, or Cash Collector)."
       );
       return;
     }
@@ -269,61 +287,56 @@ const Loading = () => {
     setStep("items");
   };
 
+  // Calculations for modal
+  const selectedBatch = productBatches.find(
+    (b) => b.id.toString() === itemForm.batch_id
+  );
+  const currentPackSize = selectedBatch?.pack_size || 1;
+  const currentRequestedPaid =
+    Number(itemForm.no_cases || 0) * currentPackSize +
+    Number(itemForm.loose_qty || 0);
+  const currentRequestedFree = Number(itemForm.free_qty || 0);
+  const currentTotalRequested = currentRequestedPaid + currentRequestedFree;
+  const currentBatchRemaining = selectedBatch?.remain_qty || 0;
+  const isStockInsufficient = currentTotalRequested > currentBatchRemaining;
+  const currentLinePrice = Number(selectedBatch?.netprice || 0);
+  const currentLineValue = currentRequestedPaid * currentLinePrice;
+
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBatch) return;
 
-    // Calculate total paid quantity requested
-    const requestedPaidQty =
-      Number(itemForm.no_cases) * currentPackSize +
-      Number(itemForm.loose_qty || 0);
-
-    const requestedFreeQty = Number(itemForm.free_qty || 0);
-
-    // Total Requested items (Paid + Free)
-    const totalRequested = requestedPaidQty + requestedFreeQty;
-
-    if (totalRequested <= 0) {
+    if (currentTotalRequested <= 0) {
       alert("Please enter a valid quantity.");
       return;
     }
 
-    // Validate against total available pool in 'qty'
-    if (totalRequested > (selectedBatch.remain_qty || 0)) {
+    if (isStockInsufficient) {
       alert(
-        `Insufficient Stock! Total Available: ${selectedBatch.remain_qty}, Requested: ${totalRequested}`,
+        `Insufficient stock! Total available in warehouse is ${currentBatchRemaining} units, but ${currentTotalRequested} units were requested.`
       );
       return;
     }
 
-    // Use user-provided split: qty will now be the TOTAL physical units
-    const confirmQty = requestedPaidQty + requestedFreeQty;
-    const confirmFreeQty = requestedFreeQty;
-
-    // Price Logic: Selling Price = Batch Buying Price (netprice)
-    // User requested "use the batch buying price as the selling price of that product"
-    // So item.net_price should be batch.netprice
-    const finalPrice = Number(selectedBatch.netprice || 0);
-
-    const newItem = {
+    const newItem: LoadingItem = {
       id: editingItemId || Date.now(),
       batch_id: selectedBatch.id,
-      qty: confirmQty,
-      free_qty: confirmFreeQty,
-      wh_price: 0, // Ignored
-      net_price: finalPrice,
+      qty: currentTotalRequested,
+      free_qty: currentRequestedFree,
+      wh_price: 0,
+      net_price: currentLinePrice,
       batch_stock: selectedBatch,
     };
 
     if (editingItemId) {
       setLoadingItems(
         loadingItems.map((item) =>
-          item.id === editingItemId ? (newItem as any) : item,
-        ),
+          item.id === editingItemId ? newItem : item
+        )
       );
       setEditingItemId(null);
     } else {
-      setLoadingItems([...loadingItems, newItem as any]);
+      setLoadingItems([...loadingItems, newItem]);
     }
     setActiveProduct(null);
   };
@@ -369,7 +382,7 @@ const Loading = () => {
           batch_id: item.batch_id,
           qty: item.qty,
           free_qty: item.free_qty,
-          wh_price: item.wh_price,
+          wh_price: item.wh_price || 0,
           net_price: item.net_price,
         })),
         driver_id: loadingData.driver_id || null,
@@ -380,7 +393,7 @@ const Loading = () => {
 
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/loadings`,
-        payload,
+        payload
       );
       await refreshTotalValue();
       navigate("/supply-invoices", { state: { activeTab: "loading" } });
@@ -392,90 +405,143 @@ const Loading = () => {
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-            New Loading Sheet
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg">
-            Create loading manifest and assign stock packages.
-          </p>
-        </div>
+  // KPIs
+  const totalPaidUnits = loadingItems.reduce(
+    (sum, item) => sum + (item.qty - (item.free_qty || 0)),
+    0
+  );
+  const totalFreeUnits = loadingItems.reduce(
+    (sum, item) => sum + (Number(item.free_qty) || 0),
+    0
+  );
+  const totalManifestUnits = loadingItems.reduce(
+    (sum, item) => sum + (Number(item.qty) || 0),
+    0
+  );
+  const totalManifestNetValue = loadingItems.reduce(
+    (sum, item) =>
+      sum +
+      (Number(item.qty) - (Number(item.free_qty) || 0)) *
+        (Number(item.net_price) || 0),
+    0
+  );
+  const totalFreeUnitsValue = loadingItems.reduce(
+    (sum, item) =>
+      sum + (Number(item.free_qty) || 0) * (Number(item.net_price) || 0),
+    0
+  );
 
-        <div className="flex items-center gap-3">
-          {step === "items" && (
-            <>
-              <button
-                onClick={() => setShowConfirmCancel(true)}
-                className="px-6 py-3 font-bold text-gray-500 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-all active:scale-95 text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowConfirmSave(true)}
-                className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold transition-all hover:bg-blue-700 hover:shadow-xl shadow-blue-200 flex items-center gap-2 text-sm active:scale-95"
-              >
-                Complete Loading
-              </button>
-            </>
-          )}
-          <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm ml-4">
-            <div
-              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest ${step === "details" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-400"}`}
-            >
-              1. Details
+  const selectedRouteObj = routes.find(
+    (r) => r.id.toString() === loadingData.route_id
+  );
+  const selectedTruckObj = trucks.find(
+    (t) => t.id.toString() === loadingData.truck_id
+  );
+  const selectedRepObj = salesReps.find(
+    (r) => r.id.toString() === loadingData.sales_rep_id
+  );
+  const driverObj = employees.find(
+    (e) => e.id.toString() === loadingData.driver_id
+  );
+  const helperObj = employees.find(
+    (e) => e.id.toString() === loadingData.helper_id
+  );
+  const cashierObj = employees.find(
+    (e) => e.id.toString() === loadingData.cash_collector_id
+  );
+
+  return (
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f8f9fa] text-slate-900 p-4 sm:p-6 font-sans">
+      <div className="max-w-7xl mx-auto space-y-4">
+        {/* Page Top Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-stone-200">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                New Loading Sheet
+              </h1>
+              <span className="inline-flex items-center gap-1 bg-stone-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-200 uppercase tracking-wide">
+                {step === "details" ? "Step 1: Configuration" : "Step 2: Manifest Items"}
+              </span>
             </div>
-            <div
-              className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-widest ${step === "items" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-gray-400"}`}
-            >
-              2. Items
-            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Configure vehicle dispatch, assign route crew, and allocate warehouse stock
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {step === "items" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setStep("details")}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/40"
+                >
+                  <ArrowLeft size={14} className="text-slate-500" />
+                  <span>Edit Config</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmCancel(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-700/40"
+                >
+                  <RotateCcw size={14} />
+                  <span>Discard</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmSave(true)}
+                  disabled={loadingItems.length === 0}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-teal-800 hover:bg-teal-900 active:bg-teal-950 transition-colors rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-1"
+                >
+                  <Check size={14} />
+                  <span>Complete Loading</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto">
+        {/* Step 1: Manifest Details & Personnel Configuration */}
         {step === "details" ? (
-          <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-            <div className="px-8 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+          <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-stone-200 bg-stone-50/50 flex justify-between items-center">
               <div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
+                <h2 className="text-sm font-bold text-slate-900">
                   Manifest Configuration
                 </h2>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
-                  Initial Setup & Team Assignment
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Select vehicle, delivery route, sales representative, and dispatch crew
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
-                  Step 1 of 2
-                </span>
-              </div>
+              <span className="text-[10px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                Step 1 of 2
+              </span>
             </div>
 
-            <form onSubmit={handleCreateLoading} className="p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* Left Side: General Info */}
-                <div className="lg:col-span-5 space-y-8">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-sm font-black text-gray-800 uppercase tracking-tight">
-                      General Assignment
-                    </h3>
-                  </div>
+            <form onSubmit={handleCreateLoading} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column: General Assignment */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b border-stone-200 pb-1.5 flex items-center gap-1.5">
+                    <Truck size={14} className="text-teal-800" />
+                    <span>General Assignment</span>
+                  </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
-                        Load Number
-                      </label>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                      Load Number
+                    </label>
+                    <div className="relative">
+                      <Hash
+                        size={15}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                      />
                       <input
                         type="text"
                         required
-                        placeholder="e.g. LOAD-001"
-                        className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold"
+                        placeholder="e.g. LOAD-2024-001"
+                        className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-stone-300 text-xs font-bold text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
                         value={loadingData.load_number}
                         onChange={(e) =>
                           setLoadingData({
@@ -485,38 +551,44 @@ const Loading = () => {
                         }
                       />
                     </div>
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
-                        Truck
-                      </label>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                      Truck / Vehicle
+                    </label>
+                    <select
+                      required
+                      className="w-full h-9 px-3 rounded-lg bg-white border border-stone-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors appearance-none"
+                      value={loadingData.truck_id}
+                      onChange={(e) =>
+                        setLoadingData({
+                          ...loadingData,
+                          truck_id: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">Select Truck</option>
+                      {trucks.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.licence_plate_no} - {t.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                      Route
+                    </label>
+                    <div className="relative">
+                      <MapPin
+                        size={15}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                      />
                       <select
                         required
-                        className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                        value={loadingData.truck_id}
-                        onChange={(e) =>
-                          setLoadingData({
-                            ...loadingData,
-                            truck_id: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="">Select Truck</option>
-                        {trucks.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.licence_plate_no} - {t.description}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
-                        Route
-                      </label>
-                      <select
-                        required
-                        className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                        className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-stone-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors appearance-none"
                         value={loadingData.route_id}
                         onChange={(e) => handleRouteChange(e.target.value)}
                       >
@@ -528,14 +600,20 @@ const Loading = () => {
                         ))}
                       </select>
                     </div>
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <label className="font-semibold text-gray-700 block mb-1.5 ml-0.5 text-xs uppercase tracking-wider">
-                        Responsible Sales Rep
-                      </label>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                      Responsible Sales Representative
+                    </label>
+                    <div className="relative">
+                      <User
+                        size={15}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                      />
                       <select
                         required
-                        className="w-full px-3 py-2.5 rounded-lg bg-blue-50/50 border border-blue-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-black text-blue-900"
+                        className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-stone-300 text-xs font-semibold text-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors appearance-none"
                         value={loadingData.sales_rep_id}
                         onChange={(e) =>
                           setLoadingData({
@@ -553,56 +631,53 @@ const Loading = () => {
                       </select>
                     </div>
                   </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
+                      Loading Date
+                    </label>
+                    <div className="relative">
+                      <Calendar
+                        size={15}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                      />
+                      <input
+                        type="date"
+                        required
+                        className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-stone-300 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+                        value={loadingData.loading_date}
+                        onChange={(e) =>
+                          setLoadingData({
+                            ...loadingData,
+                            loading_date: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Right Side: Dispatch Team */}
-                <div className="lg:col-span-7 space-y-6 px-4 lg:lg:sticky lg:top-8 lg:h-fit">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-bold text-gray-700 tracking-tight">
-                        Dispatch Team
-                      </h3>
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-widest">
-                      Select 1-3 Personnel
+                {/* Right Column: Dispatch Crew (1-3 Personnel) */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-stone-200 pb-1.5">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <Users size={14} className="text-teal-800" />
+                      <span>Dispatch Team</span>
+                    </h3>
+                    <span className="text-[10px] font-semibold text-slate-500 bg-stone-100 px-2 py-0.5 rounded">
+                      Select 1-3 personnel
                     </span>
                   </div>
 
-                  {/* Driver Card */}
-                  <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all group">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1-1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="font-black text-gray-800 text-sm">
-                            Driver
-                          </h4>
-                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">
-                            Primary operator
-                          </p>
-                        </div>
-                      </div>
+                  {/* Driver Field */}
+                  <div className="p-3.5 rounded-lg border border-stone-200 bg-stone-50/40 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">
+                        Driver
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Primary operator
+                      </span>
                     </div>
                     <EmployeeSelect
                       label=""
@@ -614,35 +689,15 @@ const Loading = () => {
                     />
                   </div>
 
-                  {/* Helper Card */}
-                  <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-emerald-200 hover:shadow-md transition-all group">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="font-black text-gray-800 text-sm">
-                            Helper
-                          </h4>
-                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">
-                            Stock Assistant
-                          </p>
-                        </div>
-                      </div>
+                  {/* Helper Field */}
+                  <div className="p-3.5 rounded-lg border border-stone-200 bg-stone-50/40 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">
+                        Helper
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Stock assistant
+                      </span>
                     </div>
                     <EmployeeSelect
                       label=""
@@ -654,35 +709,15 @@ const Loading = () => {
                     />
                   </div>
 
-                  {/* Cash Collector Card */}
-                  <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-amber-200 hover:shadow-md transition-all group">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="font-black text-gray-800 text-sm">
-                            Cash Collector
-                          </h4>
-                          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mt-0.5">
-                            Finance Lead
-                          </p>
-                        </div>
-                      </div>
+                  {/* Cash Collector Field */}
+                  <div className="p-3.5 rounded-lg border border-stone-200 bg-stone-50/40 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">
+                        Cash Collector
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Finance lead
+                      </span>
                     </div>
                     <EmployeeSelect
                       label=""
@@ -699,642 +734,370 @@ const Loading = () => {
                 </div>
               </div>
 
-              <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end mt-10 -mx-8 -mb-8">
+              <div className="pt-4 border-t border-stone-200 flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate("/supply-invoices", {
+                      state: { activeTab: "loading" },
+                    })
+                  }
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-stone-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
-                  className="w-full lg:w-auto px-10 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-200 transition-all flex items-center justify-center gap-3 group"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-teal-800 text-white rounded-lg text-xs font-semibold hover:bg-teal-900 active:bg-teal-950 transition-colors shadow-sm disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-1"
                 >
-                  <span>Initialize Loading Sheet</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                  </svg>
+                  <span>Initialize Manifest & Add Items</span>
+                  <ArrowRight size={14} />
                 </button>
               </div>
             </form>
           </div>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
-            {/* Left Sidebar: Sticky Manifest Info & Search */}
-            <div className="w-full lg:w-[350px] lg:sticky lg:top-8 space-y-6">
-              {/* Manifest Summary Card */}
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-gray-700 tracking-tight">
-                    Manifest Summary
-                  </h3>
+          /* Step 2: Manifest Items & Warehouse Stock Allocation */
+          <div className="space-y-4">
+            {/* Manifest Overview & KPI Strip */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Manifest Meta */}
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-800 shrink-0 mt-0.5">
+                  <Truck size={16} />
                 </div>
-                <div className="p-6 space-y-5">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
-                        Load ID
-                      </p>
-                      <p className="font-black text-gray-900 text-xl tracking-tight leading-none">
-                        {loadingData.load_number}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
-                        Sales Rep
-                      </p>
-                      <p className="font-black text-blue-600 text-sm">
-                        {salesReps.find(
-                          (r) => r.id.toString() === loadingData.sales_rep_id,
-                        )?.name || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6 pt-5 border-t border-gray-50">
-                    <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
-                        Route
-                      </p>
-                      <p className="font-black text-gray-900 text-sm">
-                        {routes.find(
-                          (r) => r.id.toString() === loadingData.route_id,
-                        )?.route_code || "N/A"}
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">
-                        {routes.find(
-                          (r) => r.id.toString() === loadingData.route_id,
-                        )?.route_description || ""}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">
-                        Truck
-                      </p>
-                      <p className="font-black text-gray-900 text-sm">
-                        {trucks.find(
-                          (t) => t.id.toString() === loadingData.truck_id,
-                        )?.licence_plate_no || "N/A"}
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-medium truncate mt-0.5">
-                        {trucks.find(
-                          (t) => t.id.toString() === loadingData.truck_id,
-                        )?.description || ""}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-50 flex flex-col gap-3">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                      Field Personnel
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                        <p className="text-[8px] font-black text-gray-400 uppercase">
-                          Driver
-                        </p>
-                        <p className="text-[10px] font-bold text-gray-700 truncate">
-                          {employees.find(
-                            (e) => e.id.toString() === loadingData.driver_id,
-                          )?.name || "-"}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                        <p className="text-[8px] font-black text-gray-400 uppercase">
-                          Helper
-                        </p>
-                        <p className="text-[10px] font-bold text-gray-700 truncate">
-                          {employees.find(
-                            (e) => e.id.toString() === loadingData.helper_id,
-                          )?.name || "-"}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                        <p className="text-[8px] font-black text-gray-400 uppercase">
-                          Cashier
-                        </p>
-                        <p className="text-[10px] font-bold text-gray-700 truncate">
-                          {employees.find(
-                            (e) =>
-                              e.id.toString() === loadingData.cash_collector_id,
-                          )?.name || "-"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-5 border-t border-gray-100">
-                    <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50">
-                      <div className="mb-4 ml-0.5">
-                        <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest leading-none">
-                          Free Stock Summary
-                        </p>
-                      </div>
-                      <div className="flex justify-between items-end px-0.5">
-                        <div>
-                          <p className="text-[8px] font-black text-emerald-500 uppercase mb-1.5 tracking-tighter">
-                            Free Quantity
-                          </p>
-                          <p className="text-xl font-black text-emerald-900 leading-none">
-                            {loadingItems.reduce(
-                              (sum, item) => sum + (Number(item.free_qty) || 0),
-                              0,
-                            )}
-                            <span className="text-[10px] ml-1 font-bold">
-                              Units
-                            </span>
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[8px] font-black text-emerald-500 uppercase mb-1.5 tracking-tighter">
-                            Total Value
-                          </p>
-                          <p className="text-xl font-black text-emerald-900 leading-none font-mono">
-                            Rs.{" "}
-                            {loadingItems
-                              .reduce(
-                                (sum, item) =>
-                                  sum +
-                                  (Number(item.free_qty) || 0) *
-                                  (Number(item.net_price) || 0),
-                                0,
-                              )
-                              .toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                              })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Manifest & Vehicle
+                  </p>
+                  <p className="text-xs font-bold text-slate-900 truncate">
+                    {loadingData.load_number}
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    {selectedTruckObj?.licence_plate_no || "No Truck"} | {selectedRouteObj?.route_code || "No Route"}
+                  </p>
                 </div>
+              </div>
+
+              {/* Personnel */}
+              <div className="flex items-start gap-3 border-t sm:border-t-0 sm:border-l border-stone-200 sm:pl-4 pt-3 sm:pt-0">
+                <div className="w-8 h-8 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
+                  <Users size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Assigned Crew
+                  </p>
+                  <p className="text-xs font-semibold text-slate-900 truncate">
+                    Rep: {selectedRepObj?.name || "-"}
+                  </p>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    Dr: {driverObj?.name?.split(" ")[0] || "-"} | Hp: {helperObj?.name?.split(" ")[0] || "-"} | Cs: {cashierObj?.name?.split(" ")[0] || "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Items & Units */}
+              <div className="border-t lg:border-t-0 lg:border-l border-stone-200 lg:pl-4 pt-3 lg:pt-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Loaded Stock
+                </p>
+                <p className="text-xs font-bold text-slate-900">
+                  {loadingItems.length} {loadingItems.length === 1 ? "Product" : "Products"} | {totalManifestUnits} Units
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Paid: {totalPaidUnits} | Free: {totalFreeUnits} units
+                </p>
+              </div>
+
+              {/* Manifest Value */}
+              <div className="border-t lg:border-t-0 lg:border-l border-stone-200 lg:pl-4 pt-3 lg:pt-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Total Manifest Net Value
+                </p>
+                <p className="text-sm font-bold text-slate-900 font-mono">
+                  {formatCurrency(totalManifestNetValue)}
+                </p>
+                <p className="text-[11px] text-emerald-700 font-medium">
+                  Free Value: {formatCurrency(totalFreeUnitsValue)}
+                </p>
               </div>
             </div>
 
-            {/* Main Content: Search & Items Table */}
-            <div className="flex-1 w-full pb-10 space-y-6">
-              {/* Top Search Bar */}
-              <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-200 relative ring-1 ring-gray-100">
-                <div className="flex items-center justify-between mb-4 ml-1">
-                  <div className="flex items-center gap-3">
-                    <label className="text-xs font-black text-gray-800 uppercase tracking-widest">
-                      Quick Item Add (Search Stock)
-                    </label>
-                  </div>
-                  <span className="text-[10px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-black uppercase tracking-widest border border-blue-100 animate-pulse">
-                    Scan or Type
-                  </span>
-                </div>
-                <div className="relative group">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    className="w-full pl-14 pr-6 py-5 rounded-3xl bg-gray-50 border-2 border-transparent focus:bg-white focus:border-blue-500 focus:ring-8 focus:ring-blue-500/5 outline-none font-black text-lg transition-all shadow-inner placeholder:text-gray-300 placeholder:font-bold"
-                    placeholder="Search by Barcode, Material Code or Product Name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                  />
-                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-7 w-7"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {searchResults.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-3 bg-white border border-gray-200 rounded-[2rem] shadow-2xl overflow-hidden z-[110] max-h-[450px] overflow-y-auto animate-in slide-in-from-top-4 duration-300 ring-1 ring-black/5 mx-2">
-                    {searchResults.map((batch, index) => (
-                      <div
-                        key={batch.id}
-                        onClick={() => handleSelectBatch(batch)}
-                        className={`px-8 py-5 cursor-pointer border-b last:border-0 transition-all ${selectedIndex === index
-                            ? "bg-blue-600 text-white shadow-lg"
-                            : "hover:bg-blue-50 text-gray-900"
-                          }`}
-                      >
-                        <div className="flex justify-between items-start font-black text-base">
-                          <div>
-                            <span className="truncate pr-4 block">
-                              {batch.product?.name}
-                            </span>
-                            <div
-                              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mt-0.5 ${selectedIndex === index ? "text-blue-100" : "text-gray-400"}`}
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-3 w-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2.5}
-                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                              Exp: {batch.expiry_date || "N/A"}
-                              <span className="mx-1.5 opacity-40">|</span>
-                              Inv:{" "}
-                              {batch.supplier_invoice?.invoice_date || "N/A"}
-                            </div>
-                          </div>
-                          <span
-                            className={`text-xs shrink-0 font-mono ${selectedIndex === index ? "text-blue-100" : "text-gray-400"}`}
-                          >
-                            {batch.product?.barcode ||
-                              batch.product?.material_code}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-end mt-3">
-                          <div className="flex flex-col gap-1">
-                            <span
-                              className={`text-xs font-black uppercase tracking-widest ${selectedIndex === index ? "text-blue-100" : "text-gray-800"}`}
-                            >
-                              Availability: {batch.remain_qty} Units
-                              <span className="mx-2 opacity-30">|</span>
-                              <span className="opacity-60">
-                                Initial:{" "}
-                                {batch.no_cases * batch.pack_size +
-                                  batch.extra_units +
-                                  (batch.free_qty || 0)}{" "}
-                                Units
-                              </span>
-                            </span>
-                            <div className="flex gap-3 text-[10px] font-black uppercase tracking-tighter">
-                              <span
-                                className={
-                                  selectedIndex === index
-                                    ? "text-white"
-                                    : "text-blue-500"
-                                }
-                              >
-                                Normal:{" "}
-                                {batch.remain_qty -
-                                  (batch.free_qty || 0) -
-                                  (batch.returned_qty || 0)}
-                              </span>
-                              {(batch.free_qty || 0) > 0 && (
-                                <span
-                                  className={
-                                    selectedIndex === index
-                                      ? "text-emerald-200"
-                                      : "text-emerald-500"
-                                  }
-                                >
-                                  Free: {batch.free_qty}
-                                </span>
-                              )}
-                              {(batch.returned_qty || 0) > 0 && (
-                                <span
-                                  className={
-                                    selectedIndex === index
-                                      ? "text-orange-200"
-                                      : "text-orange-500"
-                                  }
-                                >
-                                  Returns: {batch.returned_qty}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`px-3 py-1 rounded-lg font-black text-xs border font-mono ${selectedIndex === index ? "bg-white/10 border-white/20 text-white" : "bg-blue-50 border-blue-100 text-blue-700"}`}
-                            >
-                              Net: Rs.{batch.netprice}
-                            </span>
-                            <span
-                              className={`px-3 py-1 rounded-lg font-black text-xs border font-mono ${selectedIndex === index ? "bg-white/10 border-white/20 text-white" : "bg-gray-50 border-gray-100 text-gray-700"}`}
-                            >
-                              Retail: Rs.{batch.retail_price}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            {/* Stock Search & Scan Bar */}
+            <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-stone-200 relative">
+              <div className="relative">
+                <Search
+                  size={16}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="w-full h-10 pl-10 pr-10 rounded-lg bg-white border border-stone-300 focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-none transition-colors"
+                  placeholder="Scan barcode or search available warehouse stock by name, code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
                 )}
               </div>
-              <div className="bg-white rounded-[2rem] shadow-sm border border-gray-200 overflow-hidden ring-1 ring-gray-100 transition-shadow hover:shadow-md">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50/80 backdrop-blur-md text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100">
-                        <th className="px-8 py-6">Stock Identifier</th>
-                        <th className="px-6 py-6 text-center">
-                          Unit Breakdown
-                        </th>
-                        <th className="px-6 py-6 text-center">Net Price</th>
-                        <th className="px-6 py-6 text-center">Retail Price</th>
-                        <th className="px-6 py-6 text-center">Paid Qty</th>
-                        <th className="px-6 py-6 text-right">Value (LKR)</th>
-                        <th className="px-8 py-6"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {loadingItems.map((item) => (
+
+              {/* Search Suggestions Dropdown */}
+              {searchResults.length > 0 && (
+                <div className="absolute left-4 right-4 mt-1.5 bg-white border border-stone-200 rounded-lg shadow-lg overflow-hidden max-h-72 overflow-y-auto z-40">
+                  {searchResults.map((batch, index) => (
+                    <div
+                      key={batch.id}
+                      onClick={() => handleSelectBatch(batch)}
+                      className={`px-3.5 py-2.5 cursor-pointer border-b border-stone-100 last:border-0 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-colors ${
+                        selectedIndex === index
+                          ? "bg-teal-50 text-teal-900 font-semibold"
+                          : "hover:bg-stone-50 text-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-[11px] text-slate-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 w-28 text-center shrink-0">
+                          {batch.product?.barcode || batch.product?.material_code}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-slate-900">
+                            {batch.product?.name}
+                          </p>
+                          <p className="text-[10px] text-slate-400">
+                            Exp: {batch.expiry_date || "N/A"} | Inv Date: {batch.supplier_invoice?.invoice_date || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-right shrink-0">
+                        <span className="text-[11px] font-semibold text-slate-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
+                          Avail: {batch.remain_qty} units
+                        </span>
+                        <span className="text-[11px] font-mono text-teal-800 font-semibold">
+                          Net: {formatCurrency(Number(batch.netprice || 0))}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Manifest Items Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                      <th className="px-4 py-2.5 w-10 text-center">#</th>
+                      <th className="px-4 py-2.5">Stock Identifier</th>
+                      <th className="px-4 py-2.5 text-center">Batch Vol. & Breakdown</th>
+                      <th className="px-4 py-2.5 text-center">Free Qty</th>
+                      <th className="px-4 py-2.5 text-center">Total Loaded</th>
+                      <th className="px-4 py-2.5 text-right">Net Price</th>
+                      <th className="px-4 py-2.5 text-right">Retail Price</th>
+                      <th className="px-4 py-2.5 text-right">Net Value</th>
+                      <th className="px-4 py-2.5 text-right w-24">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {loadingItems.map((item, idx) => {
+                      const paidQty = item.qty - (item.free_qty || 0);
+                      const packSize = item.batch_stock?.pack_size || 1;
+                      const cases = Math.floor(paidQty / packSize);
+                      const loose = paidQty % packSize;
+
+                      return (
                         <tr
                           key={item.id}
-                          className="hover:bg-gray-50 transition-colors"
+                          className="hover:bg-stone-50/70 transition-colors"
                         >
-                          <td className="px-6 py-4">
-                            <p className="font-black text-gray-800">
+                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono text-[11px]">
+                            {idx + 1}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <p className="font-semibold text-slate-900">
                               {item.batch_stock?.product?.name}
                             </p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">
+                            <p className="text-[11px] text-slate-400 font-mono mt-0.5">
                               {item.batch_stock?.product?.barcode ||
                                 item.batch_stock?.product?.material_code}
-                              <span className="mx-1.5 opacity-50">|</span>
-                              Bat. Vol:{" "}
-                              {(item.batch_stock?.no_cases || 0) *
-                                (item.batch_stock?.pack_size || 0) +
-                                (item.batch_stock?.extra_units || 0) +
-                                (item.batch_stock?.free_qty || 0)}
+                              <span className="mx-1.5 text-stone-300">|</span>
+                              Exp: {item.batch_stock?.expiry_date || "N/A"}
                             </p>
                           </td>
-                          <td className="px-4 py-4 text-center">
-                            <div className="font-black text-gray-700 font-mono text-[11px] flex items-center justify-center gap-1.5">
-                              {(() => {
-                                const paidQty = item.qty - (item.free_qty || 0);
-                                const packSize =
-                                  item.batch_stock?.pack_size || 1;
-                                return (
-                                  <>
-                                    <span>
-                                      {Math.floor(paidQty / packSize)} x{" "}
-                                      {packSize}
-                                    </span>
-                                    <span className="text-blue-500">
-                                      + {paidQty % packSize}
-                                    </span>
-                                  </>
-                                );
-                              })()}
-                              {item.free_qty > 0 && (
-                                <span className="text-emerald-500">
-                                  + {item.free_qty}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[8px] font-black text-gray-400 uppercase tracking-tighter mt-1 space-x-2">
-                              <span>Total: {item.qty} Units</span>
-                            </div>
+                          <td className="px-4 py-2.5 text-center font-mono text-[11px] text-slate-600">
+                            {cases} × {packSize}
+                            {loose > 0 && (
+                              <span className="text-teal-700 font-semibold ml-1">
+                                + {loose} loose
+                              </span>
+                            )}
                           </td>
-                          <td className="px-4 py-4 text-center">
-                            <span className="font-black text-gray-800 font-mono">
-                              Rs. {Number(item.net_price).toFixed(2)}
-                            </span>
+                          <td className="px-4 py-2.5 text-center">
+                            {item.free_qty > 0 ? (
+                              <span className="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200">
+                                +{item.free_qty}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
                           </td>
-                          <td className="px-4 py-4 text-center">
-                            <span className="font-bold text-gray-500 font-mono">
-                              Rs.{" "}
-                              {Number(
-                                item.batch_stock?.retail_price || 0,
-                              ).toFixed(2)}
-                            </span>
+                          <td className="px-4 py-2.5 text-center font-bold text-slate-900">
+                            {item.qty}
                           </td>
-                          <td className="px-4 py-4 text-center font-black text-blue-700">
-                            {item.qty - (item.free_qty || 0)}
+                          <td className="px-4 py-2.5 text-right font-mono text-slate-800">
+                            {formatCurrency(Number(item.net_price || 0))}
                           </td>
-                          <td className="px-4 py-4 text-right font-black text-gray-900 font-mono">
-                            Rs.{" "}
-                            {(
-                              Number(item.net_price) *
-                              (Number(item.qty) - (Number(item.free_qty) || 0))
-                            ).toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                            })}
+                          <td className="px-4 py-2.5 text-right font-mono text-slate-500">
+                            {formatCurrency(
+                              Number(item.batch_stock?.retail_price || 0)
+                            )}
                           </td>
-                          <td className="px-4 py-4 text-right">
-                            <div className="flex justify-end gap-1">
+                          <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                            {formatCurrency(
+                              paidQty * Number(item.net_price || 0)
+                            )}
+                          </td>
+                          <td className="px-4 py-2.5 text-right">
+                            <div className="flex items-center justify-end gap-1">
                               <button
+                                type="button"
                                 onClick={() => handleEditItem(item)}
-                                className="text-blue-400 hover:text-blue-600 p-2 transition-colors"
-                                title="Edit Quantity"
+                                title="Edit item quantity"
+                                className="p-1 text-slate-500 hover:text-teal-800 hover:bg-stone-100 rounded transition-colors"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
+                                <Edit2 size={14} />
                               </button>
                               <button
+                                type="button"
                                 onClick={() => handleRemoveItem(item.id)}
-                                className="text-red-400 hover:text-red-600 p-2 transition-colors"
-                                title="Remove Item"
+                                title="Remove item"
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
+                                <Trash2 size={14} />
                               </button>
                             </div>
                           </td>
                         </tr>
-                      ))}
-                      {loadingItems.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="py-20 text-center text-gray-400 font-bold uppercase tracking-widest opacity-30"
-                          >
-                            No items added
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
+
+              {loadingItems.length === 0 && (
+                <div className="py-14 text-center px-4">
+                  <Boxes
+                    size={32}
+                    className="mx-auto text-slate-300 mb-2"
+                  />
+                  <p className="text-xs font-semibold text-slate-700">
+                    No items added to loading manifest yet
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm mx-auto">
+                    Scan a product barcode or search available warehouse stock above to assign packages
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Item Entry Modal */}
-      {activeProduct && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[120] p-4 text-xs font-sans">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+      {/* Item Allocation Modal */}
+      {activeProduct && selectedBatch && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+          <div className="bg-white rounded-xl shadow-xl border border-stone-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-5 py-3.5 border-b border-stone-200 bg-stone-50/70 flex justify-between items-center">
               <div>
-                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
-                  {editingItemId ? "Modify Entry" : "Add Stock to Loading"}
+                <p className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">
+                  {editingItemId ? "Modify Manifest Item" : "Allocate Stock to Manifest"}
                 </p>
-                <h4 className="font-bold text-gray-900 text-lg leading-tight">
+                <h3 className="text-xs font-bold text-slate-900 truncate">
                   {activeProduct.name}
-                </h4>
-                <p className="text-[10px] text-gray-400 font-mono mt-1">
-                  BARCODE:{" "}
-                  {activeProduct?.barcode || activeProduct?.material_code}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-mono">
+                  Code: {activeProduct.barcode || activeProduct.material_code}
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setActiveProduct(null);
                   setEditingItemId(null);
                 }}
-                className="p-2 text-gray-400 hover:bg-gray-200 rounded-full transition-colors"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleAddItem} className="p-6 space-y-5">
-              {/* Selected Batch Details Instead of Dropdown */}
-              {selectedBatch ? (
-                <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Expiry Date
-                    </p>
-                    <p className="font-bold text-gray-800">
-                      {selectedBatch?.expiry_date}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Total Avail.
-                    </p>
-                    <div className="flex flex-col items-end">
-                      <p className="font-black text-blue-600 leading-none">
-                        {selectedBatch?.remain_qty || 0}
-                      </p>
-                      {(selectedBatch?.returned_qty || 0) > 0 && (
-                        <p className="text-[9px] font-bold text-orange-500 mt-0.5">
-                          Incl. {selectedBatch?.returned_qty} Returns
-                        </p>
-                      )}
-                    </div>
-                  </div>
+            <form onSubmit={handleAddItem} className="p-5 space-y-4">
+              {/* Batch details strip */}
+              <div className="bg-stone-50 border border-stone-200 rounded-lg p-3 grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase font-semibold">
+                    Available Stock
+                  </p>
+                  <p className="font-bold text-slate-900">
+                    {selectedBatch.remain_qty} units
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-1.5 contents">
-                  <label className="font-bold text-gray-600 ml-0.5">
-                    Select Batch
-                  </label>
-                  <select
-                    required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none font-medium text-sm"
-                    value={itemForm.batch_id}
-                    onChange={(e) =>
-                      setItemForm({ ...itemForm, batch_id: e.target.value })
-                    }
-                  >
-                    <option value="">-- Choose Batch --</option>
-                    {productBatches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        Exp: {b.expiry_date} | Avail: {b.remain_qty} units{" "}
-                        {(b.returned_qty || 0) > 0
-                          ? `(Inc. ${b.returned_qty} Returns)`
-                          : ""}
-                      </option>
-                    ))}
-                  </select>
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase font-semibold">
+                    Pack Size
+                  </p>
+                  <p className="font-bold text-slate-900">
+                    {selectedBatch.pack_size} / case
+                  </p>
                 </div>
-              )}
-
-              {selectedBatch && (
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-3 gap-y-4 gap-x-6">
-                  <div>
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                      Pack Size
-                    </p>
-                    <p className="font-bold text-blue-900">
-                      {selectedBatch.pack_size} units
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-0.5">
-                      Net Price
-                    </p>
-                    <p className="font-bold text-blue-900">
-                      Rs. {Number(selectedBatch.netprice || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-0.5">
-                      Retail Price
-                    </p>
-                    <p className="font-bold text-orange-900">
-                      Rs. {Number(selectedBatch.retail_price || 0).toFixed(2)}
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase font-semibold">
+                    Expiry Date
+                  </p>
+                  <p className="font-bold text-slate-900">
+                    {selectedBatch.expiry_date || "N/A"}
+                  </p>
                 </div>
-              )}
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
                     Full Cases
                   </label>
                   <input
                     type="number"
                     min="0"
+                    placeholder="0"
                     autoFocus
-                    className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
+                    className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
                     value={itemForm.no_cases}
                     onChange={(e) =>
                       setItemForm({ ...itemForm, no_cases: e.target.value })
                     }
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="font-bold text-[10px] uppercase tracking-wider text-gray-500 ml-0.5">
+
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider block mb-1">
                     Loose Units
                   </label>
                   <input
                     type="number"
                     min="0"
-                    className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 outline-none font-bold text-sm focus:border-blue-500 transition-colors"
+                    className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
                     value={itemForm.loose_qty}
                     onChange={(e) =>
                       setItemForm({ ...itemForm, loose_qty: e.target.value })
@@ -1343,15 +1106,14 @@ const Loading = () => {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-bold text-[10px] uppercase tracking-wider text-emerald-600 ml-0.5">
-                  Free Quantity (Units)
+              <div>
+                <label className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider block mb-1">
+                  Free Quantity (Bonus Units)
                 </label>
                 <input
                   type="number"
                   min="0"
-                  className="w-full px-4 py-3 rounded-xl bg-emerald-50/50 border border-emerald-100 outline-none font-black text-sm text-emerald-700 focus:border-emerald-500 transition-all shadow-sm"
-                  placeholder="Enter free items in units..."
+                  className="w-full h-8 px-2.5 rounded-lg bg-emerald-50/50 border border-emerald-200 text-xs font-bold text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700"
                   value={itemForm.free_qty}
                   onChange={(e) =>
                     setItemForm({ ...itemForm, free_qty: e.target.value })
@@ -1359,51 +1121,62 @@ const Loading = () => {
                 />
               </div>
 
-              <div className="bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-200">
-                <div className="flex justify-between items-center mb-1">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                    Total Quantity
-                  </p>
-                  <p className="font-black text-gray-800 text-lg">
-                    {currentTotalQty} Units
-                  </p>
+              {/* Real-time Calculation & Stock Validation */}
+              <div
+                className={`p-3 rounded-lg border text-xs ${
+                  isStockInsufficient
+                    ? "bg-rose-50 border-rose-200 text-rose-800"
+                    : "bg-stone-50 border-stone-200 text-slate-800"
+                }`}
+              >
+                <div className="flex items-center justify-between font-medium mb-1">
+                  <span>Total Requested:</span>
+                  <span className="font-bold font-mono">
+                    {currentTotalRequested} units
+                  </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                    Total Value
-                  </p>
-                  <p className="font-black text-blue-600 text-lg">
-                    Rs.{" "}
-                    {(
-                      (Number(itemForm.no_cases) * currentPackSize +
-                        Number(itemForm.loose_qty || 0)) *
-                      (selectedBatch?.netprice || 0)
-                    ).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </p>
+                <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                  <span>Warehouse Stock Remaining:</span>
+                  <span
+                    className={`font-mono font-semibold ${
+                      isStockInsufficient ? "text-rose-700" : "text-slate-700"
+                    }`}
+                  >
+                    {currentBatchRemaining - currentTotalRequested} units
+                  </span>
                 </div>
+                <div className="flex items-center justify-between pt-1 border-t border-stone-200">
+                  <span className="font-semibold">Calculated Value:</span>
+                  <span className="font-bold font-mono text-teal-900">
+                    {formatCurrency(currentLineValue)}
+                  </span>
+                </div>
+
+                {isStockInsufficient && (
+                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-rose-700 font-bold">
+                    <ShieldAlert size={14} />
+                    <span>Requested amount exceeds available batch stock!</span>
+                  </div>
+                )}
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-2 border-t border-stone-200">
                 <button
                   type="button"
                   onClick={() => {
                     setActiveProduct(null);
                     setEditingItemId(null);
                   }}
-                  className="flex-1 py-3 font-bold text-gray-500 bg-white border border-gray-300 rounded-xl hover:bg-gray-50"
+                  className="flex-1 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={!selectedBatch || loading}
-                  className="flex-[2] py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50"
+                  disabled={isStockInsufficient || loading}
+                  className="flex-1 py-1.5 text-xs font-semibold text-white bg-teal-800 rounded-lg hover:bg-teal-900 active:bg-teal-950 transition-colors shadow-sm disabled:opacity-50"
                 >
-                  {loading
-                    ? "Saving..."
-                    : editingItemId
-                      ? "Update Item"
-                      : "Add to Manifest"}
+                  {editingItemId ? "Update Item" : "Add to Manifest"}
                 </button>
               </div>
             </form>
@@ -1411,60 +1184,72 @@ const Loading = () => {
         </div>
       )}
 
-      {/* Confirmation Modals */}
+      {/* Confirmation Save Modal */}
       {showConfirmSave && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
-            <h3 className="text-xl font-black text-gray-900 mb-2">
-              Finalize Loading?
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+          <div className="bg-white rounded-xl shadow-xl border border-stone-200 w-full max-w-sm p-5 text-center animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-9 h-9 rounded-full bg-teal-50 text-teal-800 border border-teal-200 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 mb-1">
+              Finalize Loading Manifest?
             </h3>
-            <p className="text-sm text-gray-500 mb-8">
-              This will save the loading manifest. Ensure all items are correct.
+            <p className="text-xs text-slate-500 mb-4">
+              Saving will confirm dispatch of {loadingItems.length} product {loadingItems.length === 1 ? "line" : "lines"} totaling{" "}
+              <strong>{formatCurrency(totalManifestNetValue)}</strong> for load #{loadingData.load_number}.
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => setShowConfirmSave(false)}
-                className="py-3 font-bold text-gray-500 border rounded-xl hover:bg-gray-50"
+                className="py-1.5 text-xs font-semibold text-slate-700 border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
               >
                 Back
               </button>
               <button
+                type="button"
                 onClick={handleComplete}
-                className="py-3 font-bold text-white bg-blue-600 rounded-xl shadow-lg shadow-blue-100"
+                disabled={loading}
+                className="py-1.5 text-xs font-semibold text-white bg-teal-800 hover:bg-teal-900 active:bg-teal-950 rounded-lg shadow-sm transition-colors"
               >
-                Confirm
+                {loading ? "Saving..." : "Confirm & Save"}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Confirmation Discard Modal */}
       {showConfirmCancel && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 text-sm font-sans text-center">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-200">
-            <h3 className="text-xl font-black text-gray-900 mb-2">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+          <div className="bg-white rounded-xl shadow-xl border border-stone-200 w-full max-w-sm p-5 text-center animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center justify-center mx-auto mb-3">
+              <AlertTriangle size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 mb-1">
               Discard Manifest?
             </h3>
-            <p className="text-sm text-gray-500 mb-8">
-              All items added to this list will be lost. The manifest has not
-              been saved to the database yet.
+            <p className="text-xs text-slate-500 mb-4">
+              All items added to manifest #{loadingData.load_number} will be discarded.
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => setShowConfirmCancel(false)}
-                className="py-3 font-bold text-gray-500 border rounded-xl hover:bg-gray-50"
+                className="py-1.5 text-xs font-semibold text-slate-700 border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors"
               >
-                Back
+                Keep Editing
               </button>
               <button
+                type="button"
                 onClick={() =>
                   navigate("/supply-invoices", {
                     state: { activeTab: "loading" },
                   })
                 }
-                className="py-3 font-bold text-white bg-red-500 rounded-xl shadow-lg shadow-red-100"
+                className="py-1.5 text-xs font-semibold text-white bg-rose-700 hover:bg-rose-800 rounded-lg shadow-sm transition-colors"
               >
-                Exit
+                Discard
               </button>
             </div>
           </div>
