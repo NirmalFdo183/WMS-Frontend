@@ -128,13 +128,9 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             <p className="text-[11px] text-slate-500 font-medium capitalize leading-none mt-0.5">
               {user?.role === "admin"
                 ? "Administrator"
-                : user?.role === "staff"
-                  ? "Warehouse Staff"
-                  : user?.role === "rep"
-                    ? "Sales Rep"
-                    : user?.role === "cashier"
-                      ? "Cashier"
-                      : "User"}
+                : user?.role === "cashier"
+                  ? "Cashier"
+                  : "User"}
             </p>
           </div>
         </div>

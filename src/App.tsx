@@ -21,8 +21,8 @@ import PosTerminal from "./pages/PosTerminal";
 import Layout from "./components/Layout";
 import "./App.css";
 
-// Protected Route Wrapper for Admin & Warehouse Staff
-const ProtectedRoute = () => {
+// Protected Route Wrapper for Admin (Full System Access)
+const AdminProtectedRoute = () => {
   const { isAuthenticated, user } = useAuth();
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -33,22 +33,46 @@ const ProtectedRoute = () => {
     return <Navigate to="/pos" replace />;
   }
 
+  // Only admin role can access the warehouse management system
+  if (user?.role !== "admin") {
+    return <Navigate to="/login" replace />;
+  }
+
   return <Layout />;
 };
 
-// Protected Route for POS Terminal
+// Protected Route for POS Terminal (Accessible by Cashiers and Admins)
 const PosProtectedRoute = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  // Allow both admin and cashier into POS terminal
+  if (user?.role !== "admin" && user?.role !== "cashier") {
+    return <Navigate to="/login" replace />;
+  }
+
   return <PosTerminal />;
+};
+
+// Route wrapper for Login: redirect already logged-in users to their area
+const LoginRoute = () => {
+  const { isAuthenticated, user } = useAuth();
+  if (isAuthenticated && user) {
+    return user.role === "cashier" ? (
+      <Navigate to="/pos" replace />
+    ) : (
+      <Navigate to="/dashboard" replace />
+    );
+  }
+  return <Login />;
 };
 
 const router = createBrowserRouter([
   {
     path: "/login",
-    element: <Login />,
+    element: <LoginRoute />,
   },
   {
     path: "/pos",
@@ -56,7 +80,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <ProtectedRoute />,
+    element: <AdminProtectedRoute />,
     children: [
       {
         path: "dashboard",

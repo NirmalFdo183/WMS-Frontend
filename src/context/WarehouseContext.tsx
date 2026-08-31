@@ -18,9 +18,25 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
   const [totalValue, setTotalValue] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const fetchTotalValue = async () => {
+    // Only administrators have access to warehouse supplier invoices financial valuation
+    if (user && user.role !== "admin") return;
+
+    // Check localStorage fallback if user object is loading
+    if (!user) {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed?.role !== "admin") return;
+        } catch {
+          // fallback
+        }
+      }
+    }
+
     // If no token in context, check localStorage as fallback before giving up
     const effectiveToken = token || localStorage.getItem("token");
     if (!effectiveToken) return;
@@ -53,11 +69,15 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    fetchTotalValue();
-  }, [token]);
+    if (user?.role === "admin") {
+      fetchTotalValue();
+    }
+  }, [token, user]);
 
   const refreshTotalValue = async () => {
-    await fetchTotalValue();
+    if (user?.role === "admin") {
+      await fetchTotalValue();
+    }
   };
 
   return (
