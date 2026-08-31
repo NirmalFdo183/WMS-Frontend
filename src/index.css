@@ -41,4 +41,55 @@
 
 [data-density="compact"] table tr {
   height: auto !important;
+}
+
+/* -------------------------------------------------------------
+   POS Thermal Receipt Print Styles (Standard 80mm / 58mm Roll)
+   ------------------------------------------------------------- */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0mm;
+  }
+
+  html,
+  body {
+    width: 80mm !important;
+    min-width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Completely hide all main UI when printing */
+  .print\:hidden,
+  .no-print,
+  header,
+  nav,
+  aside,
+  button,
+  input,
+  footer {
+    display: none !important;
+  }
+
+  /* Make only the printable thermal receipt visible and styled */
+  #printable-receipt {
+    display: block !important;
+    position: relative !important;
+    width: 76mm !important;
+    max-width: 76mm !important;
+    margin: 0 auto !important;
+    padding: 2mm 1mm !important;
+    font-family: 'Courier New', Courier, monospace, 'Lucida Console', monospace !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
 }
