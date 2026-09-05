@@ -673,7 +673,7 @@ const Settings: React.FC = () => {
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Total Transactions
                   </p>
-                  <p className="text-xl font-black text-slate-900 mt-0.5 font-mono">
+                  <p className="text-xl font-black text-slate-900 mt-0.5 ">
                     {auditMetrics.totalTransactions}
                   </p>
                 </div>
@@ -687,7 +687,7 @@ const Settings: React.FC = () => {
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Audited Sales Total
                   </p>
-                  <p className="text-xl font-black text-slate-900 mt-0.5 font-mono">
+                  <p className="text-xl font-black text-slate-900 mt-0.5 ">
                     {formatCurrency(auditMetrics.totalRevenue)}
                   </p>
                 </div>
@@ -701,7 +701,7 @@ const Settings: React.FC = () => {
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Total Discounts Given
                   </p>
-                  <p className="text-xl font-black text-slate-900 mt-0.5 font-mono text-amber-900">
+                  <p className="text-xl font-black text-slate-900 mt-0.5  text-amber-900">
                     {formatCurrency(auditMetrics.totalDiscounts)}
                   </p>
                 </div>
@@ -715,7 +715,7 @@ const Settings: React.FC = () => {
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Audited Cashiers
                   </p>
-                  <p className="text-xl font-black text-slate-900 mt-0.5 font-mono">
+                  <p className="text-xl font-black text-slate-900 mt-0.5 ">
                     {auditMetrics.uniqueCashiers}
                   </p>
                 </div>
@@ -981,7 +981,7 @@ const Settings: React.FC = () => {
                             key={sale.id}
                             className="hover:bg-stone-50/70 transition-colors"
                           >
-                            <td className="py-3 px-4 font-mono font-bold text-teal-800">
+                            <td className="py-3 px-4  font-bold text-teal-800">
                               #{sale.id}
                             </td>
                             <td className="py-3 px-4">
@@ -995,20 +995,20 @@ const Settings: React.FC = () => {
                                   <p className="font-bold text-slate-900 leading-snug">
                                     {sale.user?.name || "System Cashier"}
                                   </p>
-                                  <p className="text-[11px] text-slate-500 font-mono">
+                                  <p className="text-[11px] text-slate-500 ">
                                     @{sale.user?.username || `user_${sale.user_id}`}
                                   </p>
                                 </div>
                               </div>
                             </td>
                             <td className="py-3 px-4 text-slate-700 font-medium">
-                              <span className="font-mono text-xs">{sale.date_time}</span>
+                              <span className=" text-xs">{sale.date_time}</span>
                             </td>
                             <td className="py-3 px-4 text-center">
                               <span className="font-semibold text-slate-800">
                                 {itemsCount} items
                               </span>
-                              <span className="text-[11px] text-slate-500 block font-mono">
+                              <span className="text-[11px] text-slate-500 block ">
                                 ({totalUnits} units)
                               </span>
                             </td>
@@ -1028,7 +1028,7 @@ const Settings: React.FC = () => {
                                 <span>{sale.payment_type || "cash"}</span>
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-right font-mono font-medium">
+                            <td className="py-3 px-4 text-right  font-medium">
                               {Number(sale.discount) > 0 ? (
                                 <span className="text-amber-800">
                                   - {formatCurrency(Number(sale.discount))}
@@ -1037,7 +1037,7 @@ const Settings: React.FC = () => {
                                 <span className="text-slate-400">-</span>
                               )}
                             </td>
-                            <td className="py-3 px-4 text-right font-mono font-bold text-slate-900 text-sm">
+                            <td className="py-3 px-4 text-right  font-bold text-slate-900 text-sm">
                               {formatCurrency(Number(sale.total))}
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -1091,11 +1091,11 @@ const Settings: React.FC = () => {
 
                     <div className="flex items-center gap-1 px-2 text-slate-700 font-semibold">
                       <span>Page</span>
-                      <span className="font-bold text-slate-900 font-mono">
+                      <span className="font-bold text-slate-900 ">
                         {currentPage}
                       </span>
                       <span>of</span>
-                      <span className="font-bold text-slate-900 font-mono">
+                      <span className="font-bold text-slate-900 ">
                         {totalPages}
                       </span>
                     </div>
@@ -1245,14 +1245,14 @@ const Settings: React.FC = () => {
                                   <p className="font-bold text-slate-900 group-hover:text-teal-800 transition-colors leading-snug">
                                     {u.name}
                                   </p>
-                                  <p className="text-[11px] text-slate-400 font-mono">
+                                  <p className="text-[11px] text-slate-400 ">
                                     ID: #{u.id}
                                   </p>
                                 </div>
                               </div>
                             </td>
 
-                            <td className="py-3 px-4 font-mono font-semibold text-slate-700">
+                            <td className="py-3 px-4  font-semibold text-slate-700">
                               @{u.username}
                             </td>
 
@@ -1273,7 +1273,7 @@ const Settings: React.FC = () => {
                               </span>
                             </td>
 
-                            <td className="py-3 px-4 font-mono text-slate-800 font-medium">
+                            <td className="py-3 px-4  text-slate-800 font-medium">
                               {u.phone}
                             </td>
 
@@ -1287,7 +1287,7 @@ const Settings: React.FC = () => {
                                   Admin Authority
                                 </span>
                               ) : (
-                                <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                                <span className=" font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
                                   {u.sales_count ?? 0} sales
                                 </span>
                               )}
@@ -1435,7 +1435,7 @@ const Settings: React.FC = () => {
                         })
                       }
                       placeholder="e.g. kasun_pos"
-                      className="w-full px-3.5 py-2 text-xs font-mono font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
+                      className="w-full px-3.5 py-2 text-xs  font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
                     />
                     {createErrors.username && (
                       <p className="text-[11px] text-red-600 font-semibold mt-1">
@@ -1456,7 +1456,7 @@ const Settings: React.FC = () => {
                         setCreateForm({ ...createForm, phone: e.target.value })
                       }
                       placeholder="e.g. 0771234567"
-                      className="w-full px-3.5 py-2 text-xs font-mono font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
+                      className="w-full px-3.5 py-2 text-xs  font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
                     />
                     {createErrors.phone && (
                       <p className="text-[11px] text-red-600 font-semibold mt-1">
@@ -1598,7 +1598,7 @@ const Settings: React.FC = () => {
                       {selectedUser.name}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs font-mono text-slate-500">
+                      <span className="text-xs  text-slate-500">
                         @{selectedUser.username}
                       </span>
                       <span
@@ -1736,7 +1736,7 @@ const Settings: React.FC = () => {
                               username: e.target.value.toLowerCase().trim(),
                             })
                           }
-                          className="w-full px-3.5 py-2 text-xs font-mono font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
+                          className="w-full px-3.5 py-2 text-xs  font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
                         />
                         {editErrors.username && (
                           <p className="text-[11px] text-red-600 font-semibold mt-1">
@@ -1756,7 +1756,7 @@ const Settings: React.FC = () => {
                           onChange={(e) =>
                             setEditForm({ ...editForm, phone: e.target.value })
                           }
-                          className="w-full px-3.5 py-2 text-xs font-mono font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
+                          className="w-full px-3.5 py-2 text-xs  font-medium text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700"
                         />
                         {editErrors.phone && (
                           <p className="text-[11px] text-red-600 font-semibold mt-1">
@@ -1986,7 +1986,7 @@ const Settings: React.FC = () => {
                     <span className="text-[10px] font-bold text-slate-400 uppercase">
                       Username / ID
                     </span>
-                    <p className="font-mono text-slate-700 mt-0.5">
+                    <p className=" text-slate-700 mt-0.5">
                       @{selectedAuditSale.user?.username || selectedAuditSale.user_id}
                     </p>
                   </div>
@@ -2004,7 +2004,7 @@ const Settings: React.FC = () => {
                     <span className="text-[10px] font-bold text-slate-400 uppercase">
                       Cashier Phone
                     </span>
-                    <p className="font-mono text-slate-700 mt-0.5">
+                    <p className=" text-slate-700 mt-0.5">
                       {selectedAuditSale.user?.phone || "-"}
                     </p>
                   </div>
@@ -2032,16 +2032,16 @@ const Settings: React.FC = () => {
                             <td className="py-2 px-3 font-semibold text-slate-900">
                               {it.product?.name || `Product #${it.product_id}`}
                             </td>
-                            <td className="py-2 px-3 text-center font-mono text-slate-600">
+                            <td className="py-2 px-3 text-center  text-slate-600">
                               {it.batch_id ? `#${it.batch_id}` : "-"}
                             </td>
                             <td className="py-2 px-3 text-center font-bold text-slate-900">
                               {it.qty}
                             </td>
-                            <td className="py-2 px-3 text-right font-mono text-slate-700">
+                            <td className="py-2 px-3 text-right  text-slate-700">
                               {formatCurrency(Number(it.retail_price || it.unit_price))}
                             </td>
-                            <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
+                            <td className="py-2 px-3 text-right  font-bold text-slate-900">
                               {formatCurrency(Number(it.total))}
                             </td>
                           </tr>
@@ -2055,7 +2055,7 @@ const Settings: React.FC = () => {
                 <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 space-y-1.5 text-xs text-right">
                   <div className="flex justify-between text-slate-600">
                     <span>Gross Subtotal:</span>
-                    <span className="font-mono font-semibold text-slate-900">
+                    <span className=" font-semibold text-slate-900">
                       {formatCurrency(
                         Number(selectedAuditSale.total) +
                           Number(selectedAuditSale.discount || 0)
@@ -2066,7 +2066,7 @@ const Settings: React.FC = () => {
                   {Number(selectedAuditSale.discount) > 0 && (
                     <div className="flex justify-between text-amber-800 font-semibold">
                       <span>Total Discount Given:</span>
-                      <span className="font-mono">
+                      <span className="">
                         - {formatCurrency(Number(selectedAuditSale.discount))}
                       </span>
                     </div>
@@ -2074,7 +2074,7 @@ const Settings: React.FC = () => {
 
                   <div className="flex justify-between text-sm font-black text-slate-900 border-t border-stone-300 pt-2 mt-2">
                     <span>Net Sale Amount:</span>
-                    <span className="font-mono">
+                    <span className="">
                       {formatCurrency(Number(selectedAuditSale.total))}
                     </span>
                   </div>

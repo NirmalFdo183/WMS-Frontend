@@ -83,7 +83,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
                 Warehouse Value
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs sm:text-sm text-slate-900 font-bold font-mono tabular-nums">
+                <span className="text-xs sm:text-sm text-slate-900 font-bold  tabular-nums">
                   {valLoading ? (
                     <span className="text-slate-400 font-normal">Updating...</span>
                   ) : (
@@ -107,7 +107,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       </div>
 
       {/* Center Live Clock (Matches POS) */}
-      <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-600 bg-stone-100 px-3 py-1.5 rounded-md border border-stone-200 font-mono tabular-nums">
+      <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-600 bg-stone-100 px-3 py-1.5 rounded-md border border-stone-200  tabular-nums">
         <Calendar size={14} className="text-slate-400" />
         <span>{formattedDate}</span>
         <span className="text-slate-300">|</span>

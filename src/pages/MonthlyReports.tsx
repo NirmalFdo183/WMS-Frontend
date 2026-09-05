@@ -572,7 +572,7 @@ const MonthlyReports: React.FC = () => {
               </strong>
             </span>
           </div>
-          <span className="text-[11px] font-mono text-teal-800">
+          <span className="text-[11px]  text-teal-800">
             Computed in real-time from active store database records
           </span>
         </div>
@@ -592,7 +592,7 @@ const MonthlyReports: React.FC = () => {
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-black text-slate-900 font-mono tracking-tight">
+              <p className="text-2xl font-black text-slate-900  tracking-tight">
                 {formatCurrency(suppliesMetrics.totalAmount)}
               </p>
               <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 font-medium">
@@ -615,7 +615,7 @@ const MonthlyReports: React.FC = () => {
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-black text-slate-900 font-mono tracking-tight">
+              <p className="text-2xl font-black text-slate-900  tracking-tight">
                 {formatCurrency(deliveriesMetrics.totalAmount)}
               </p>
               <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 font-medium">
@@ -638,7 +638,7 @@ const MonthlyReports: React.FC = () => {
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-black text-teal-950 font-mono tracking-tight">
+              <p className="text-2xl font-black text-teal-950  tracking-tight">
                 {formatCurrency(posMetrics.totalRevenue)}
               </p>
               <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 font-medium">
@@ -661,7 +661,7 @@ const MonthlyReports: React.FC = () => {
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-black text-emerald-800 font-mono tracking-tight">
+              <p className="text-2xl font-black text-emerald-800  tracking-tight">
                 {formatCurrency(posMetrics.totalProfit)}
               </p>
               <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 font-medium">
@@ -692,7 +692,7 @@ const MonthlyReports: React.FC = () => {
                   Breakdown of revenue collected via Cash vs Card payments in {MONTH_NAMES[Number(selectedMonth) - 1]} {selectedYear}.
                 </p>
               </div>
-              <span className="text-xs font-bold font-mono bg-stone-100 text-slate-700 px-2.5 py-1 rounded-md">
+              <span className="text-xs font-bold  bg-stone-100 text-slate-700 px-2.5 py-1 rounded-md">
                 {formatCurrency(posMetrics.totalRevenue)}
               </span>
             </div>
@@ -731,7 +731,7 @@ const MonthlyReports: React.FC = () => {
                                   {data.name} Payments
                                 </p>
                                 <div className="flex items-center gap-2 text-slate-300">
-                                  <span className="font-mono text-teal-300 font-bold">
+                                  <span className=" text-teal-300 font-bold">
                                     {formatCurrency(data.value)}
                                   </span>
                                   <span>•</span>
@@ -780,7 +780,7 @@ const MonthlyReports: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <span className="text-xs font-bold font-mono text-slate-900">
+                      <span className="text-xs font-bold  text-slate-900">
                         {formatCurrency(item.value)}
                       </span>
                     </div>
@@ -802,7 +802,7 @@ const MonthlyReports: React.FC = () => {
                   Highest volume items sold through POS terminal.
                 </p>
               </div>
-              <span className="text-xs font-bold font-mono bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md">
+              <span className="text-xs font-bold  bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md">
                 Top 10 Volume
               </span>
             </div>
@@ -841,11 +841,11 @@ const MonthlyReports: React.FC = () => {
                                   {data.name}
                                 </p>
                                 <div className="flex items-center gap-1.5 text-slate-300">
-                                  <span className="font-mono text-teal-300 font-bold">
+                                  <span className=" text-teal-300 font-bold">
                                     {data.value} units
                                   </span>
                                   <span>•</span>
-                                  <span className="font-mono text-amber-300">
+                                  <span className=" text-amber-300">
                                     {formatCurrency(data.revenue)}
                                   </span>
                                 </div>
@@ -879,7 +879,7 @@ const MonthlyReports: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="font-bold font-mono text-teal-900">
+                        <span className="font-bold  text-teal-900">
                           {prod.value} pcs
                         </span>
                         <span className="text-[10px] text-slate-500 block">
@@ -952,16 +952,16 @@ const MonthlyReports: React.FC = () => {
                           </p>
                           <div className="flex justify-between gap-3 text-teal-300 font-semibold">
                             <span>Total Sales:</span>
-                            <span className="font-mono">{formatCurrency(data.salesAmount)}</span>
+                            <span className="">{formatCurrency(data.salesAmount)}</span>
                           </div>
                           <div className="flex justify-between gap-3 text-amber-400 font-semibold">
                             <span>Total Profit:</span>
-                            <span className="font-mono">{formatCurrency(data.profitAmount)}</span>
+                            <span className="">{formatCurrency(data.profitAmount)}</span>
                           </div>
                           {data.salesAmount > 0 && (
                             <div className="flex justify-between gap-3 text-slate-400 text-[10px] pt-0.5 border-t border-slate-800">
                               <span>Margin:</span>
-                              <span className="font-mono text-emerald-400 font-bold">
+                              <span className=" text-emerald-400 font-bold">
                                 {((data.profitAmount / data.salesAmount) * 100).toFixed(1)}%
                               </span>
                             </div>

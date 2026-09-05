@@ -763,7 +763,7 @@ const ProductPage: React.FC = () => {
 
     return {
       label: expiryDateStr,
-      className: "text-slate-700 font-mono text-sm",
+      className: "text-slate-700  text-sm",
     };
   };
 
@@ -1122,12 +1122,12 @@ const ProductPage: React.FC = () => {
                         <tr key={prod.id} className="hover:bg-stone-50/70 transition-colors">
                           <td className="py-3 px-4">
                             <div className="font-semibold text-slate-900">{prod.name}</div>
-                            <div className="font-mono text-xs text-slate-500 mt-0.5">
+                            <div className=" text-xs text-slate-500 mt-0.5">
                               {prod.material_code}
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="font-mono text-xs text-slate-600 select-all tracking-wider">
+                            <span className=" text-xs text-slate-600 select-all tracking-wider">
                               {prod.barcode || "—"}
                             </span>
                           </td>
@@ -1242,12 +1242,12 @@ const ProductPage: React.FC = () => {
                     <tr key={prod.id} className="hover:bg-stone-50/70 transition-colors">
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-900">{prod.name}</div>
-                        <div className="font-mono text-xs text-slate-500 mt-0.5">
+                        <div className=" text-xs text-slate-500 mt-0.5">
                           {prod.material_code}
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="font-mono text-xs text-slate-600 select-all tracking-wider">
+                        <span className=" text-xs text-slate-600 select-all tracking-wider">
                           {prod.barcode || "—"}
                         </span>
                       </td>
@@ -1393,14 +1393,14 @@ const ProductPage: React.FC = () => {
                 <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
                   <span>
                     Material Code:{" "}
-                    <strong className="font-mono text-slate-700">
+                    <strong className=" text-slate-700">
                       {viewingProduct.material_code}
                     </strong>
                   </span>
                   <span>·</span>
                   <span>
                     Barcode:{" "}
-                    <strong className="font-mono text-slate-700 select-all">
+                    <strong className=" text-slate-700 select-all">
                       {viewingProduct.barcode || "—"}
                     </strong>
                   </span>
@@ -1512,7 +1512,7 @@ const ProductPage: React.FC = () => {
                                   units
                                 </span>
                               </td>
-                              <td className="py-2.5 px-3 text-xs text-slate-600 font-mono">
+                              <td className="py-2.5 px-3 text-xs text-slate-600 ">
                                 {cases} cases × {packSize} + {loose} loose
                               </td>
                               <td className="py-2.5 px-3 text-right text-slate-800 font-medium">
@@ -1682,7 +1682,7 @@ const ProductPage: React.FC = () => {
                   placeholder="e.g. 0479100010010"
                   aria-invalid={!!fieldErrors.barcode}
                   aria-describedby={fieldErrors.barcode ? "err-barcode" : undefined}
-                  className={`w-full px-3 py-2 text-sm rounded-lg border bg-white font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                  className={`w-full px-3 py-2 text-sm rounded-lg border bg-white  text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
                     fieldErrors.barcode
                       ? "border-red-400 focus:ring-red-200"
                       : "border-stone-300 focus:ring-teal-700/20 focus:border-teal-700"
@@ -1815,7 +1815,7 @@ const ProductPage: React.FC = () => {
               <p className="text-sm text-slate-600 mt-1">
                 Are you sure you want to delete{" "}
                 <strong className="text-slate-900 font-semibold">{deleteTarget.name}</strong>{" "}
-                (Code: <code className="text-xs font-mono">{deleteTarget.material_code}</code>)?
+                (Code: <code className="text-xs ">{deleteTarget.material_code}</code>)?
               </p>
               <p className="text-xs text-slate-500 mt-1.5">
                 This action cannot be undone. If this product has related batch stocks or sales
