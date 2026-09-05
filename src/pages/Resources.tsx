@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 import {
   Edit2,
   Trash2,
@@ -15,6 +16,7 @@ import {
   AlertTriangle,
   X,
   Loader2,
+  FolderTree,
 } from "lucide-react";
 
 // Interfaces
@@ -63,7 +65,15 @@ type TabType = "routes" | "trucks" | "employees" | "sales-reps";
 
 const Resources: React.FC = () => {
   // State management for tabs
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>("routes");
+
+  useEffect(() => {
+    if (location.state && location.state.activeTab) {
+      setActiveTab(location.state.activeTab);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   // Data States
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -457,7 +467,8 @@ const Resources: React.FC = () => {
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 bg-[#f8f9fa] min-h-[calc(100vh-4rem)] text-slate-900 font-sans antialiased">
+    <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-6">
       {/* Toast Notification */}
       {toast && (
         <div
@@ -491,17 +502,12 @@ const Resources: React.FC = () => {
       )}
 
       {/* 1. Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-teal-800 mb-1">
-            Fleet & Resource Logistics
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+        <div className="flex items-center gap-2.5">
+          <FolderTree className="text-teal-800" size={30} />
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Resource Management
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-            Manage distribution routes, transport vehicles, staff, and sales representatives.
-          </p>
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-auto shrink-0">
@@ -1374,6 +1380,7 @@ const Resources: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

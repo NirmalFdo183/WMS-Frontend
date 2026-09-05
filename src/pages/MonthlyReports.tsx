@@ -462,14 +462,11 @@ const MonthlyReports: React.FC = () => {
             HEADER & PERIOD SELECTOR
            ========================================================= */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-              <BarChart3 className="text-teal-800" size={30} />
-              <span>Monthly Reports & Business Performance</span>
+          <div className="flex items-center gap-2.5">
+            <BarChart3 className="text-teal-800" size={30} />
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Monthly Reports & Business Performance
             </h1>
-            <p className="text-sm font-medium text-slate-500 mt-1">
-              Comprehensive analytics, supply costs, dispatches, POS revenue, and profit margins.
-            </p>
           </div>
 
           {/* Period Filter Controls */}

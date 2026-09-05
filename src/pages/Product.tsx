@@ -771,7 +771,8 @@ const ProductPage: React.FC = () => {
   const endIndex = startIndex + paginatedProducts.length;
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-[1600px] mx-auto min-h-screen bg-[#f8f9fa] text-slate-900">
+    <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-6">
       {/* Toast Notification */}
       {toast && (
         <div
@@ -808,17 +809,12 @@ const ProductPage: React.FC = () => {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-teal-800 mb-1">
-            Inventory Management
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+        <div className="flex items-center gap-2.5">
+          <Package className="text-teal-800" size={30} />
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Products
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Manage product master catalog, stock levels, and warehouse batch tracking.
-          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -1861,6 +1857,7 @@ const ProductPage: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
