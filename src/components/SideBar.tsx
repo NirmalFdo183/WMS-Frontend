@@ -14,10 +14,7 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
-  User,
-  Bell,
-  Shield,
-  Palette,
+  BarChart3,
 } from "lucide-react";
 
 interface SideBarProps {
@@ -68,24 +65,22 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       icon: <RefreshCw size={18} />,
     },
     {
-      name: "Sales Register",
-      path: "/sales",
-      icon: <ShoppingCart size={18} />,
+      name: "Monthly Reports",
+      path: "/monthly-reports",
+      icon: <BarChart3 size={18} />,
     },
   ];
 
   const settingsSubItems = [
-    { name: "Account", path: "/settings/account", icon: <User size={15} /> },
     {
-      name: "Notifications",
-      path: "/settings/notifications",
-      icon: <Bell size={15} />,
+      name: "Cashier Audits",
+      path: "/settings/cashier-audits",
+      icon: <FileText size={15} />,
     },
-    { name: "Security", path: "/settings/security", icon: <Shield size={15} /> },
     {
-      name: "Appearance",
-      path: "/settings/appearance",
-      icon: <Palette size={15} />,
+      name: "Manage Users",
+      path: "/settings/manage-users",
+      icon: <Users size={15} />,
     },
   ];
 
@@ -158,10 +153,10 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
               }
             }}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-xs font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+              `flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
                 isActive
-                  ? "bg-teal-50 text-teal-900 border-l-4 border-teal-800 font-bold pl-2.5 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-stone-100/70 border-l-4 border-transparent"
+                  ? "bg-teal-50 text-teal-950 border-l-4 border-teal-800 font-bold pl-2.5 shadow-xs"
+                  : "text-slate-800 hover:text-slate-950 hover:bg-stone-100 border-l-4 border-transparent"
               }`
             }
           >
@@ -169,7 +164,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
               <>
                 <span
                   className={`shrink-0 transition-colors ${
-                    isActive ? "text-teal-800" : "text-slate-400 group-hover:text-slate-600"
+                    isActive ? "text-teal-800" : "text-slate-500 group-hover:text-slate-800"
                   }`}
                 >
                   {item.icon}
@@ -177,7 +172,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 <span className="flex-1 flex items-center justify-between truncate">
                   <span className="truncate">{item.name}</span>
                   {item.badge && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300">
                       {item.badge}
                     </span>
                   )}
@@ -193,10 +188,10 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
             <button
               type="button"
               onClick={handleSettingsToggle}
-              className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-xs font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+              className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
                 isSettingsActive
-                  ? "text-slate-900 font-bold bg-stone-100/70"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-stone-100/70"
+                  ? "text-slate-950 font-bold bg-stone-100"
+                  : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
               }`}
               aria-expanded={isSettingsOpen}
             >
@@ -205,7 +200,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                   className={`shrink-0 transition-colors ${
                     isSettingsActive
                       ? "text-teal-800"
-                      : "text-slate-400 group-hover:text-slate-600"
+                      : "text-slate-500 group-hover:text-slate-800"
                   }`}
                 >
                   <Settings size={18} />
@@ -216,7 +211,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 className={`shrink-0 transition-transform duration-200 ${
                   isSettingsActive
                     ? "text-teal-800"
-                    : "text-slate-400 group-hover:text-slate-600"
+                    : "text-slate-500 group-hover:text-slate-800"
                 }`}
               >
                 {isSettingsOpen ? (
@@ -235,7 +230,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                   : "max-h-0 opacity-0 pointer-events-none"
               }`}
             >
-              <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-200/80 space-y-1 py-0.5">
+              <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-300 space-y-1 py-0.5">
                 {settingsSubItems.map((subItem) => (
                   <NavLink
                     key={subItem.path}
@@ -248,19 +243,19 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                     className={({ isActive }) => {
                       const isCurrentActive =
                         isActive ||
-                        (subItem.path === "/settings/account" &&
+                        (subItem.path === "/settings/cashier-audits" &&
                           location.pathname === "/settings");
-                      return `flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                      return `flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
                         isCurrentActive
-                          ? "bg-teal-50 text-teal-900 font-bold border border-teal-200/80 shadow-2xs"
-                          : "text-slate-500 hover:text-slate-900 hover:bg-stone-100/80 font-medium border border-transparent"
+                          ? "bg-teal-50 text-teal-950 font-bold border border-teal-300 shadow-2xs"
+                          : "text-slate-700 hover:text-slate-950 hover:bg-stone-100 font-semibold border border-transparent"
                       }`;
                     }}
                   >
                     {({ isActive }) => {
                       const isCurrentActive =
                         isActive ||
-                        (subItem.path === "/settings/account" &&
+                        (subItem.path === "/settings/cashier-audits" &&
                           location.pathname === "/settings");
                       return (
                         <>
@@ -268,7 +263,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                             className={`shrink-0 transition-colors ${
                               isCurrentActive
                                 ? "text-teal-800"
-                                : "text-slate-400 group-hover:text-slate-600"
+                                : "text-slate-500 group-hover:text-slate-800"
                             }`}
                           >
                             {subItem.icon}
