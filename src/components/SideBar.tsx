@@ -15,6 +15,8 @@ import {
   ChevronDown,
   ChevronRight,
   BarChart3,
+  MapPin,
+  UserCheck,
 } from "lucide-react";
 
 interface SideBarProps {
@@ -29,12 +31,18 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
   const isSettingsActive = location.pathname.startsWith("/settings");
   const [isSettingsOpen, setIsSettingsOpen] = useState(isSettingsActive);
 
-  // Auto-expand when navigating to settings
+  const isInvoicesActive = location.pathname.startsWith("/supply-invoices");
+  const [isInvoicesOpen, setIsInvoicesOpen] = useState(isInvoicesActive);
+
+  const isResourcesActive = location.pathname.startsWith("/resources");
+  const [isResourcesOpen, setIsResourcesOpen] = useState(isResourcesActive);
+
+  // Auto-expand when navigating
   useEffect(() => {
-    if (isSettingsActive) {
-      setIsSettingsOpen(true);
-    }
-  }, [isSettingsActive]);
+    if (isSettingsActive) setIsSettingsOpen(true);
+    if (isInvoicesActive) setIsInvoicesOpen(true);
+    if (isResourcesActive) setIsResourcesOpen(true);
+  }, [isSettingsActive, isInvoicesActive, isResourcesActive]);
 
   const navItems = [
     {
@@ -53,12 +61,6 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
     { name: "New Supply", path: "/new-supply", icon: <Truck size={18} /> },
     { name: "Loading", path: "/loading", icon: <ShoppingCart size={18} /> },
     { name: "Shops", path: "/shops", icon: <Store size={18} /> },
-    { name: "Resources", path: "/resources", icon: <FolderTree size={18} /> },
-    {
-      name: "Invoices",
-      path: "/supply-invoices",
-      icon: <FileText size={18} />,
-    },
     {
       name: "Returns",
       path: "/returns",
@@ -69,6 +71,20 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       path: "/monthly-reports",
       icon: <BarChart3 size={18} />,
     },
+  ];
+
+  const invoicesSubItems = [
+    { name: "Supply Invoices", id: "supply", icon: <FileText size={15} /> },
+    { name: "Loading Manifests", id: "loading", icon: <Truck size={15} /> },
+    { name: "Sales Invoices", id: "sales", icon: <ShoppingCart size={15} /> },
+    { name: "Shop Invoices", id: "shop", icon: <Store size={15} /> },
+  ];
+
+  const resourcesSubItems = [
+    { name: "Routes", id: "routes", icon: <MapPin size={15} /> },
+    { name: "Trucks", id: "trucks", icon: <Truck size={15} /> },
+    { name: "Employees", id: "employees", icon: <Users size={15} /> },
+    { name: "Sales Reps", id: "sales-reps", icon: <UserCheck size={15} /> },
   ];
 
   const settingsSubItems = [
@@ -143,44 +159,206 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
 
       {/* Navigation List */}
       <nav className="flex-1 px-3 py-3 space-y-1.5 overflow-y-auto custom-scrollbar">
-        {visibleItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            onClick={() => {
-              if (window.innerWidth < 1024) {
-                onClose();
+        {visibleItems.map((item) => {
+          const navLink = (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => {
+                if (window.innerWidth < 1024) {
+                  onClose();
+                }
+              }}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                  isActive
+                    ? "bg-teal-50 text-teal-950 border-l-4 border-teal-800 font-bold pl-2.5 shadow-xs"
+                    : "text-slate-800 hover:text-slate-950 hover:bg-stone-100 border-l-4 border-transparent"
+                }`
               }
-            }}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
-                isActive
-                  ? "bg-teal-50 text-teal-950 border-l-4 border-teal-800 font-bold pl-2.5 shadow-xs"
-                  : "text-slate-800 hover:text-slate-950 hover:bg-stone-100 border-l-4 border-transparent"
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span
-                  className={`shrink-0 transition-colors ${
-                    isActive ? "text-teal-800" : "text-slate-500 group-hover:text-slate-800"
+            >
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={`shrink-0 transition-colors ${
+                      isActive ? "text-teal-800" : "text-slate-500 group-hover:text-slate-800"
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="flex-1 flex items-center justify-between truncate">
+                    <span className="truncate">{item.name}</span>
+                    {item.badge && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300">
+                        {item.badge}
+                      </span>
+                    )}
+                  </span>
+                </>
+              )}
+            </NavLink>
+          );
+
+          if (item.name === "Shops") {
+            return [
+              navLink,
+              <div key="resources-dropdown">
+                <button
+                  type="button"
+                  onClick={() => setIsResourcesOpen((prev) => !prev)}
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                    isResourcesActive
+                      ? "text-slate-950 font-bold bg-stone-100"
+                      : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
+                  }`}
+                  aria-expanded={isResourcesOpen}
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <span
+                      className={`shrink-0 transition-colors ${
+                        isResourcesActive
+                          ? "text-teal-800"
+                          : "text-slate-500 group-hover:text-slate-800"
+                      }`}
+                    >
+                      <FolderTree size={18} />
+                    </span>
+                    <span className="truncate">Resources</span>
+                  </div>
+                  <span
+                    className={`shrink-0 transition-transform duration-200 ${
+                      isResourcesActive
+                        ? "text-teal-800"
+                        : "text-slate-500 group-hover:text-slate-800"
+                    }`}
+                  >
+                    {isResourcesOpen ? (
+                      <ChevronDown size={15} />
+                    ) : (
+                      <ChevronRight size={15} />
+                    )}
+                  </span>
+                </button>
+
+                {/* Sub-menu Dropdown Items */}
+                <div
+                  className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                    isResourcesOpen
+                      ? "max-h-60 opacity-100 mt-1 mb-1"
+                      : "max-h-0 opacity-0 pointer-events-none"
                   }`}
                 >
-                  {item.icon}
-                </span>
-                <span className="flex-1 flex items-center justify-between truncate">
-                  <span className="truncate">{item.name}</span>
-                  {item.badge && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300">
-                      {item.badge}
+                  <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-300 space-y-1 py-0.5">
+                    {resourcesSubItems.map((subItem) => {
+                      const isCurrentActive =
+                        isResourcesActive &&
+                        (location.state?.activeTab === subItem.id ||
+                          (!location.state?.activeTab && subItem.id === "routes"));
+
+                      return (
+                        <NavLink
+                          key={subItem.id}
+                          to="/resources"
+                          state={{ activeTab: subItem.id }}
+                          onClick={() => {
+                            if (window.innerWidth < 1024) {
+                              onClose();
+                            }
+                          }}
+                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                            isCurrentActive
+                              ? "bg-teal-50 text-teal-950 font-bold border border-teal-300 shadow-2xs"
+                              : "text-slate-700 hover:text-slate-950 hover:bg-stone-100 font-semibold border border-transparent"
+                          }`}
+                        >
+                          <span className="truncate">{subItem.name}</span>
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>,
+              <div key="invoices-dropdown">
+                <button
+                  type="button"
+                  onClick={() => setIsInvoicesOpen((prev) => !prev)}
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                    isInvoicesActive
+                      ? "text-slate-950 font-bold bg-stone-100"
+                      : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
+                  }`}
+                  aria-expanded={isInvoicesOpen}
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <span
+                      className={`shrink-0 transition-colors ${
+                        isInvoicesActive
+                          ? "text-teal-800"
+                          : "text-slate-500 group-hover:text-slate-800"
+                      }`}
+                    >
+                      <FileText size={18} />
                     </span>
-                  )}
-                </span>
-              </>
-            )}
-          </NavLink>
-        ))}
+                    <span className="truncate">Invoices</span>
+                  </div>
+                  <span
+                    className={`shrink-0 transition-transform duration-200 ${
+                      isInvoicesActive
+                        ? "text-teal-800"
+                        : "text-slate-500 group-hover:text-slate-800"
+                    }`}
+                  >
+                    {isInvoicesOpen ? (
+                      <ChevronDown size={15} />
+                    ) : (
+                      <ChevronRight size={15} />
+                    )}
+                  </span>
+                </button>
+
+                {/* Sub-menu Dropdown Items */}
+                <div
+                  className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                    isInvoicesOpen
+                      ? "max-h-60 opacity-100 mt-1 mb-1"
+                      : "max-h-0 opacity-0 pointer-events-none"
+                  }`}
+                >
+                  <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-300 space-y-1 py-0.5">
+                    {invoicesSubItems.map((subItem) => {
+                      const isCurrentActive =
+                        isInvoicesActive &&
+                        (location.state?.activeTab === subItem.id ||
+                          (!location.state?.activeTab && subItem.id === "supply"));
+
+                      return (
+                        <NavLink
+                          key={subItem.id}
+                          to="/supply-invoices"
+                          state={{ activeTab: subItem.id }}
+                          onClick={() => {
+                            if (window.innerWidth < 1024) {
+                              onClose();
+                            }
+                          }}
+                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                            isCurrentActive
+                              ? "bg-teal-50 text-teal-950 font-bold border border-teal-300 shadow-2xs"
+                              : "text-slate-700 hover:text-slate-950 hover:bg-stone-100 font-semibold border border-transparent"
+                          }`}
+                        >
+                          <span className="truncate">{subItem.name}</span>
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>,
+            ];
+          }
+
+          return navLink;
+        })}
 
         {/* Settings Dropdown Item */}
         {showSettings && (
@@ -259,15 +437,6 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                           location.pathname === "/settings");
                       return (
                         <>
-                          <span
-                            className={`shrink-0 transition-colors ${
-                              isCurrentActive
-                                ? "text-teal-800"
-                                : "text-slate-500 group-hover:text-slate-800"
-                            }`}
-                          >
-                            {subItem.icon}
-                          </span>
                           <span className="truncate">{subItem.name}</span>
                         </>
                       );

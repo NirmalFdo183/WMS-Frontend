@@ -326,7 +326,8 @@ const Shops: React.FC = () => {
   };
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 bg-[#f8f9fa] min-h-[calc(100vh-4rem)] text-slate-900 font-sans antialiased">
+    <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-6">
       {/* Toast Notification */}
       {toast && (
         <div
@@ -360,17 +361,12 @@ const Shops: React.FC = () => {
       )}
 
       {/* 1. Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-teal-800 mb-1">
-            Route & Shop Operations
-          </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+        <div className="flex items-center gap-2.5">
+          <Store className="text-teal-800" size={30} />
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             Shop Management
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Manage registered retail shops and assign delivery distribution routes.
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
@@ -879,6 +875,7 @@ const Shops: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

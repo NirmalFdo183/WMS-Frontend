@@ -12,7 +12,7 @@ const Layout = () => {
 
       {/* Main Layout Area */}
       <main
-        className={`flex-1 overflow-y-auto h-full w-full transition-all duration-300 flex flex-col ${isSidebarOpen ? "lg:ml-64" : ""}`}
+        className={`flex-1 overflow-y-scroll h-full w-full transition-all duration-300 flex flex-col ${isSidebarOpen ? "lg:ml-64" : ""}`}
       >
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         <div className="flex-1 w-full pb-8">

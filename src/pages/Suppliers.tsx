@@ -11,6 +11,7 @@ import {
   Loader2,
   RefreshCw,
   AlertTriangle,
+  Users,
 } from "lucide-react";
 
 interface Supplier {
@@ -488,7 +489,7 @@ const Suppliers = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f8f9fa] text-slate-900 p-4 sm:p-6 lg:p-8">
+    <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
       {/* Toast Notification */}
       {toast && (
         <div
@@ -535,17 +536,12 @@ const Suppliers = () => {
 
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-teal-800 mb-1">
-              Supplier Directory
-            </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+          <div className="flex items-center gap-2.5">
+            <Users className="text-teal-800" size={30} />
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Suppliers
             </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Manage supplier catalog, contact directory, and distributor information.
-            </p>
           </div>
 
           <button
