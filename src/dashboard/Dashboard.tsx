@@ -112,6 +112,13 @@ const Dashboard = () => {
   const [loadingSearch, setLoadingSearch] = useState("");
   const [loadingStatusFilter, setLoadingStatusFilter] = useState<string>("all");
 
+  // Helper to safely extract arrays from various API response shapes
+  const extractArray = <T,>(resData: any): T[] => {
+    if (Array.isArray(resData)) return resData;
+    if (resData && Array.isArray(resData.data)) return resData.data;
+    return [];
+  };
+
   // Fetch all dashboard operational data
   const fetchData = useCallback(async (isManualRefresh = false) => {
     try {
@@ -127,11 +134,21 @@ const Dashboard = () => {
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/returns`),
       ]);
 
-      if (statsRes.status === "fulfilled") setStats(statsRes.value.data);
-      if (batchesRes.status === "fulfilled") setBatches(batchesRes.value.data || []);
-      if (loadingsRes.status === "fulfilled") setLoadings(loadingsRes.value.data || []);
-      if (salesRes.status === "fulfilled") setSales(salesRes.value.data || []);
-      if (returnsRes.status === "fulfilled") setReturns(returnsRes.value.data || []);
+      if (statsRes.status === "fulfilled" && statsRes.value?.data && !statsRes.value.data.message) {
+        setStats(statsRes.value.data);
+      }
+      if (batchesRes.status === "fulfilled") {
+        setBatches(extractArray<BatchStock>(batchesRes.value.data));
+      }
+      if (loadingsRes.status === "fulfilled") {
+        setLoadings(extractArray<LoadingItem>(loadingsRes.value.data));
+      }
+      if (salesRes.status === "fulfilled") {
+        setSales(extractArray<SaleRecord>(salesRes.value.data));
+      }
+      if (returnsRes.status === "fulfilled") {
+        setReturns(extractArray<ReturnRecord>(returnsRes.value.data));
+      }
 
       setLastUpdated(new Date());
     } catch (err: any) {
@@ -188,7 +205,8 @@ const Dashboard = () => {
 
   // Filtered Operational Data
   const periodDeliveredLoadings = useMemo(() => {
-    return loadings.filter((l) => {
+    const list = Array.isArray(loadings) ? loadings : [];
+    return list.filter((l) => {
       if (l.status !== "delivered") return false;
       if (!periodCutoffDate) return true;
       const date = l.loading_date ? new Date(l.loading_date) : null;
@@ -199,7 +217,8 @@ const Dashboard = () => {
   // "Needs Attention" Calculations
   // 1. Low stock items (remain_qty <= 50)
   const lowStockItems = useMemo(() => {
-    return batches
+    const list = Array.isArray(batches) ? batches : [];
+    return list
       .filter((b) => b.remain_qty > 0 && b.remain_qty <= 50 && b.product)
       .sort((a, b) => a.remain_qty - b.remain_qty)
       .slice(0, 6);
@@ -210,8 +229,9 @@ const Dashboard = () => {
     const now = new Date();
     const limit = new Date();
     limit.setDate(limit.getDate() + 90);
+    const list = Array.isArray(batches) ? batches : [];
 
-    return batches
+    return list
       .filter((b) => {
         if (!b.expiry_date || b.remain_qty <= 0) return false;
         const exp = new Date(b.expiry_date);
@@ -223,17 +243,20 @@ const Dashboard = () => {
 
   // 3. Pending Loadings
   const pendingLoadings = useMemo(() => {
-    return loadings.filter((l) => l.status === "pending").slice(0, 6);
+    const list = Array.isArray(loadings) ? loadings : [];
+    return list.filter((l) => l.status === "pending").slice(0, 6);
   }, [loadings]);
 
   // 4. Pending Returns
   const pendingReturns = useMemo(() => {
-    return returns.filter((r) => !r.status || r.status.toLowerCase() === "pending").slice(0, 6);
+    const list = Array.isArray(returns) ? returns : [];
+    return list.filter((r) => !r.status || r.status.toLowerCase() === "pending").slice(0, 6);
   }, [returns]);
 
   // Filtered Loadings for Table
   const filteredLoadingsTable = useMemo(() => {
-    return loadings.filter((l) => {
+    const list = Array.isArray(loadings) ? loadings : [];
+    return list.filter((l) => {
       const matchSearch =
         loadingSearch === "" ||
         l.load_number?.toLowerCase().includes(loadingSearch.toLowerCase()) ||
@@ -246,7 +269,8 @@ const Dashboard = () => {
   }, [loadings, loadingSearch, loadingStatusFilter]);
 
   const recentSalesList = useMemo(() => {
-    return [...sales]
+    const list = Array.isArray(sales) ? sales : [];
+    return [...list]
       .sort((a, b) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime())
       .slice(0, 6);
   }, [sales]);

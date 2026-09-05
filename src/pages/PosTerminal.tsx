@@ -593,6 +593,7 @@ const PosTerminal: React.FC = () => {
   // Handle Barcode Scanner / Search Form Submit
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (quickAddOpen) return;
     if (filteredBatches.length === 0) return;
 
     // Check for exact barcode or material code match
@@ -1069,12 +1070,14 @@ const PosTerminal: React.FC = () => {
                           onMouseEnter={() => setSelectedIndex(idx)}
                           className={`cursor-pointer transition-colors ${
                             isSelected
-                              ? "bg-teal-50/90 text-slate-900 border-l-4 border-l-teal-800 font-medium"
-                              : "hover:bg-stone-50/80 text-slate-700 border-l-4 border-l-transparent"
+                              ? "bg-teal-50/90 text-slate-900 font-medium"
+                              : "hover:bg-stone-50/80 text-slate-700"
                           }`}
                         >
                           {/* Row Indicator / Number */}
-                          <td className="py-2.5 pl-3 pr-2 text-center whitespace-nowrap">
+                          <td className={`py-2.5 pl-3 pr-2 text-center whitespace-nowrap border-l-4 transition-colors ${
+                            isSelected ? "border-l-teal-800" : "border-l-transparent"
+                          }`}>
                             {isSelected ? (
                               <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-teal-800 text-white text-[10px] font-bold shadow-xs">
                                 ▶
@@ -1531,6 +1534,7 @@ const PosTerminal: React.FC = () => {
                       onClick={() => {
                         const q = parseInt(quickQty, 10) || 1;
                         if (q > 1) setQuickQty((q - 1).toString());
+                        quickQtyInputRef.current?.focus();
                       }}
                       className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-stone-200 rounded-md font-bold transition-colors cursor-pointer"
                       tabIndex={-1}
@@ -1551,6 +1555,7 @@ const PosTerminal: React.FC = () => {
                       onClick={() => {
                         const q = parseInt(quickQty, 10) || 0;
                         if (q < selectedBatch.remain_qty) setQuickQty((q + 1).toString());
+                        quickQtyInputRef.current?.focus();
                       }}
                       className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-stone-200 rounded-md font-bold transition-colors cursor-pointer"
                       tabIndex={-1}
@@ -1592,7 +1597,10 @@ const PosTerminal: React.FC = () => {
                       <button
                         key={pct}
                         type="button"
-                        onClick={() => setQuickDiscount(pct.toString())}
+                        onClick={() => {
+                          setQuickDiscount(pct.toString());
+                          quickQtyInputRef.current?.focus();
+                        }}
                         className={`px-2 py-0.5 text-[10px] font-bold rounded border transition-colors cursor-pointer ${
                           parseFloat(quickDiscount) === pct
                             ? "bg-teal-800 text-white border-teal-800"
