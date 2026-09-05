@@ -891,9 +891,9 @@ const PosTerminal: React.FC = () => {
           ) : (
             <button
               type="button"
-              onClick={() => navigate("/sales")}
+              onClick={() => navigate("/dashboard")}
               className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 text-xs font-semibold px-2 py-1 transition-colors ml-1"
-              title="Exit POS to admin sales"
+              title="Exit POS to dashboard"
             >
               <ArrowLeft size={15} />
               <span>Exit POS</span>
@@ -1789,14 +1789,14 @@ const PosTerminal: React.FC = () => {
 
                     {/* Quick Cash Presets */}
                     <div className="flex gap-1.5 overflow-x-auto pt-1">
-                      {[grandTotal, 100, 500, 1000, 5000].map((preset) => (
+                      {[100, 500, 1000, 5000].map((preset) => (
                         <button
                           key={preset}
                           type="button"
                           onClick={() => setCashTendered(preset.toString())}
                           className="px-2 py-1 bg-white hover:bg-stone-100 border border-stone-300 text-[11px] font-semibold text-slate-700 rounded shrink-0 tabular-nums"
                         >
-                          {preset === grandTotal ? "Exact" : `LKR ${preset}`}
+                          LKR {preset}
                         </button>
                       ))}
                     </div>
