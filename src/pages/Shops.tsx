@@ -559,7 +559,7 @@ const Shops: React.FC = () => {
                     {/* Shop Details */}
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-mono text-xs font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 w-fit mb-1 inline-block">
+                        <span className=" text-xs font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 w-fit mb-1 inline-block">
                           {shop.shop_code}
                         </span>
                         <span className="font-semibold text-slate-900 text-sm sm:text-base leading-snug">
@@ -578,7 +578,7 @@ const Shops: React.FC = () => {
                     {/* Contact & Location */}
                     <td className="px-6 py-4">
                       <div className="space-y-0.5">
-                        <p className="font-mono text-xs sm:text-sm text-slate-800 select-all font-medium">
+                        <p className=" text-xs sm:text-sm text-slate-800 select-all font-medium">
                           {shop.phoneno || <span className="text-slate-400 font-sans font-normal">—</span>}
                         </p>
                         <p className="text-xs text-slate-500 break-words max-w-sm sm:max-w-md leading-relaxed">
@@ -737,7 +737,7 @@ const Shops: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, shop_code: e.target.value })
                   }
-                  className="w-full h-10 px-3.5 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors font-mono"
+                  className="w-full h-10 px-3.5 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors "
                   placeholder="e.g. SHOP-001"
                 />
               </div>

@@ -823,7 +823,7 @@ const PosTerminal: React.FC = () => {
         </div>
 
         {/* Center Live Clock */}
-        <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-600 bg-stone-100 px-3 py-1.5 rounded-md border border-stone-200 font-mono tabular-nums">
+        <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-600 bg-stone-100 px-3 py-1.5 rounded-md border border-stone-200  tabular-nums">
           <Calendar size={14} className="text-slate-400" />
           <span>{new Date().toLocaleDateString()}</span>
           <span className="text-slate-300">|</span>
@@ -1011,14 +1011,14 @@ const PosTerminal: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3 max-w-sm w-full text-left">
                   <div className="p-3 rounded-lg bg-stone-50 border border-stone-200">
                     <p className="text-[11px] font-bold text-slate-700 flex items-center gap-1 mb-1">
-                      <kbd className="px-1 py-0.5 bg-white rounded border border-stone-300 font-mono text-[10px]">F2</kbd>
+                      <kbd className="px-1 py-0.5 bg-white rounded border border-stone-300  text-[10px]">F2</kbd>
                       <span>Focus Search</span>
                     </p>
                     <p className="text-[10px] text-slate-500">Jump directly to barcode / product search</p>
                   </div>
                   <div className="p-3 rounded-lg bg-stone-50 border border-stone-200">
                     <p className="text-[11px] font-bold text-slate-700 flex items-center gap-1 mb-1">
-                      <kbd className="px-1 py-0.5 bg-white rounded border border-stone-300 font-mono text-[10px]">↵ Enter</kbd>
+                      <kbd className="px-1 py-0.5 bg-white rounded border border-stone-300  text-[10px]">↵ Enter</kbd>
                       <span>Quick Add</span>
                     </p>
                     <p className="text-[10px] text-slate-500">Add top match directly to customer sale</p>
@@ -1083,7 +1083,7 @@ const PosTerminal: React.FC = () => {
                                 ▶
                               </span>
                             ) : (
-                              <span className="text-slate-400 font-mono text-[11px]">
+                              <span className="text-slate-400  text-[11px]">
                                 {idx + 1}
                               </span>
                             )}
@@ -1104,7 +1104,7 @@ const PosTerminal: React.FC = () => {
                           </td>
 
                           {/* SKU & Barcode */}
-                          <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
+                          <td className="py-2.5 px-3 whitespace-nowrap  text-[11px]">
                             <div className="flex flex-col gap-0.5">
                               <span className="text-slate-700 font-semibold">
                                 {p.material_code || "-"}
@@ -1120,7 +1120,7 @@ const PosTerminal: React.FC = () => {
                           {/* Batch Info & Expiry */}
                           <td className="py-2.5 px-3 whitespace-nowrap">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="bg-stone-100 text-slate-700 font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded border border-stone-200">
+                              <span className="bg-stone-100 text-slate-700  text-[11px] font-semibold px-1.5 py-0.5 rounded border border-stone-200">
                                 Batch #{batch.id}
                               </span>
                               {hasReturns && (
@@ -1137,14 +1137,14 @@ const PosTerminal: React.FC = () => {
                           </td>
 
                           {/* Pack Size */}
-                          <td className="py-2.5 px-3 text-center whitespace-nowrap font-mono text-xs text-slate-600">
+                          <td className="py-2.5 px-3 text-center whitespace-nowrap  text-xs text-slate-600">
                             {batch.pack_size || 1}
                           </td>
 
                           {/* Stock */}
                           <td className="py-2.5 px-3 text-center whitespace-nowrap">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold font-mono ${
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold  ${
                                 isLowStock
                                   ? "bg-red-50 text-red-700 border border-red-200"
                                   : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -1156,7 +1156,7 @@ const PosTerminal: React.FC = () => {
 
                           {/* Retail Price */}
                           <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                            <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">
+                            <span className="text-xs font-bold text-slate-900  tabular-nums">
                               {formatCurrency(Number(batch.retail_price))}
                             </span>
                           </td>
@@ -1178,7 +1178,7 @@ const PosTerminal: React.FC = () => {
                               <Plus size={13} />
                               <span>Add</span>
                               {isSelected && (
-                                <span className="text-[10px] bg-teal-950/60 px-1 py-0.2 rounded font-mono ml-0.5">
+                                <span className="text-[10px] bg-teal-950/60 px-1 py-0.2 rounded  ml-0.5">
                                   ↵ Enter
                                 </span>
                               )}
@@ -1197,28 +1197,28 @@ const PosTerminal: React.FC = () => {
           <div className="px-4 py-2 bg-stone-100 border-t border-stone-200 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600 font-medium shrink-0">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">↑</kbd>
-                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">↓</kbd>
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs  font-bold text-slate-700">↑</kbd>
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs  font-bold text-slate-700">↓</kbd>
                 <span>Navigate</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">↵ Enter</kbd>
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs  font-bold text-slate-700">↵ Enter</kbd>
                 <span>Add Item</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">F2</kbd>
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs  font-bold text-slate-700">F2</kbd>
                 <span>Search</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">F8</kbd>
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs  font-bold text-slate-700">F8</kbd>
                 <span>Cart Qty</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs font-mono font-bold text-slate-700">F9</kbd>
+                <kbd className="px-1.5 py-0.5 bg-white rounded border border-stone-300 shadow-xs  font-bold text-slate-700">F9</kbd>
                 <span>Pay</span>
               </span>
             </div>
-            <span className="text-slate-500 font-mono text-[10px]">
+            <span className="text-slate-500  text-[10px]">
               {filteredBatches.length > 0 ? `Row ${selectedIndex + 1} of ${filteredBatches.length}` : '0 results'}
             </span>
           </div>
@@ -1231,7 +1231,7 @@ const PosTerminal: React.FC = () => {
             <div>
               <h2 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
                 <span>Current sale</span>
-                <span className="bg-stone-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full font-mono">
+                <span className="bg-stone-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full ">
                   {cart.length}
                 </span>
               </h2>
@@ -1292,7 +1292,7 @@ const PosTerminal: React.FC = () => {
                     >
                       {item.product_name}
                     </h4>
-                    <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                    <div className="text-[11px] text-slate-500  flex items-center gap-1.5 mt-0.5">
                       <span>{formatCurrency(item.retail_price)}</span>
                       {item.discount_percentage > 0 && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 py-0.2 rounded border border-amber-200">
@@ -1327,7 +1327,7 @@ const PosTerminal: React.FC = () => {
                             parseInt(e.target.value) || 1
                           )
                         }
-                        className="cart-qty-input w-10 text-center text-xs font-bold text-slate-900 font-mono focus:outline-none"
+                        className="cart-qty-input w-10 text-center text-xs font-bold text-slate-900  focus:outline-none"
                         title="Edit quantity"
                       />
                       <button
@@ -1357,11 +1357,11 @@ const PosTerminal: React.FC = () => {
 
                   {/* 3. Total Value */}
                   <div className="w-24 sm:w-28 text-right shrink-0 pr-1">
-                    <p className="text-xs sm:text-sm font-bold text-slate-900 font-mono tabular-nums">
+                    <p className="text-xs sm:text-sm font-bold text-slate-900  tabular-nums">
                       {formatCurrency(item.line_total)}
                     </p>
                     {item.discount_amount > 0 && (
-                      <p className="text-[10px] text-amber-700 font-medium font-mono line-through">
+                      <p className="text-[10px] text-amber-700 font-medium  line-through">
                         {formatCurrency(item.total_qty * item.retail_price)}
                       </p>
                     )}
@@ -1472,11 +1472,11 @@ const PosTerminal: React.FC = () => {
                   <span className="bg-teal-800 text-teal-100 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-700/60 uppercase tracking-wider">
                     {selectedBatch.product.category || "General"}
                   </span>
-                  <span className="bg-teal-800 text-teal-100 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-700/60 font-mono">
+                  <span className="bg-teal-800 text-teal-100 text-[10px] font-bold px-2 py-0.5 rounded border border-teal-700/60 ">
                     Batch #{selectedBatch.id}
                   </span>
                   {selectedBatch.expiry_date && (
-                    <span className="text-[10px] text-teal-200/90 font-mono">
+                    <span className="text-[10px] text-teal-200/90 ">
                       Exp: {selectedBatch.expiry_date}
                     </span>
                   )}
@@ -1484,7 +1484,7 @@ const PosTerminal: React.FC = () => {
                 <h3 className="text-base font-bold text-white leading-tight">
                   {selectedBatch.product.name}
                 </h3>
-                <p className="text-xs text-teal-200/80 font-mono mt-0.5">
+                <p className="text-xs text-teal-200/80  mt-0.5">
                   SKU: {selectedBatch.product.material_code} {selectedBatch.product.barcode ? `| Barcode: ${selectedBatch.product.barcode}` : ""}
                 </p>
               </div>
@@ -1509,13 +1509,13 @@ const PosTerminal: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                   <span className="text-xs font-bold text-emerald-800">Available Stock:</span>
-                  <span className="text-sm font-black text-emerald-900 font-mono">
+                  <span className="text-sm font-black text-emerald-900 ">
                     {selectedBatch.remain_qty} units
                   </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-stone-100 border border-stone-200 flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-700">Pack Size:</span>
-                  <span className="text-sm font-bold text-slate-900 font-mono">
+                  <span className="text-sm font-bold text-slate-900 ">
                     {selectedBatch.pack_size || 1}
                   </span>
                 </div>
@@ -1548,7 +1548,7 @@ const PosTerminal: React.FC = () => {
                       max={selectedBatch.remain_qty}
                       value={quickQty}
                       onChange={(e) => setQuickQty(e.target.value)}
-                      className="w-full text-center text-base font-bold font-mono text-slate-900 bg-transparent focus:outline-none"
+                      className="w-full text-center text-base font-bold  text-slate-900 bg-transparent focus:outline-none"
                     />
                     <button
                       type="button"
@@ -1580,7 +1580,7 @@ const PosTerminal: React.FC = () => {
                       min="0"
                       value={quickPrice}
                       onChange={(e) => setQuickPrice(e.target.value)}
-                      className="w-full pl-12 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-sm font-bold font-mono text-slate-900 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 tabular-nums transition-colors"
+                      className="w-full pl-12 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-sm font-bold  text-slate-900 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 tabular-nums transition-colors"
                     />
                   </div>
                 </div>
@@ -1621,7 +1621,7 @@ const PosTerminal: React.FC = () => {
                     step="0.5"
                     value={quickDiscount}
                     onChange={(e) => setQuickDiscount(e.target.value)}
-                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold font-mono text-slate-900 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 transition-colors"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-xs font-bold  text-slate-900 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 transition-colors"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
                     %
@@ -1650,17 +1650,17 @@ const PosTerminal: React.FC = () => {
                   <div className="p-3.5 bg-stone-50 border border-stone-200 rounded-xl space-y-1 text-xs">
                     <div className="flex justify-between text-slate-600">
                       <span>Gross: {modalQtyNum} × {formatCurrency(modalPriceNum)}</span>
-                      <span className="font-mono">{formatCurrency(modalGross)}</span>
+                      <span className="">{formatCurrency(modalGross)}</span>
                     </div>
                     {modalDiscAmt > 0 && (
                       <div className="flex justify-between text-amber-700 font-medium">
                         <span>Discount ({modalDiscPercent}%):</span>
-                        <span className="font-mono">- {formatCurrency(modalDiscAmt)}</span>
+                        <span className="">- {formatCurrency(modalDiscAmt)}</span>
                       </div>
                     )}
                     <div className="pt-2 border-t border-stone-200 flex justify-between items-baseline font-bold text-slate-900">
                       <span className="text-sm">Line Total:</span>
-                      <span className="text-lg font-black font-mono text-teal-900 tabular-nums">
+                      <span className="text-lg font-black  text-teal-900 tabular-nums">
                         {formatCurrency(modalLineTotal)}
                       </span>
                     </div>
@@ -1783,7 +1783,7 @@ const PosTerminal: React.FC = () => {
                         value={cashTendered}
                         onChange={(e) => setCashTendered(e.target.value)}
                         placeholder="0.00"
-                        className="w-full px-3 py-2 bg-white text-slate-900 rounded border border-stone-300 text-base font-bold font-mono focus:outline-none focus:border-teal-700 tabular-nums"
+                        className="w-full px-3 py-2 bg-white text-slate-900 rounded border border-stone-300 text-base font-bold  focus:outline-none focus:border-teal-700 tabular-nums"
                       />
                     </div>
 
@@ -1807,7 +1807,7 @@ const PosTerminal: React.FC = () => {
                         Change Due:
                       </span>
                       <span
-                        className={`text-sm font-bold font-mono tabular-nums ${
+                        className={`text-sm font-bold  tabular-nums ${
                           cashAmountNum >= grandTotal
                             ? "text-teal-800"
                             : "text-red-600"
@@ -1890,7 +1890,7 @@ const PosTerminal: React.FC = () => {
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-teal-800 text-xs">
+                          <span className=" font-bold text-teal-800 text-xs">
                             Sale #{sale.id}
                           </span>
                           <span className="text-slate-300">•</span>
@@ -1955,7 +1955,7 @@ const PosTerminal: React.FC = () => {
       {completedSale && (
         <div
           id="printable-receipt"
-          className="hidden print:block text-black bg-white font-mono text-[11px] leading-tight select-text w-[76mm] mx-auto p-2"
+          className="hidden print:block text-black bg-white  text-[11px] leading-tight select-text w-[76mm] mx-auto p-2"
         >
           {/* Shop Header Details */}
           <div className="text-center font-bold space-y-0.5 mb-1">

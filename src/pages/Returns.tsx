@@ -342,7 +342,7 @@ const Returns: React.FC = () => {
           <span>Return History</span>
           {returnsList.length > 0 && (
             <span
-              className={`text-xs px-2 py-0.5 rounded-full font-mono font-medium ${
+              className={`text-xs px-2 py-0.5 rounded-full  font-medium ${
                 activeTab === "history"
                   ? "bg-teal-900/60 text-teal-100"
                   : "bg-stone-100 text-slate-600"
@@ -365,7 +365,7 @@ const Returns: React.FC = () => {
                 <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                   1. Select Manifest
                 </h3>
-                <span className="text-xs text-slate-500 font-medium font-mono">
+                <span className="text-xs text-slate-500 font-medium ">
                   {filteredLoadings.length} {filteredLoadings.length === 1 ? "record" : "records"}
                 </span>
               </div>
@@ -438,7 +438,7 @@ const Returns: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <span className="font-mono text-xs font-bold text-slate-900 px-2 py-0.5 bg-stone-100 border border-stone-200 rounded">
+                        <span className=" text-xs font-bold text-slate-900 px-2 py-0.5 bg-stone-100 border border-stone-200 rounded">
                           #{load.load_number}
                         </span>
                         <span
@@ -462,12 +462,12 @@ const Returns: React.FC = () => {
                       <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-stone-100">
                         <div className="flex items-center gap-1.5 truncate">
                           <TruckIcon size={13} className="text-slate-400 shrink-0" />
-                          <span className="font-mono font-medium truncate">
+                          <span className=" font-medium truncate">
                             {load.truck?.licence_plate_no || "N/A"}
                           </span>
                         </div>
                         {load.route?.route_code && (
-                          <div className="flex items-center gap-1 text-[11px] font-mono text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100 shrink-0">
+                          <div className="flex items-center gap-1 text-[11px]  text-teal-800 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-100 shrink-0">
                             <MapPin size={11} />
                             <span>{load.route.route_code}</span>
                           </div>
@@ -495,7 +495,7 @@ const Returns: React.FC = () => {
               {selectedLoading && (
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-slate-600">Selected Manifest:</span>
-                  <span className="font-mono text-xs font-bold px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-md">
+                  <span className=" text-xs font-bold px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-md">
                     #{selectedLoading.load_number}
                   </span>
                 </div>
@@ -556,12 +556,12 @@ const Returns: React.FC = () => {
                               <p className="font-semibold text-slate-900">
                                 {item.batch_stock?.product?.name || "Product"}
                               </p>
-                              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                              <p className="text-xs text-slate-400  mt-0.5">
                                 {item.batch_stock?.product?.barcode || "—"}
                               </p>
                             </td>
                             <td className="py-3 px-3 text-center">
-                              <span className="font-mono text-xs font-medium px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200">
+                              <span className=" text-xs font-medium px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200">
                                 {item.batch_stock?.batch_number ||
                                   `ID:${item.batch_id}`}
                               </span>
@@ -766,7 +766,7 @@ const Returns: React.FC = () => {
                           <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-900">
                             {ret.return_date}
                           </td>
-                          <td className="py-3.5 px-4 sm:px-6 font-mono text-xs font-semibold text-slate-800">
+                          <td className="py-3.5 px-4 sm:px-6  text-xs font-semibold text-slate-800">
                             <span className="px-2 py-0.5 bg-stone-100 border border-stone-200 rounded">
                               #{ret.loading?.load_number || ret.loading_id || "N/A"}
                             </span>
@@ -775,17 +775,17 @@ const Returns: React.FC = () => {
                             <p className="font-semibold text-slate-900">
                               {ret.batch_stock?.product?.name || "Product"}
                             </p>
-                            <p className="text-xs text-slate-400 font-mono mt-0.5">
+                            <p className="text-xs text-slate-400  mt-0.5">
                               {ret.batch_stock?.product?.barcode || "—"}
                             </p>
                           </td>
                           <td className="py-3.5 px-4 sm:px-6 text-center">
-                            <span className="font-mono text-xs px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200">
+                            <span className=" text-xs px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200">
                               {ret.batch_stock?.batch_number || `ID:${ret.batch_id}`}
                             </span>
                           </td>
                           <td className="py-3.5 px-4 sm:px-6 text-center">
-                            <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-full bg-teal-50 text-teal-900 border border-teal-200">
+                            <span className=" font-bold text-xs px-2.5 py-1 rounded-full bg-teal-50 text-teal-900 border border-teal-200">
                               {ret.qty} units
                             </span>
                           </td>
