@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard,
@@ -11,6 +12,12 @@ import {
   FolderTree,
   Settings,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  User,
+  Bell,
+  Shield,
+  Palette,
 } from "lucide-react";
 
 interface SideBarProps {
@@ -20,6 +27,17 @@ interface SideBarProps {
 
 const SideBar = ({ isOpen, onClose }: SideBarProps) => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  const isSettingsActive = location.pathname.startsWith("/settings");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(isSettingsActive);
+
+  // Auto-expand when navigating to settings
+  useEffect(() => {
+    if (isSettingsActive) {
+      setIsSettingsOpen(true);
+    }
+  }, [isSettingsActive]);
 
   const navItems = [
     {
@@ -54,13 +72,33 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       path: "/sales",
       icon: <ShoppingCart size={18} />,
     },
-    { name: "Settings", path: "/settings", icon: <Settings size={18} /> },
+  ];
+
+  const settingsSubItems = [
+    { name: "Account", path: "/settings/account", icon: <User size={15} /> },
+    {
+      name: "Notifications",
+      path: "/settings/notifications",
+      icon: <Bell size={15} />,
+    },
+    { name: "Security", path: "/settings/security", icon: <Shield size={15} /> },
+    {
+      name: "Appearance",
+      path: "/settings/appearance",
+      icon: <Palette size={15} />,
+    },
   ];
 
   const visibleItems =
     user?.role === "cashier"
       ? navItems.filter((item) => item.path === "/pos")
       : navItems;
+
+  const showSettings = user?.role !== "cashier";
+
+  const handleSettingsToggle = () => {
+    setIsSettingsOpen((prev) => !prev);
+  };
 
   return (
     <aside
@@ -109,7 +147,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-3 py-3 space-y-1.5 overflow-y-auto custom-scrollbar">
         {visibleItems.map((item) => (
           <NavLink
             key={item.path}
@@ -148,6 +186,103 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
             )}
           </NavLink>
         ))}
+
+        {/* Settings Dropdown Item */}
+        {showSettings && (
+          <div>
+            <button
+              type="button"
+              onClick={handleSettingsToggle}
+              className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-xs font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                isSettingsActive
+                  ? "text-slate-900 font-bold bg-stone-100/70"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-stone-100/70"
+              }`}
+              aria-expanded={isSettingsOpen}
+            >
+              <div className="flex items-center gap-3 truncate">
+                <span
+                  className={`shrink-0 transition-colors ${
+                    isSettingsActive
+                      ? "text-teal-800"
+                      : "text-slate-400 group-hover:text-slate-600"
+                  }`}
+                >
+                  <Settings size={18} />
+                </span>
+                <span className="truncate">Settings</span>
+              </div>
+              <span
+                className={`shrink-0 transition-transform duration-200 ${
+                  isSettingsActive
+                    ? "text-teal-800"
+                    : "text-slate-400 group-hover:text-slate-600"
+                }`}
+              >
+                {isSettingsOpen ? (
+                  <ChevronDown size={15} />
+                ) : (
+                  <ChevronRight size={15} />
+                )}
+              </span>
+            </button>
+
+            {/* Sub-menu Dropdown Items with Tree Branch Line */}
+            <div
+              className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                isSettingsOpen
+                  ? "max-h-60 opacity-100 mt-1 mb-1"
+                  : "max-h-0 opacity-0 pointer-events-none"
+              }`}
+            >
+              <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-200/80 space-y-1 py-0.5">
+                {settingsSubItems.map((subItem) => (
+                  <NavLink
+                    key={subItem.path}
+                    to={subItem.path}
+                    onClick={() => {
+                      if (window.innerWidth < 1024) {
+                        onClose();
+                      }
+                    }}
+                    className={({ isActive }) => {
+                      const isCurrentActive =
+                        isActive ||
+                        (subItem.path === "/settings/account" &&
+                          location.pathname === "/settings");
+                      return `flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                        isCurrentActive
+                          ? "bg-teal-50 text-teal-900 font-bold border border-teal-200/80 shadow-2xs"
+                          : "text-slate-500 hover:text-slate-900 hover:bg-stone-100/80 font-medium border border-transparent"
+                      }`;
+                    }}
+                  >
+                    {({ isActive }) => {
+                      const isCurrentActive =
+                        isActive ||
+                        (subItem.path === "/settings/account" &&
+                          location.pathname === "/settings");
+                      return (
+                        <>
+                          <span
+                            className={`shrink-0 transition-colors ${
+                              isCurrentActive
+                                ? "text-teal-800"
+                                : "text-slate-400 group-hover:text-slate-600"
+                            }`}
+                          >
+                            {subItem.icon}
+                          </span>
+                          <span className="truncate">{subItem.name}</span>
+                        </>
+                      );
+                    }}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
     </aside>
   );

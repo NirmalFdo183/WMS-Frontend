@@ -1,8 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
-  User as UserIcon,
-  Bell,
-  Shield,
   Palette,
   Check,
   Info,
@@ -15,32 +13,20 @@ import { useAuth } from "../context/AuthContext";
 type TabId = "account" | "notifications" | "security" | "appearance";
 type DensityMode = "comfortable" | "compact";
 
-interface TabItem {
-  id: TabId;
-  label: string;
-  icon: typeof UserIcon;
-}
-
-const NAV_ITEMS: TabItem[] = [
-  { id: "account", label: "Account", icon: UserIcon },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "security", label: "Security", icon: Shield },
-  { id: "appearance", label: "Appearance", icon: Palette },
-];
-
 const Settings = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabId>("account");
+  const { tab } = useParams<{ tab?: string }>();
+  const validTabs: TabId[] = [
+    "account",
+    "notifications",
+    "security",
+    "appearance",
+  ];
+  const activeTab: TabId =
+    tab && validTabs.includes(tab as TabId) ? (tab as TabId) : "account";
+
   const [density, setDensity] = useState<DensityMode>("comfortable");
   const [storageError, setStorageError] = useState<string | null>(null);
-
-  const tabListRef = useRef<HTMLDivElement>(null);
-  const tabButtonRefs = useRef<Record<TabId, HTMLButtonElement | null>>({
-    account: null,
-    notifications: null,
-    security: null,
-    appearance: null,
-  });
 
   // User-scoped storage key
   const storageKey = user?.id
@@ -85,44 +71,6 @@ const Settings = () => {
     }
   };
 
-  // Keyboard navigation according to W3C Tabs Pattern
-  const handleTabKeyDown = (
-    e: React.KeyboardEvent<HTMLButtonElement>,
-    index: number
-  ) => {
-    const totalTabs = NAV_ITEMS.length;
-    let nextIndex = -1;
-
-    switch (e.key) {
-      case "ArrowDown":
-      case "ArrowRight":
-        e.preventDefault();
-        nextIndex = (index + 1) % totalTabs;
-        break;
-      case "ArrowUp":
-      case "ArrowLeft":
-        e.preventDefault();
-        nextIndex = (index - 1 + totalTabs) % totalTabs;
-        break;
-      case "Home":
-        e.preventDefault();
-        nextIndex = 0;
-        break;
-      case "End":
-        e.preventDefault();
-        nextIndex = totalTabs - 1;
-        break;
-      default:
-        return;
-    }
-
-    if (nextIndex >= 0) {
-      const nextTab = NAV_ITEMS[nextIndex];
-      setActiveTab(nextTab.id);
-      tabButtonRefs.current[nextTab.id]?.focus();
-    }
-  };
-
   // Human-readable role label
   const roleDisplay = (() => {
     switch (user?.role) {
@@ -130,31 +78,19 @@ const Settings = () => {
         return {
           title: "Administrator",
           badge: "bg-teal-50 text-teal-800 border-teal-200",
-          desc: "Full operational and administrative authority",
-        };
-      case "staff":
-        return {
-          title: "Warehouse Staff",
-          badge: "bg-blue-50 text-blue-800 border-blue-200",
-          desc: "Inventory receiving, picking, and dispatch management",
-        };
-      case "rep":
-        return {
-          title: "Sales Representative",
-          badge: "bg-amber-50 text-amber-800 border-amber-200",
-          desc: "Customer distribution and field sales tracking",
+          desc: "Full operational and administrative authority across the entire system",
         };
       case "cashier":
         return {
           title: "Cashier",
           badge: "bg-emerald-50 text-emerald-800 border-emerald-200",
-          desc: "POS register processing and receipt issuing",
+          desc: "POS register processing and sales operations",
         };
       default:
         return {
-          title: "Standard User",
+          title: "Staff User",
           badge: "bg-stone-100 text-stone-700 border-stone-200",
-          desc: "Read-only access permissions",
+          desc: "Assigned role access",
         };
     }
   })();
@@ -185,63 +121,15 @@ const Settings = () => {
           </div>
         )}
 
-        {/* Settings Layout */}
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          {/* Section Navigation (Tabs) */}
-          <nav
-            ref={tabListRef}
-            role="tablist"
-            aria-label="Settings sections"
-            aria-orientation="vertical"
-            className="w-full lg:w-60 shrink-0 bg-white border border-stone-200 rounded-lg p-1.5 shadow-xs flex lg:flex-col gap-1 overflow-x-auto no-scrollbar"
-          >
-            {NAV_ITEMS.map((item, index) => {
-              const isSelected = activeTab === item.id;
-              const Icon = item.icon;
-
-              return (
-                <button
-                  key={item.id}
-                  ref={(el) => {
-                    tabButtonRefs.current[item.id] = el;
-                  }}
-                  id={`tab-${item.id}`}
-                  role="tab"
-                  type="button"
-                  aria-selected={isSelected}
-                  aria-controls={`panel-${item.id}`}
-                  tabIndex={isSelected ? 0 : -1}
-                  onClick={() => setActiveTab(item.id)}
-                  onKeyDown={(e) => handleTabKeyDown(e, index)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-medium transition-all text-left whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-teal-700/40 ${
-                    isSelected
-                      ? "bg-teal-50 text-teal-900 border-l-2 lg:border-l-4 border-teal-700 font-semibold shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-stone-50"
-                  }`}
-                >
-                  <Icon
-                    size={18}
-                    className={`shrink-0 ${
-                      isSelected ? "text-teal-800" : "text-slate-400"
-                    }`}
-                  />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Section Content Area */}
-          <main className="flex-1 w-full bg-white border border-stone-200 rounded-lg shadow-xs overflow-hidden">
-            {/* Account Panel */}
-            {activeTab === "account" && (
-              <div
-                id="panel-account"
-                role="tabpanel"
-                aria-labelledby="tab-account"
-                tabIndex={0}
-                className="p-6 sm:p-8 space-y-8 focus:outline-none"
-              >
+        {/* Settings Main Content Card */}
+        <main className="w-full bg-white border border-stone-200 rounded-xl shadow-xs overflow-hidden">
+          {/* Account Panel */}
+          {activeTab === "account" && (
+            <div
+              id="panel-account"
+              tabIndex={0}
+              className="p-6 sm:p-8 space-y-8 focus:outline-none"
+            >
                 <div className="border-b border-stone-200 pb-4">
                   <h2 className="text-lg font-bold text-slate-900">
                     Profile information
@@ -267,7 +155,7 @@ const Settings = () => {
                 </div>
 
                 {/* Real User Static Fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-semibold text-slate-700">
                       Full name
@@ -313,7 +201,7 @@ const Settings = () => {
                 </div>
 
                 {/* Administrator Contact Notice */}
-                <div className="p-4 bg-stone-50 border border-stone-200 rounded-lg flex items-start gap-3 max-w-2xl">
+                <div className="p-4 bg-stone-50 border border-stone-200 rounded-lg flex items-start gap-3">
                   <Info size={18} className="text-slate-500 shrink-0 mt-0.5" />
                   <div className="text-xs text-slate-600 leading-relaxed">
                     <span className="font-semibold text-slate-800">
@@ -440,7 +328,7 @@ const Settings = () => {
                   </p>
                 </div>
 
-                <div className="space-y-5 max-w-2xl">
+                <div className="space-y-5">
                   {/* Centrally Managed Password Section */}
                   <div className="p-5 bg-white border border-stone-200 rounded-lg shadow-2xs space-y-3">
                     <div className="flex items-center justify-between">
@@ -527,7 +415,7 @@ const Settings = () => {
                   <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Visual theme
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* Modern Light - Active */}
                     <div className="p-4 rounded-lg border-2 border-teal-700 bg-teal-50/20 flex flex-col justify-between h-32 relative shadow-xs">
                       <div className="flex items-center justify-between">
@@ -591,7 +479,7 @@ const Settings = () => {
                 </div>
 
                 {/* Data Density Section */}
-                <div className="pt-6 border-t border-stone-200 space-y-3 max-w-2xl">
+                <div className="pt-6 border-t border-stone-200 space-y-3">
                   <div>
                     <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Data density
@@ -664,7 +552,6 @@ const Settings = () => {
               </div>
             )}
           </main>
-        </div>
       </div>
     </div>
   );

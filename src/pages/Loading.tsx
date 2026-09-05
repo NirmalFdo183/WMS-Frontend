@@ -460,9 +460,9 @@ const Loading: React.FC = () => {
               <span className="text-xs font-semibold uppercase tracking-wider text-teal-800">
                 Logistics & Dispatch
               </span>
-              <span className="inline-flex items-center gap-1 bg-stone-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-200 uppercase tracking-wide">
+              {/* <span className="inline-flex items-center gap-1 bg-stone-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-200 uppercase tracking-wide">
                 {step === "details" ? "Step 1: Configuration" : "Step 2: Manifest Items"}
-              </span>
+              </span> */}
             </div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
               New Loading Sheet
