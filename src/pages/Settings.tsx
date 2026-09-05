@@ -130,31 +130,19 @@ const Settings = () => {
         return {
           title: "Administrator",
           badge: "bg-teal-50 text-teal-800 border-teal-200",
-          desc: "Full operational and administrative authority",
-        };
-      case "staff":
-        return {
-          title: "Warehouse Staff",
-          badge: "bg-blue-50 text-blue-800 border-blue-200",
-          desc: "Inventory receiving, picking, and dispatch management",
-        };
-      case "rep":
-        return {
-          title: "Sales Representative",
-          badge: "bg-amber-50 text-amber-800 border-amber-200",
-          desc: "Customer distribution and field sales tracking",
+          desc: "Full operational and administrative authority across the entire system",
         };
       case "cashier":
         return {
           title: "Cashier",
           badge: "bg-emerald-50 text-emerald-800 border-emerald-200",
-          desc: "POS register processing and receipt issuing",
+          desc: "POS register processing and sales operations",
         };
       default:
         return {
-          title: "Standard User",
+          title: "Staff User",
           badge: "bg-stone-100 text-stone-700 border-stone-200",
-          desc: "Read-only access permissions",
+          desc: "Assigned role access",
         };
     }
   })();

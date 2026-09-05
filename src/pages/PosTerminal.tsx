@@ -611,48 +611,6 @@ const PosTerminal: React.FC = () => {
     }
   };
 
-  // Add Item to Cart
-  const addToCart = (batch: BatchStock) => {
-    if (!batch.product) return;
-
-    const existingIndex = cart.findIndex((item) => item.batch_id === batch.id);
-
-    if (existingIndex > -1) {
-      const existing = cart[existingIndex];
-      const newQty = existing.total_qty + 1;
-      if (newQty > batch.remain_qty) {
-        setStockFeedback(
-          `Stock limit reached! Only ${batch.remain_qty} units available for ${batch.product.name}.`
-        );
-        setTimeout(() => setStockFeedback(null), 4000);
-        return;
-      }
-      updateCartItemQty(existing.cart_id, newQty);
-    } else {
-      const unitPrice = Number(batch.retail_price);
-      const newCartItem: CartItem = {
-        cart_id: `${batch.id}-${Date.now()}`,
-        batch_id: batch.id,
-        product_id: batch.product.id,
-        product_name: batch.product.name,
-        material_code: batch.product.material_code,
-        barcode: batch.product.barcode,
-        pack_size: batch.pack_size || 1,
-        cases: 0,
-        units: 1,
-        total_qty: 1,
-        retail_price: unitPrice,
-        unit_price: unitPrice,
-        discount_percentage: 0,
-        discount_amount: 0,
-        line_total: unitPrice,
-        available_qty: batch.remain_qty,
-      };
-      setCart([...cart, newCartItem]);
-    }
-    setStockFeedback(null);
-  };
-
   // Update Item Quantity in Cart
   const updateCartItemQty = (cartId: string, newTotalQty: number) => {
     if (newTotalQty <= 0) {
@@ -686,28 +644,6 @@ const PosTerminal: React.FC = () => {
           cases,
           units,
           total_qty: newTotalQty,
-          discount_amount: discountAmt,
-          unit_price: unitPrice,
-          line_total: lineTotal,
-        };
-      })
-    );
-  };
-
-  // Update Item Discount Percentage
-  const updateItemDiscount = (cartId: string, discPercent: number) => {
-    const validDisc = Math.min(100, Math.max(0, discPercent));
-    setCart((prevCart) =>
-      prevCart.map((item) => {
-        if (item.cart_id !== cartId) return item;
-        const grossTotal = item.total_qty * item.retail_price;
-        const discountAmt = (grossTotal * validDisc) / 100;
-        const lineTotal = grossTotal - discountAmt;
-        const unitPrice = item.total_qty > 0 ? lineTotal / item.total_qty : item.retail_price;
-
-        return {
-          ...item,
-          discount_percentage: validDisc,
           discount_amount: discountAmt,
           unit_price: unitPrice,
           line_total: lineTotal,
@@ -1123,7 +1059,9 @@ const PosTerminal: React.FC = () => {
                       return (
                         <tr
                           key={batch.id}
-                          ref={(el) => (rowRefs.current[idx] = el)}
+                          ref={(el) => {
+                            rowRefs.current[idx] = el;
+                          }}
                           onClick={() => {
                             setSelectedIndex(idx);
                             openQuickAddModal(batch);
