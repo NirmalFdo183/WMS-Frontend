@@ -18,6 +18,7 @@ import SupplyInvoices from "./pages/SupplyInvoices";
 import Returns from "./pages/Returns";
 import Sales from "./pages/Sales";
 import PosTerminal from "./pages/PosTerminal";
+import MonthlyReports from "./pages/MonthlyReports";
 import Layout from "./components/Layout";
 import "./App.css";
 
@@ -130,6 +131,10 @@ const router = createBrowserRouter([
       {
         path: "sales",
         element: <Sales />,
+      },
+      {
+        path: "monthly-reports",
+        element: <MonthlyReports />,
       },
       {
         path: "",
