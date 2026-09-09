@@ -580,21 +580,19 @@ const SupplyInvoices: React.FC = () => {
                   setActiveTab(tab.id as any);
                   navigate(`?tab=${tab.id}`, { replace: true });
                 }}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shadow-xs ${
-                  isActive
-                    ? "bg-teal-800 text-white shadow-sm"
-                    : "bg-white text-slate-600 hover:text-slate-900 hover:bg-stone-50 border border-stone-200"
-                }`}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shadow-xs ${isActive
+                  ? "bg-teal-800 text-white shadow-sm"
+                  : "bg-white text-slate-600 hover:text-slate-900 hover:bg-stone-50 border border-stone-200"
+                  }`}
               >
                 {tab.icon}
                 <span>{tab.label}</span>
                 {tab.count !== null && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full  font-bold ${
-                      isActive
-                        ? "bg-white/20 text-white"
-                        : "bg-stone-100 text-slate-600"
-                    }`}
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full  font-bold ${isActive
+                      ? "bg-white/20 text-white"
+                      : "bg-stone-100 text-slate-600"
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -619,8 +617,8 @@ const SupplyInvoices: React.FC = () => {
                   activeTab === "supply"
                     ? "Search invoice # or supplier..."
                     : activeTab === "loading"
-                    ? "Search load ref, truck, route, or rep..."
-                    : "Search sale ID or cashier..."
+                      ? "Search load ref, truck, route, or rep..."
+                      : "Search sale ID or cashier..."
                 }
                 className="w-full h-9 pl-9 pr-8 text-xs text-slate-900 bg-white border border-stone-300 rounded-lg placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
                 value={searchTerm}
@@ -763,8 +761,10 @@ const SupplyInvoices: React.FC = () => {
                           <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                             {rowNum}
                           </td>
-                          <td className="px-4 py-2.5 font-bold  text-teal-900">
-                            #{inv.invoice_number}
+                          <td className="px-4 py-2.5">
+                            <span className=" text-xs font-semibold text-slate-700 tracking-wider">
+                              {inv.invoice_number}
+                            </span>
                           </td>
                           <td className="px-4 py-2.5 text-slate-600 font-medium">
                             {inv.invoice_date}
@@ -882,8 +882,10 @@ const SupplyInvoices: React.FC = () => {
                           <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                             {rowNum}
                           </td>
-                          <td className="px-4 py-2.5 font-bold  text-teal-900">
-                            {load.load_number}
+                          <td className="px-4 py-2.5">
+                            <span className=" text-xs font-semibold text-slate-700 tracking-wider">
+                              {load.load_number}
+                            </span>
                           </td>
                           <td className="px-4 py-2.5 text-slate-600 font-medium">
                             {load.loading_date}
@@ -910,13 +912,12 @@ const SupplyInvoices: React.FC = () => {
                               onChange={(e) =>
                                 handleUpdateStatus(load.id, e.target.value)
                               }
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer border ${
-                                load.status === "delivered"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                  : load.status === "pending"
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer border ${load.status === "delivered"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : load.status === "pending"
                                   ? "bg-amber-50 text-amber-700 border-amber-200"
                                   : "bg-rose-50 text-rose-700 border-rose-200"
-                              }`}
+                                }`}
                             >
                               <option value="pending">Pending</option>
                               <option value="delivered">Delivered</option>
@@ -1023,8 +1024,10 @@ const SupplyInvoices: React.FC = () => {
                           <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                             {rowNum}
                           </td>
-                          <td className="px-4 py-2.5 font-bold  text-teal-900">
-                            S-{sale.id.toString().padStart(6, "0")}
+                          <td className="px-4 py-2.5">
+                            <span className=" text-xs font-semibold text-slate-700 tracking-wider">
+                              S-{sale.id.toString().padStart(6, "0")}
+                            </span>
                           </td>
                           <td className="px-4 py-2.5 text-slate-600 font-medium">
                             {new Date(sale.date_time).toLocaleString([], {
@@ -1037,11 +1040,10 @@ const SupplyInvoices: React.FC = () => {
                           </td>
                           <td className="px-4 py-2.5 text-center">
                             <span
-                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                sale.payment_type === "cash"
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                  : "bg-teal-50 text-teal-800 border border-teal-200"
-                              }`}
+                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${sale.payment_type === "cash"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "bg-teal-50 text-teal-800 border border-teal-200"
+                                }`}
                             >
                               {sale.payment_type}
                             </span>
@@ -1158,55 +1160,55 @@ const SupplyInvoices: React.FC = () => {
                       <table className="w-full text-left text-xs border-collapse">
                         <thead className="sticky top-0 bg-stone-50 z-10">
                           <tr className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
-                          <th className="px-3.5 py-2">Product & Code</th>
-                          <th className="px-3 py-2 text-center">Breakdown</th>
-                          <th className="px-3 py-2 text-center">Free Units</th>
-                          <th className="px-3 py-2 text-right">Net Cost</th>
-                          <th className="px-3 py-2 text-right">Retail</th>
-                          <th className="px-3.5 py-2 text-right">Line Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-stone-100">
-                        {selectedInvoice.batch_stocks?.map((item) => (
-                          <tr key={item.id} className="hover:bg-stone-50/60">
-                            <td className="px-3.5 py-2">
-                              <p className="font-semibold text-slate-900">
-                                {item.product.name}
-                              </p>
-                              <p className="text-[10px]  text-slate-400 mt-0.5">
-                                {item.product.barcode || item.product.material_code}
-                                {item.expiry_date && ` | Exp: ${item.expiry_date}`}
-                              </p>
-                            </td>
-                            <td className="px-3 py-2 text-center  text-[11px] text-slate-600">
-                              {item.no_cases} × {item.pack_size}
-                              {item.extra_units > 0 && ` + ${item.extra_units}`}
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              {item.free_qty > 0 ? (
-                                <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200">
-                                  +{item.free_qty}
-                                </span>
-                              ) : (
-                                <span className="text-slate-400">-</span>
-                              )}
-                            </td>
-                            <td className="px-3 py-2 text-right  text-slate-800">
-                              {formatCurrency(Number(item.netprice))}
-                            </td>
-                            <td className="px-3 py-2 text-right  text-slate-500">
-                              {formatCurrency(Number(item.retail_price))}
-                            </td>
-                            <td className="px-3.5 py-2 text-right  font-bold text-slate-900">
-                              {formatCurrency(
-                                (Number(item.no_cases) * Number(item.pack_size) +
-                                  Number(item.extra_units || 0)) *
-                                  Number(item.netprice)
-                              )}
-                            </td>
+                            <th className="px-3.5 py-2">Product & Code</th>
+                            <th className="px-3 py-2 text-center">Breakdown</th>
+                            <th className="px-3 py-2 text-center">Free Units</th>
+                            <th className="px-3 py-2 text-right">Net Cost</th>
+                            <th className="px-3 py-2 text-right">Retail</th>
+                            <th className="px-3.5 py-2 text-right">Line Total</th>
                           </tr>
-                        ))}
-                      </tbody>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100">
+                          {selectedInvoice.batch_stocks?.map((item) => (
+                            <tr key={item.id} className="hover:bg-stone-50/60">
+                              <td className="px-3.5 py-2">
+                                <p className="font-semibold text-slate-900">
+                                  {item.product.name}
+                                </p>
+                                <p className="text-[10px]  text-slate-400 mt-0.5">
+                                  {item.product.barcode || item.product.material_code}
+                                  {item.expiry_date && ` | Exp: ${item.expiry_date}`}
+                                </p>
+                              </td>
+                              <td className="px-3 py-2 text-center  text-[11px] text-slate-600">
+                                {item.no_cases} × {item.pack_size}
+                                {item.extra_units > 0 && ` + ${item.extra_units}`}
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                {item.free_qty > 0 ? (
+                                  <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200">
+                                    +{item.free_qty}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400">-</span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-right  text-slate-800">
+                                {formatCurrency(Number(item.netprice))}
+                              </td>
+                              <td className="px-3 py-2 text-right  text-slate-500">
+                                {formatCurrency(Number(item.retail_price))}
+                              </td>
+                              <td className="px-3.5 py-2 text-right  font-bold text-slate-900">
+                                {formatCurrency(
+                                  (Number(item.no_cases) * Number(item.pack_size) +
+                                    Number(item.extra_units || 0)) *
+                                  Number(item.netprice)
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
                       </table>
                     </div>
                   </div>
@@ -1460,8 +1462,8 @@ const SupplyInvoices: React.FC = () => {
                             {formatCurrency(
                               Number(
                                 item.retail_price ||
-                                  item.batch_stock?.retail_price ||
-                                  item.unit_price
+                                item.batch_stock?.retail_price ||
+                                item.unit_price
                               )
                             )}
                           </td>
@@ -1523,50 +1525,50 @@ const SupplyInvoices: React.FC = () => {
                 <div className="border border-stone-200 rounded-xl overflow-hidden shadow-xs">
                   <div className="overflow-x-auto max-h-[50vh] overflow-y-auto custom-scrollbar">
                     <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-stone-50 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
-                        <th className="px-3.5 py-2">Product</th>
-                        <th className="px-3 py-2 text-center">Loaded Qty</th>
-                        <th className="px-3 py-2 text-center w-28">Return Qty</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-100">
-                      {returnItems.map((item) => (
-                        <tr key={item.id} className="hover:bg-stone-50/60">
-                          <td className="px-3.5 py-2">
-                            <p className="font-semibold text-slate-900">
-                              {item.batch_stock?.product?.name}
-                            </p>
-                            <p className="text-[10px] text-slate-400 ">
-                              {item.batch_stock?.product?.material_code}
-                            </p>
-                          </td>
-                          <td className="px-3 py-2 text-center font-bold text-slate-700">
-                            {item.qty}
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              min="0"
-                              max={item.qty}
-                              className="w-full h-7 px-2 border border-stone-300 rounded text-center font-bold text-xs outline-none focus:border-teal-700"
-                              placeholder="0"
-                              value={returnQuantities[item.batch_stock?.id] || ""}
-                              onChange={(e) => {
-                                let val = parseInt(e.target.value, 10);
-                                if (isNaN(val) || val < 0) val = 0;
-                                if (val > item.qty) val = item.qty;
-
-                                setReturnQuantities({
-                                  ...returnQuantities,
-                                  [item.batch_stock?.id]: val.toString(),
-                                });
-                              }}
-                            />
-                          </td>
+                      <thead>
+                        <tr className="bg-stone-50 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                          <th className="px-3.5 py-2">Product</th>
+                          <th className="px-3 py-2 text-center">Loaded Qty</th>
+                          <th className="px-3 py-2 text-center w-28">Return Qty</th>
                         </tr>
-                      ))}
-                    </tbody>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100">
+                        {returnItems.map((item) => (
+                          <tr key={item.id} className="hover:bg-stone-50/60">
+                            <td className="px-3.5 py-2">
+                              <p className="font-semibold text-slate-900">
+                                {item.batch_stock?.product?.name}
+                              </p>
+                              <p className="text-[10px] text-slate-400 ">
+                                {item.batch_stock?.product?.material_code}
+                              </p>
+                            </td>
+                            <td className="px-3 py-2 text-center font-bold text-slate-700">
+                              {item.qty}
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max={item.qty}
+                                className="w-full h-7 px-2 border border-stone-300 rounded text-center font-bold text-xs outline-none focus:border-teal-700"
+                                placeholder="0"
+                                value={returnQuantities[item.batch_stock?.id] || ""}
+                                onChange={(e) => {
+                                  let val = parseInt(e.target.value, 10);
+                                  if (isNaN(val) || val < 0) val = 0;
+                                  if (val > item.qty) val = item.qty;
+
+                                  setReturnQuantities({
+                                    ...returnQuantities,
+                                    [item.batch_stock?.id]: val.toString(),
+                                  });
+                                }}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
                     </table>
                   </div>
                 </div>
