@@ -341,7 +341,7 @@ const Shops: React.FC = () => {
               : "bg-emerald-50 border-emerald-200 text-emerald-900"
           }`}
         >
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {toast.type === "error" ? (
               <AlertCircle size={18} className="shrink-0 text-red-600" />
             ) : (
@@ -362,21 +362,21 @@ const Shops: React.FC = () => {
 
       {/* 1. Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <Store className="text-teal-800" size={30} />
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             Shop Management
           </h1>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleRefresh}
             disabled={loading}
             title="Refresh shop list"
             aria-label="Refresh shop list"
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-lg border border-stone-200 bg-white text-slate-700 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors shadow-xs disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3 py-2.5 rounded-lg border border-stone-200 bg-white text-slate-700 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors shadow-xs disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-teal-700" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
@@ -400,7 +400,7 @@ const Shops: React.FC = () => {
           <div className="relative flex-1">
             <Search
               size={17}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
               aria-hidden="true"
             />
             <input
@@ -417,7 +417,7 @@ const Shops: React.FC = () => {
                 onClick={() => setSearchQuery("")}
                 aria-label="Clear search"
                 title="Clear search"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
               >
                 <X size={15} />
               </button>
@@ -533,51 +533,56 @@ const Shops: React.FC = () => {
       {!loading && !fetchError && (
         <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[750px]">
+            <table className="w-full text-left border-collapse min-w-[750px] text-xs">
               <thead>
-                <tr className="bg-stone-50/80 border-b border-stone-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                  <th scope="col" className="px-6 py-3.5">
-                    Shop Details
+                <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                  <th scope="col" className="px-4 py-2.5 w-10 text-center">#</th>
+                  <th scope="col" className="px-4 py-2.5">
+                    Shop ID
                   </th>
-                  <th scope="col" className="px-6 py-3.5">
+                  <th scope="col" className="px-4 py-2.5">
+                    Shop Name
+                  </th>
+                  <th scope="col" className="px-4 py-2.5">
                     Assigned Route
                   </th>
-                  <th scope="col" className="px-6 py-3.5">
+                  <th scope="col" className="px-4 py-2.5">
                     Contact & Location
                   </th>
-                  <th scope="col" className="px-6 py-3.5 text-right">
+                  <th scope="col" className="px-4 py-2.5 text-right">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100 text-xs sm:text-sm">
-                {filteredShops.map((shop) => (
+              <tbody className="divide-y divide-stone-100  sm:">
+                {filteredShops.map((shop, index) => (
                   <tr
                     key={shop.id}
                     className="hover:bg-stone-50/70 transition-colors group"
                   >
-                    {/* Shop Details */}
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className=" text-xs font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 w-fit mb-1 inline-block">
-                          {shop.shop_code}
-                        </span>
-                        <span className="font-semibold text-slate-900 text-sm sm:text-base leading-snug">
-                          {shop.shop_name}
-                        </span>
-                      </div>
+                    <td className="px-4 py-2.5 text-center text-slate-400 text-[11px]">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className=" text-xs font-semibold text-slate-700 tracking-wider">
+                        {shop.shop_code}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="font-semibold text-slate-900 leading-snug">
+                        {shop.shop_name}
+                      </span>
                     </td>
 
-                    {/* Assigned Route */}
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-stone-100 text-slate-700 border border-stone-200">
+                    <td className="px-4 py-2.5">
+                      <span className="font-semibold text-slate-800">
                         {shop.route_code}
                       </span>
                     </td>
 
                     {/* Contact & Location */}
-                    <td className="px-6 py-4">
-                      <div className="space-y-0.5">
+                    <td className="px-4 py-2.5">
+                      <div className="space-y-0">
                         <p className=" text-xs sm:text-sm text-slate-800 select-all font-medium">
                           {shop.phoneno || <span className="text-slate-400 font-sans font-normal">—</span>}
                         </p>
@@ -588,8 +593,8 @@ const Shops: React.FC = () => {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
                           onClick={() => openModal(shop)}
@@ -617,7 +622,7 @@ const Shops: React.FC = () => {
                 {filteredShops.length === 0 && shops.length > 0 && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={6}
                       className="px-6 py-12 text-center text-slate-500"
                     >
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -639,7 +644,7 @@ const Shops: React.FC = () => {
                             setSearchQuery("");
                             setSelectedRoute("all");
                           }}
-                          className="mt-3 px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+                          className="mt-3 px-3 py-1 bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
                         >
                           Clear filters
                         </button>
@@ -652,7 +657,7 @@ const Shops: React.FC = () => {
                 {shops.length === 0 && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={6}
                       className="px-6 py-14 text-center text-slate-500"
                     >
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -668,7 +673,7 @@ const Shops: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => openModal()}
-                          className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white text-sm font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700 shadow-sm"
+                          className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white text-sm font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700 shadow-sm"
                         >
                           <Plus size={16} />
                           <span>Add Shop</span>
@@ -697,7 +702,7 @@ const Shops: React.FC = () => {
                 <h2 className="text-lg font-bold text-slate-900">
                   {editingId ? "Edit Shop" : "Add New Shop"}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                <p className="text-xs sm:text-sm text-slate-500 mt-0">
                   {editingId
                     ? "Update retail shop registration and assigned route."
                     : "Enter new shop details and assign an outbound delivery route."}
@@ -707,7 +712,7 @@ const Shops: React.FC = () => {
                 type="button"
                 onClick={closeModal}
                 aria-label="Close dialog"
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40"
               >
                 <X size={20} />
               </button>
@@ -719,7 +724,7 @@ const Shops: React.FC = () => {
                 role="alert"
                 className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs sm:text-sm flex items-start gap-2"
               >
-                <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-600" />
+                <AlertCircle size={16} className="shrink-0 mt-0 text-red-600" />
                 <span>{dialogGeneralError}</span>
               </div>
             )}
@@ -727,7 +732,7 @@ const Shops: React.FC = () => {
             {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Shop Code <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -737,13 +742,13 @@ const Shops: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, shop_code: e.target.value })
                   }
-                  className="w-full h-10 px-3.5 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors "
+                  className="w-full h-10 px-3 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors "
                   placeholder="e.g. SHOP-001"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Shop Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -753,13 +758,13 @@ const Shops: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, shop_name: e.target.value })
                   }
-                  className="w-full h-10 px-3.5 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors"
+                  className="w-full h-10 px-3 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors"
                   placeholder="e.g. City Mart Supermarket"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Assigned Route <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -780,7 +785,7 @@ const Shops: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Phone Number
                 </label>
                 <input
@@ -789,13 +794,13 @@ const Shops: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, phoneno: e.target.value })
                   }
-                  className="w-full h-10 px-3.5 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors"
+                  className="w-full h-10 px-3 text-sm text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-colors"
                   placeholder="e.g. 0112345678 or +94 77 123 4567"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Address
                 </label>
                 <textarea
@@ -809,18 +814,18 @@ const Shops: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3">
+              <div className="flex items-center justify-end gap-2 pt-3">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-stone-300 hover:bg-stone-50 rounded-lg transition-colors shadow-xs"
+                  className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-stone-300 hover:bg-stone-50 rounded-lg transition-colors shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-teal-800 hover:bg-teal-900 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50 disabled:opacity-50"
+                  className="px-4 py-2.5 text-sm font-semibold text-white bg-teal-800 hover:bg-teal-900 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50 disabled:opacity-50"
                 >
                   {saving ? "Saving..." : editingId ? "Update Shop" : "Save Shop"}
                 </button>
@@ -849,17 +854,17 @@ const Shops: React.FC = () => {
             </p>
 
             {deleteError && (
-              <div className="mb-4 p-2.5 bg-red-50 border border-red-200 text-red-700 rounded text-xs text-left">
+              <div className="mb-4 p-2 bg-red-50 border border-red-200 text-red-700 rounded text-xs text-left">
                 {deleteError}
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={closeDeleteModal}
                 disabled={deleting}
-                className="py-2 px-3 font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors text-xs shadow-xs"
+                className="py-2.5 px-3 font-semibold text-slate-700 bg-white border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors text-xs shadow-xs"
               >
                 Cancel
               </button>
@@ -867,7 +872,7 @@ const Shops: React.FC = () => {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="py-2 px-3 font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors text-xs disabled:opacity-50"
+                className="py-2.5 px-3 font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors text-xs disabled:opacity-50"
               >
                 {deleting ? "Deleting..." : "Delete Shop"}
               </button>
