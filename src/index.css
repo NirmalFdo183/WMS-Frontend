@@ -31,3 +31,14 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Application Data Density Rules */
+[data-density="compact"] table th,
+[data-density="compact"] table td {
+  padding-top: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+}
+
+[data-density="compact"] table tr {
+  height: auto !important;
+}
