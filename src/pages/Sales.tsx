@@ -13,8 +13,6 @@ import {
   ArrowRight,
   CreditCard,
   Banknote,
-  Calendar,
-  User as UserIcon,
   X,
   Pencil,
   Printer,
@@ -54,6 +52,27 @@ interface SaleItem {
   retail_price: number;
 }
 
+const formatCurrency = (amount: number): string => {
+  const safeNum = isNaN(amount) ? 0 : amount;
+  return `LKR ${safeNum.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const formatPackaging = (units: number, packSize: number = 1): string => {
+  const safePack = packSize > 0 ? packSize : 1;
+  const cases = Math.floor(units / safePack);
+  const loose = units % safePack;
+  if (cases > 0 && loose > 0) {
+    return `${cases} cs + ${loose} loose · ${units} units (${safePack}/cs)`;
+  }
+  if (cases > 0) {
+    return `${cases} cases · ${units} units (${safePack}/cs)`;
+  }
+  return `${loose} loose units · ${units} total`;
+};
+
 const Sales = () => {
   const navigate = useNavigate();
   const { refreshTotalValue } = useWarehouse();
@@ -84,6 +103,12 @@ const Sales = () => {
   const [completedSale, setCompletedSale] = useState<any | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Form Refs
+  const casesRef = useRef<HTMLInputElement>(null);
+  const looseRef = useRef<HTMLInputElement>(null);
+  const discountRef = useRef<HTMLInputElement>(null);
+  const unitPriceRef = useRef<HTMLInputElement>(null);
+
   // Modal / Item Entry State
   const [activeBatch, setActiveBatch] = useState<BatchStock | null>(null);
   const [itemForm, setItemForm] = useState({
@@ -92,6 +117,27 @@ const Sales = () => {
     unit_price: 0,
     discount_percentage: 5,
   });
+
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, fieldIndex: number) => {
+    const refs = [casesRef, looseRef, discountRef, unitPriceRef];
+    
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      refs[(fieldIndex + 1) % refs.length].current?.focus();
+      refs[(fieldIndex + 1) % refs.length].current?.select();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      refs[(fieldIndex - 1 + refs.length) % refs.length].current?.focus();
+      refs[(fieldIndex - 1 + refs.length) % refs.length].current?.select();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      addItemToSale();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setActiveBatch(null);
+      searchInputRef.current?.focus();
+    }
+  };
 
   // Calculate totals for active selection
   const currentTotalQty =
@@ -184,6 +230,10 @@ const Sales = () => {
     });
     setSearchTerm("");
     setSearchResults([]);
+    setTimeout(() => {
+      looseRef.current?.focus();
+      looseRef.current?.select();
+    }, 100);
   };
 
   const addItemToSale = () => {
@@ -244,6 +294,12 @@ const Sales = () => {
 
     // 4. Scroll up to the form
     window.scrollTo({ top: 300, behavior: "smooth" });
+
+    // 5. Focus the input
+    setTimeout(() => {
+      looseRef.current?.focus();
+      looseRef.current?.select();
+    }, 100);
   };
 
   const calculateGrandTotal = () => {
@@ -311,86 +367,113 @@ const Sales = () => {
       payment_type: "cash",
     });
     setSearchTerm("");
-  };
-
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+  };  return (
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* 1. Header Area with Direct Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-stone-200 rounded-lg p-5 shadow-xs">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight text-left flex items-center gap-3">
-            <span>Direct Sales Register</span>
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg">
-            Create and manage point of sale transactions.
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              Direct Sales Register
+            </h1>
+            <span className="bg-stone-100 text-slate-600 text-[11px] font-semibold px-2 py-0.5 rounded border border-stone-200">
+              Counter Sales
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Create, process, and record point of sale transactions.
           </p>
         </div>
 
-        <button
-          onClick={() => navigate("/pos")}
-          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm px-6 py-3 rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center gap-2.5 transition-all hover:scale-[1.02] active:scale-95"
-        >
-          <ShoppingCart size={20} />
-          <span>Launch Fullscreen POS Terminal</span>
-          <ArrowRight size={18} />
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/supply-invoices?tab=sales")}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-stone-50 text-slate-700 border border-stone-300 rounded-md text-xs font-semibold transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+          >
+            <History size={14} className="text-slate-500" />
+            <span>Sales History</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/pos")}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-md text-xs font-semibold transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+          >
+            <ShoppingCart size={14} />
+            <span>Open POS Terminal</span>
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-        {/* Left Column: Sale Items Table & Form (Takes more space) */}
-        <div className="flex-1 space-y-8 w-full">
-          {/* Sale Settings Card */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm uppercase tracking-wider">
-                <Calendar size={16} className="text-blue-500" />
-                Transaction Info
-              </h3>
-            </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* 2. Main Workspace Layout: 2 Columns */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Left Section: Transaction Info, Product Search, and Cart Table */}
+        <div className="flex-1 space-y-6 w-full">
+          {/* Compact Transaction Info Bar */}
+          <div className="bg-white border border-stone-200 rounded-lg p-4 shadow-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+              {/* Date & Time */}
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                  Date & Time
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Transaction Date & Time
                 </label>
                 <input
                   type="datetime-local"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-gray-800"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-md text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
                   value={saleData.date_time}
                   onChange={(e) =>
                     setSaleData({ ...saleData, date_time: e.target.value })
                   }
                 />
               </div>
+
+              {/* Payment Type */}
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                  Payment Type
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Payment Method
                 </label>
-                <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                <div className="flex gap-1.5 p-1 bg-stone-100 rounded-md border border-stone-200">
                   <button
+                    type="button"
                     onClick={() =>
                       setSaleData({ ...saleData, payment_type: "cash" })
                     }
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-bold transition-all ${saleData.payment_type === "cash" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                      saleData.payment_type === "cash"
+                        ? "bg-teal-800 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
                   >
-                    <Banknote size={16} /> Cash
+                    <Banknote size={14} /> Cash
                   </button>
                   <button
+                    type="button"
                     onClick={() =>
                       setSaleData({ ...saleData, payment_type: "card" })
                     }
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-bold transition-all ${saleData.payment_type === "card" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                      saleData.payment_type === "card"
+                        ? "bg-teal-800 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
                   >
-                    <CreditCard size={16} /> Card
+                    <CreditCard size={14} /> Card
                   </button>
                 </div>
               </div>
-              <div className="md:col-span-2 lg:col-span-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
-                  Operator
+
+              {/* Operator */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Cashier / Operator
                 </label>
-                <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-2 text-blue-700">
-                  <UserIcon size={16} />
-                  <span className="font-bold">
-                    {user?.name || "GUEST USER"}
+                <div className="px-3 py-2 bg-stone-50 border border-stone-300 rounded-md flex items-center gap-2 text-slate-800">
+                  <div className="w-5 h-5 rounded bg-teal-800 text-white flex items-center justify-center text-[10px] font-bold">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                  </div>
+                  <span className="text-xs font-semibold truncate">
+                    {user?.name || "Administrator"}
                   </span>
                 </div>
               </div>
@@ -398,390 +481,336 @@ const Sales = () => {
           </div>
 
           {/* Product Search & Selection Section */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm uppercase tracking-wider">
-                <Search size={16} className="text-blue-500" />
-                Add Products
-              </h3>
+          <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-xs relative">
+            <div className="flex items-center justify-between mb-3">
+              <label
+                htmlFor="admin-search-products"
+                className="text-xs font-bold text-slate-800 uppercase tracking-wider"
+              >
+                Scan barcode or search products
+              </label>
+              <span className="text-xs text-slate-500 font-medium">
+                {allBatches.length} batches in catalog
+              </span>
             </div>
-            <div className="p-6">
-              <div className="relative">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search by Product Name, Code or Barcode..."
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 border border-gray-200 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-lg font-medium"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
 
-                {/* Search Results Dropdown */}
-                {searchResults.length > 0 && (
-                  <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-                    {searchResults.map((batch, index) => (
-                      <button
-                        key={batch.id}
-                        className={`w-full text-left px-6 py-4 flex items-center justify-between transition-all border-b border-gray-50 last:border-0 ${index === selectedIndex ? "bg-blue-600 text-white" : "hover:bg-gray-50 text-gray-800"}`}
-                        onClick={() => handleSelectBatch(batch)}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`p-2 rounded-lg ${index === selectedIndex ? "bg-white/20" : "bg-blue-50 text-blue-600"}`}
-                          >
-                            <Package size={20} />
-                          </div>
-                          <div>
-                            <p className="font-black text-sm">
-                              {batch.product?.name}
-                            </p>
-                            <p
-                              className={`text-[10px] font-bold uppercase tracking-widest ${index === selectedIndex ? "text-white/70" : "text-gray-400"}`}
-                            >
-                              Code: {batch.product?.material_code} | Exp:{" "}
-                              {batch.expiry_date || "N/A"}
-                            </p>
-                          </div>
+            <div className="relative">
+              <Search
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
+              />
+              <input
+                id="admin-search-products"
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search by product name, barcode, or SKU..."
+                className="w-full pl-10 pr-10 py-2.5 bg-stone-50 text-slate-900 rounded-lg border border-stone-300 placeholder-slate-400 text-sm font-medium focus:outline-none focus:bg-white focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors shadow-inner"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                >
+                  <X size={15} />
+                </button>
+              )}
+
+              {/* Search Results Dropdown */}
+              {searchResults.length > 0 && (
+                <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white rounded-lg shadow-lg border border-stone-200 overflow-hidden max-h-80 overflow-y-auto">
+                  {searchResults.map((batch, index) => (
+                    <button
+                      key={batch.id}
+                      className={`w-full text-left px-4 py-3 flex items-center justify-between transition-colors border-b border-stone-100 last:border-0 ${
+                        index === selectedIndex
+                          ? "bg-teal-800 text-white"
+                          : "hover:bg-stone-50 text-slate-900"
+                      }`}
+                      onClick={() => handleSelectBatch(batch)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded ${
+                            index === selectedIndex ? "bg-white/20" : "bg-stone-100 text-slate-600"
+                          }`}
+                        >
+                          <Package size={18} />
                         </div>
-                        <div className="text-right">
-                          <div className="flex flex-col items-end mb-1">
-                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
-                              Pricing
-                            </span>
-                            <div className="flex gap-4 text-xs font-black">
-                              <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                                NET: Rs.{" "}
-                                {(batch.netprice || 0).toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  },
-                                )}
-                              </span>
-                              <span className="text-gray-900 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100">
-                                RET: Rs.{" "}
-                                {(batch.retail_price || 0).toLocaleString(
-                                  undefined,
-                                  {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  },
-                                )}
-                              </span>
-                            </div>
-                          </div>
+                        <div>
+                          <p className="font-bold text-xs">
+                            {batch.product?.name}
+                          </p>
                           <p
-                            className={`text-[10px] font-bold px-3 py-1 rounded-lg border ${
-                              index === selectedIndex
-                                ? "bg-white/20 border-white/30 text-white"
-                                : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                            className={`text-[11px] font-mono ${
+                              index === selectedIndex ? "text-teal-100" : "text-slate-500"
                             }`}
                           >
-                            STOCK: {batch.remain_qty}
+                            SKU: {batch.product?.material_code} · Batch #{batch.id} · Exp: {batch.expiry_date || "N/A"}
                           </p>
                         </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Advanced entry form area for active product (Case/Loose version like Loading.tsx) */}
-              {activeBatch && (
-                <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border border-blue-100 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
-                        <Package size={24} />
                       </div>
-                      <div>
-                        <h4 className="font-black text-gray-900">
-                          {activeBatch.product?.name}
-                        </h4>
-                        <div className="flex flex-col gap-1">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                            Batch: {activeBatch.id} | EXP:{" "}
-                            {activeBatch.expiry_date || "N/A"}
-                          </p>
-                          <div className="flex items-center gap-6 bg-white/50 px-4 py-2 rounded-2xl border border-blue-100/50 w-fit">
-                            <div className="flex flex-col">
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
-                                Available Stock
-                              </p>
-                              <p className="text-[14px] font-black text-emerald-600">
-                                {activeBatch.remain_qty}{" "}
-                                <span className="text-[10px] uppercase opacity-60">
-                                  Units
-                                </span>
-                              </p>
-                            </div>
 
-                            <div className="h-8 w-px bg-gray-200"></div>
-
-                            <div className="flex items-center gap-6">
-                              <div className="flex flex-col">
-                                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest leading-none mb-1">
-                                  Net Price
-                                </p>
-                                <p className="text-[14px] font-black text-blue-600">
-                                  Rs.{" "}
-                                  {(activeBatch.netprice || 0).toLocaleString(
-                                    undefined,
-                                    {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    },
-                                  )}
-                                </p>
-                              </div>
-
-                              <div className="flex flex-col">
-                                <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest leading-none mb-1">
-                                  Retail Price
-                                </p>
-                                <p className="text-[14px] font-black text-gray-900">
-                                  Rs.{" "}
-                                  {(
-                                    activeBatch.retail_price || 0
-                                  ).toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                      <div className="text-right">
+                        <div className="flex items-center gap-2 justify-end text-xs font-mono tabular-nums">
+                          <span className={index === selectedIndex ? "text-white" : "text-slate-900 font-bold"}>
+                            {formatCurrency(Number(batch.retail_price))}
+                          </span>
                         </div>
+                        <p
+                          className={`text-[11px] font-semibold mt-0.5 ${
+                            index === selectedIndex ? "text-teal-100" : "text-teal-800"
+                          }`}
+                        >
+                          {formatPackaging(batch.remain_qty, batch.pack_size)}
+                        </p>
                       </div>
-                    </div>
-                    <button
-                      onClick={() => setActiveBatch(null)}
-                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-all"
-                    >
-                      <X size={20} />
                     </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
-                        Cases (Pack: {activeBatch.pack_size})
-                      </label>
-                      <input
-                        type="number"
-                        className="w-full px-4 py-3 rounded-xl bg-white border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500/20 font-black text-gray-800"
-                        value={itemForm.no_cases}
-                        onChange={(e) =>
-                          setItemForm({ ...itemForm, no_cases: e.target.value })
-                        }
-                        placeholder="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
-                        Loose Units
-                      </label>
-                      <input
-                        type="number"
-                        className="w-full px-4 py-3 rounded-xl bg-white border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500/20 font-black text-gray-800"
-                        value={itemForm.loose_qty}
-                        onChange={(e) =>
-                          setItemForm({
-                            ...itemForm,
-                            loose_qty: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
-                        Discount (%)
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          className="w-full px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500/20 font-black text-blue-600"
-                          value={itemForm.discount_percentage}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            const unitP =
-                              activeBatch.retail_price * (1 - val / 100);
-                            setItemForm({
-                              ...itemForm,
-                              discount_percentage: val,
-                              unit_price: Number(unitP.toFixed(2)),
-                            });
-                          }}
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-blue-400 text-xs">
-                          %
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2 ml-1">
-                        Unit Price (Rs)
-                      </label>
-                      <input
-                        type="number"
-                        className="w-full px-4 py-3 rounded-xl bg-white border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500/20 font-black text-gray-800"
-                        value={itemForm.unit_price}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          // percentage = (1 - discounted / original) * 100
-                          const perc =
-                            (1 - val / (activeBatch.retail_price || 1)) * 100;
-                          setItemForm({
-                            ...itemForm,
-                            unit_price: val,
-                            discount_percentage: Number(perc.toFixed(2)),
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-between items-center border-t border-blue-100 pt-6">
-                    <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                        Total Selection
-                      </p>
-                      <p className="text-xl font-black text-blue-600">
-                        {currentTotalQty}{" "}
-                        <span className="text-xs text-gray-400">UNITS</span>
-                      </p>
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setActiveBatch(null)}
-                        className="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-2xl hover:bg-gray-50 transition-all font-bold"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={addItemToSale}
-                        className="px-8 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all flex items-center gap-3 font-bold"
-                      >
-                        <Plus size={20} /> Add to Cart
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
+
+            {/* Selected Batch Item Configuration Panel */}
+            {activeBatch && (
+              <div className="mt-4 p-4 bg-stone-50 border border-teal-700/30 rounded-lg animate-in fade-in duration-200">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded bg-teal-800 text-white mt-0.5">
+                      <Package size={18} />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">
+                        {activeBatch.product?.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 font-mono mt-0.5">
+                        Batch #{activeBatch.id} · SKU: {activeBatch.product?.material_code} · Exp: {activeBatch.expiry_date || "N/A"}
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded font-semibold">
+                          Available: {formatPackaging(activeBatch.remain_qty, activeBatch.pack_size)}
+                        </span>
+                        <span className="px-2 py-0.5 bg-white border border-stone-200 rounded font-mono font-semibold text-slate-700">
+                          Retail: {formatCurrency(Number(activeBatch.retail_price))}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveBatch(null)}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                    aria-label="Cancel product selection"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Cases (Pack: {activeBatch.pack_size})
+                    </label>
+                    <input
+                      id="cases-input"
+                      ref={casesRef}
+                      type="number"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs font-bold text-slate-900 focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+                      value={itemForm.no_cases}
+                      onChange={(e) =>
+                        setItemForm({ ...itemForm, no_cases: e.target.value })
+                      }
+                      onKeyDown={(e) => handleFormKeyDown(e, 0)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Loose Units
+                    </label>
+                    <input
+                      id="loose-input"
+                      ref={looseRef}
+                      type="number"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs font-bold text-slate-900 focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+                      value={itemForm.loose_qty}
+                      onChange={(e) =>
+                        setItemForm({
+                          ...itemForm,
+                          loose_qty: e.target.value,
+                        })
+                      }
+                      onKeyDown={(e) => handleFormKeyDown(e, 1)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Discount (%)
+                    </label>
+                    <input
+                      id="discount-input"
+                      ref={discountRef}
+                      type="number"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs font-bold text-slate-900 focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+                      value={itemForm.discount_percentage}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        const unitP =
+                          activeBatch.retail_price * (1 - val / 100);
+                        setItemForm({
+                          ...itemForm,
+                          discount_percentage: val,
+                          unit_price: Number(unitP.toFixed(2)),
+                        });
+                      }}
+                      onKeyDown={(e) => handleFormKeyDown(e, 2)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Unit Price (LKR)
+                    </label>
+                    <input
+                      id="price-input"
+                      ref={unitPriceRef}
+                      type="number"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs font-bold text-slate-900 focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 font-mono"
+                      value={itemForm.unit_price}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        const perc =
+                          (1 - val / (activeBatch.retail_price || 1)) * 100;
+                        setItemForm({
+                          ...itemForm,
+                          unit_price: val,
+                          discount_percentage: Number(perc.toFixed(2)),
+                        });
+                      }}
+                      onKeyDown={(e) => handleFormKeyDown(e, 3)}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="text-xs">
+                    <span className="text-slate-500 font-medium">Selected Quantity: </span>
+                    <span className="font-bold text-slate-900 font-mono">
+                      {formatPackaging(currentTotalQty, activeBatch.pack_size)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveBatch(null)}
+                      className="px-3.5 py-1.5 bg-white border border-stone-300 text-slate-700 hover:bg-stone-50 rounded-md text-xs font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={addItemToSale}
+                      className="px-4 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-md text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Plus size={15} />
+                      <span>Add to Cart</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Cart Table */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm uppercase tracking-wider">
-                <ShoppingCart size={16} className="text-blue-500" />
-                Cart Items ({saleItems.length})
+          <div className="bg-white border border-stone-200 rounded-lg overflow-hidden shadow-xs">
+            <div className="px-5 py-3.5 border-b border-stone-200 flex items-center justify-between bg-stone-50/50">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <ShoppingCart size={15} className="text-teal-800" />
+                <span>Cart Items ({saleItems.length})</span>
               </h3>
+              {saleItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSaleItems([])}
+                  className="text-[11px] font-semibold text-rose-600 hover:underline"
+                >
+                  Clear Cart
+                </button>
+              )}
             </div>
-            <div className="overflow-x-auto min-h-[300px]">
-              <table className="w-full">
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-gray-50/50">
-                    <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      Description
-                    </th>
-                    <th className="px-4 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      Qty (Units)
-                    </th>
-                    <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      Packaging
-                    </th>
-                    <th className="px-4 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      Price (Retail)
-                    </th>
-                    <th className="px-4 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      Discount
-                    </th>
-                    <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      Subtotal
-                    </th>
-                    <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest w-20">
-                      Action
-                    </th>
+                  <tr className="bg-stone-50 text-slate-500 border-b border-stone-200 font-semibold">
+                    <th className="py-2.5 px-4">Description</th>
+                    <th className="py-2.5 px-3 text-center">Qty (Units)</th>
+                    <th className="py-2.5 px-3">Packaging</th>
+                    <th className="py-2.5 px-3 text-right">Retail Price</th>
+                    <th className="py-2.5 px-3 text-right">Discount</th>
+                    <th className="py-2.5 px-4 text-right">Subtotal</th>
+                    <th className="py-2.5 px-4 text-center w-20">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-stone-100">
                   {saleItems.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-24 text-center">
-                        <div className="flex flex-col items-center gap-6 opacity-10">
-                          <ShoppingCart size={80} strokeWidth={1.5} />
-                          <p className="text-2xl font-black uppercase tracking-[0.2em]">
-                            Cart Empty
-                          </p>
-                        </div>
+                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                        <ShoppingCart size={32} className="mx-auto mb-2 text-stone-300" />
+                        <p className="text-xs font-semibold text-slate-700">No Items Added to Sale</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Search or scan a product above to add items to this transaction.</p>
                       </td>
                     </tr>
                   ) : (
                     saleItems.map((item) => (
                       <tr
                         key={item.id}
-                        className="hover:bg-gray-50/50 transition-colors"
+                        className="hover:bg-stone-50/60 transition-colors"
                       >
-                        <td className="px-6 py-4">
-                          <p className="font-bold text-gray-900">
+                        <td className="py-3 px-4">
+                          <p className="font-bold text-slate-900 text-xs">
                             {item.product_name}
                           </p>
-                          <p className="text-[10px] font-black text-blue-400 uppercase tracking-tighter mt-0.5">
-                            BATCH #{item.batch_id}
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                            Batch #{item.batch_id}
                           </p>
                         </td>
-                        <td className="px-4 py-4 text-center font-black text-gray-700">
+                        <td className="py-3 px-3 text-center font-bold text-slate-900 font-mono">
                           {item.qty}
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="text-xs font-bold text-gray-500">
-                            {Math.floor(item.qty / (item.pack_size || 1))} Cases
-                            {item.qty % (item.pack_size || 1) > 0 &&
-                              ` + ${item.qty % (item.pack_size || 1)} Loose`}
-                          </span>
+                        <td className="py-3 px-3 text-slate-600 text-[11px]">
+                          {formatPackaging(item.qty, item.pack_size)}
                         </td>
-                        <td className="px-3 py-4 text-right font-bold text-gray-900 text-xs whitespace-nowrap">
-                          Rs.{" "}
-                          {item.retail_price.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                        <td className="py-3 px-3 text-right font-mono text-slate-700 tabular-nums">
+                          {formatCurrency(item.retail_price)}
                         </td>
-                        <td className="px-3 py-4 text-right font-bold text-red-500 text-xs whitespace-nowrap">
-                          - Rs.{" "}
-                          {item.discount.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                        <td className="py-3 px-3 text-right font-mono text-slate-500 tabular-nums">
+                          - {formatCurrency(item.discount)}
                         </td>
-                        <td className="px-4 py-4 text-right font-black text-blue-600 text-xs whitespace-nowrap">
-                          Rs.{" "}
-                          {item.total.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                        <td className="py-3 px-4 text-right font-bold text-slate-900 font-mono tabular-nums">
+                          {formatCurrency(item.total)}
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
                             <button
+                              type="button"
                               onClick={() => handleEditItem(item)}
-                              className="p-2.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                              className="p-1 text-slate-400 hover:text-teal-800 rounded transition-colors"
+                              title="Edit line"
                             >
-                              <Pencil size={18} />
+                              <Pencil size={14} />
                             </button>
                             <button
+                              type="button"
                               onClick={() => removeItem(item.id)}
-                              className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                              className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                              title="Remove item"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </td>
@@ -794,147 +823,135 @@ const Sales = () => {
           </div>
         </div>
 
-        {/* Right Sidebar: Checkout Summary (Matches Loading.tsx summary layout) */}
-        <div className="w-full lg:w-[350px] lg:sticky lg:top-8 space-y-6">
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="px-8 py-6 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-xl font-black text-gray-900 tracking-tight">
-                Checkout
-              </h3>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
-                Sale Summary
-              </p>
+        {/* Right Section: Checkout Summary Panel */}
+        <div className="w-full lg:w-[350px] lg:sticky lg:top-20 space-y-4 shrink-0">
+          <div className="bg-white border border-stone-200 rounded-lg p-5 shadow-xs">
+            <div className="border-b border-stone-200 pb-3 mb-4">
+              <h3 className="text-sm font-bold text-slate-900">Sale Checkout</h3>
+              <p className="text-xs text-slate-500">Summary and transaction confirmation</p>
             </div>
 
-            <div className="p-8 space-y-8">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  <span className="font-bold text-gray-400 text-xs uppercase tracking-widest">
-                    Subtotal
-                  </span>
-                  <span className="font-black text-gray-900">
-                    Rs.{" "}
-                    {saleItems
-                      .reduce(
-                        (sum, item) => sum + item.qty * item.unit_price,
-                        0,
-                      )
-                      .toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center px-4 py-2 border-t border-gray-100 pt-4">
-                  <span className="font-bold text-gray-400 text-xs uppercase tracking-widest">
-                    Total Savings
-                  </span>
-                  <span className="font-black text-emerald-500">
-                    Rs.{" "}
-                    {saleItems
-                      .reduce((sum, item) => sum + item.discount, 0)
-                      .toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-gray-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-3">
-                  Grand Total
-                </p>
-                <p className="text-4xl font-black tracking-tighter break-words">
-                  Rs.{" "}
-                  {calculateGrandTotal().toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </p>
-              </div>
-
-              <div className="pt-4 space-y-4">
-                <button
-                  disabled={saleItems.length === 0 || loading}
-                  onClick={handleCompleteSale}
-                  className="w-full py-6 bg-blue-600 text-white rounded-3xl font-black text-xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-100 flex items-center justify-center gap-3 disabled:opacity-50 group active:scale-95"
-                >
-                  {loading ? "Processing..." : "Confirm Sale"}
-                  {!loading && (
-                    <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between items-center text-slate-600">
+                <span>Subtotal ({saleItems.length} lines)</span>
+                <span className="font-mono tabular-nums font-semibold text-slate-800">
+                  {formatCurrency(
+                    saleItems.reduce(
+                      (sum, item) => sum + item.qty * item.unit_price,
+                      0
+                    )
                   )}
-                </button>
+                </span>
               </div>
-            </div>
-          </div>
 
-          {/* Quick Help Card (Optional, for aesthetic) */}
-          <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
-            <div className="flex gap-4">
-              <div className="p-2 bg-blue-100 text-blue-600 rounded-xl h-fit">
-                <AlertCircle size={20} />
+              <div className="flex justify-between items-center text-slate-600">
+                <span>Total Savings</span>
+                <span className="font-mono tabular-nums font-semibold text-emerald-700">
+                  - {formatCurrency(
+                    saleItems.reduce((sum, item) => sum + item.discount, 0)
+                  )}
+                </span>
               </div>
-              <div>
-                <h5 className="font-black text-gray-900 text-sm mb-1">
-                  Stock Impact
-                </h5>
-                <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                  Finalizing this sale will immediately deduct quantities from
-                  the selected batches.
-                </p>
+
+              {/* Grand Total Highlight Box */}
+              <div className="bg-stone-50 border border-stone-200 rounded-md p-3.5 mt-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                  Grand Total
+                </span>
+                <span className="text-2xl font-black text-slate-900 font-mono tracking-tight tabular-nums">
+                  {formatCurrency(calculateGrandTotal())}
+                </span>
+              </div>
+
+              {/* Confirm Sale Button */}
+              <button
+                type="button"
+                disabled={saleItems.length === 0 || loading}
+                onClick={() => {
+                  if (loading) return;
+                  handleCompleteSale();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && e.repeat) {
+                    e.preventDefault();
+                  }
+                }}
+                className="w-full mt-4 py-3 bg-teal-800 hover:bg-teal-900 text-white rounded-md font-bold text-sm shadow-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Processing Transaction...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Confirm Sale</span>
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
+
+              {/* Supporting Stock Impact Note */}
+              <div className="pt-2 text-[11px] text-slate-500 flex items-start gap-1.5 leading-relaxed">
+                <AlertCircle size={14} className="text-slate-400 shrink-0 mt-0.5" />
+                <span>
+                  Stock impact: Quantities will be deducted immediately from warehouse inventory upon confirmation.
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Success Modal (Now only shown if print was successful/closed, or kept as a fallback for manual re-print) */}
+      {/* Success Modal */}
       {completedSale && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-blue-900/40 backdrop-blur-md no-print">
-          <div className="bg-white rounded-[40px] shadow-2xl max-w-lg w-full p-10 animate-in fade-in zoom-in duration-300 border border-blue-100">
-            <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-8 text-emerald-600 shadow-inner">
-              <CheckCircle2 size={48} />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs no-print">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 border border-stone-200 animate-in fade-in zoom-in duration-150">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-200">
+              <CheckCircle2 size={28} />
             </div>
 
-            <div className="text-center space-y-2 mb-10">
-              <h3 className="text-3xl font-black text-gray-900">
-                Sale Completed!
+            <div className="text-center space-y-1 mb-6">
+              <h3 className="text-base font-bold text-slate-900">
+                Sale Completed Successfully
               </h3>
-              <p className="text-gray-500 font-medium">
-                Invoice{" "}
-                <span className="text-blue-600 font-black">
-                  S-{completedSale.id.toString().padStart(6, "0")}
-                </span>{" "}
-                has been generated successfully.
+              <p className="text-xs text-slate-500">
+                Invoice <span className="font-mono font-bold text-teal-800">S-{completedSale.id.toString().padStart(6, "0")}</span> has been recorded.
+              </p>
+              <p className="text-base font-bold text-slate-900 font-mono mt-2">
+                {formatCurrency(Number(completedSale.total))}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <button
+                type="button"
                 onClick={handlePrint}
-                className="col-span-2 py-5 bg-gray-900 text-white rounded-3xl font-black flex items-center justify-center gap-3 hover:bg-black transition-all shadow-xl active:scale-95"
+                className="w-full py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-md font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors"
               >
-                <Printer size={20} />
-                Print Sales Invoice
+                <Printer size={15} />
+                <span>Print Sales Invoice (80mm)</span>
               </button>
 
-              <button
-                onClick={resetSale}
-                className="py-4 bg-blue-50 text-blue-600 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-blue-100 transition-all active:scale-95"
-              >
-                <Plus size={18} />
-                New Sale
-              </button>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={resetSale}
+                  className="py-2 bg-stone-100 hover:bg-stone-200 text-slate-800 rounded-md font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Plus size={14} />
+                  <span>New Sale</span>
+                </button>
 
-              <button
-                onClick={() => navigate("/supply-invoices?tab=sales")}
-                className="py-4 bg-gray-50 text-gray-500 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-gray-100 transition-all active:scale-95 text-xs uppercase tracking-widest"
-              >
-                <History size={18} />
-                View History
-              </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/supply-invoices?tab=sales")}
+                  className="py-2 bg-white hover:bg-stone-50 border border-stone-300 text-slate-700 rounded-md font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <History size={14} />
+                  <span>View History</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
