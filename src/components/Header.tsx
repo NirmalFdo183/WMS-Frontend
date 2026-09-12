@@ -1,27 +1,41 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-
-import { LogOut, Calendar, Menu } from "lucide-react";
-
+import { LogOut, Calendar, Menu, RefreshCw, AlertCircle } from "lucide-react";
 import { useWarehouse } from "../context/WarehouseContext";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
+const formatCurrency = (amount: number): string => {
+  const safeNum = isNaN(amount) ? 0 : amount;
+  return `LKR ${safeNum.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
 const Header = ({ onMenuClick }: HeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<string>("");
 
-  // Use global context for total warehouse value hhhh
-  const { totalValue } = useWarehouse();
+  // Use global context for total warehouse value
+  const { totalValue, loading: valLoading, error: valError, refreshTotalValue } = useWarehouse();
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDate(new Date());
-    }, 60000);
+    const updateTime = () => {
+      setCurrentTime(
+        new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -30,86 +44,112 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     navigate("/login");
   };
 
-  const formattedDate = currentDate.toLocaleDateString("en-US", {
-    weekday: "long",
+  const formattedDate = new Date().toLocaleDateString("en-US", {
+    weekday: "short",
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
   });
 
   return (
-    <header className="flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 lg:px-8 py-3 sticky top-0 z-30">
-      <div className="flex items-center gap-4 lg:gap-8">
+    <header className="h-16 bg-white border-b border-stone-200 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0 shadow-xs">
+      {/* Left: Sidebar Toggle & Warehouse Value */}
+      <div className="flex items-center gap-3 lg:gap-6">
         <button
           type="button"
-          className="-ml-2 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all focus:outline-none rounded-xl"
+          className="p-1.5 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-stone-100 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
           onClick={onMenuClick}
+          aria-label="Toggle navigation menu"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </button>
 
-        <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-100 transition-transform group-hover:scale-105">
-            {user?.name?.charAt(0).toUpperCase() || "U"}
+        {/* Warehouse Value Indicator */}
+        <div className="flex items-center">
+          {valError ? (
+            <button
+              type="button"
+              onClick={refreshTotalValue}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              title="Click to retry loading warehouse value"
+            >
+              <AlertCircle size={14} className="text-amber-600" />
+              <span>Couldn't load warehouse value — Retry</span>
+              <RefreshCw size={12} className={valLoading ? "animate-spin ml-1" : "ml-1"} />
+            </button>
+          ) : (
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider leading-none mb-1">
+                Warehouse Value
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm text-slate-900 font-bold font-mono tabular-nums">
+                  {valLoading ? (
+                    <span className="text-slate-400 font-normal">Updating...</span>
+                  ) : (
+                    formatCurrency(totalValue)
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={refreshTotalValue}
+                  disabled={valLoading}
+                  className="p-0.5 text-slate-400 hover:text-teal-800 rounded transition-colors focus:outline-none"
+                  title="Refresh warehouse valuation"
+                  aria-label="Refresh warehouse valuation"
+                >
+                  <RefreshCw size={11} className={valLoading ? "animate-spin" : ""} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Center Live Clock (Matches POS) */}
+      <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-600 bg-stone-100 px-3 py-1.5 rounded-md border border-stone-200 font-mono tabular-nums">
+        <Calendar size={14} className="text-slate-400" />
+        <span>{formattedDate}</span>
+        <span className="text-slate-300">|</span>
+        <span className="text-slate-900 font-semibold">{currentTime}</span>
+      </div>
+
+      {/* Right: Cashier / Admin Profile & Logout */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* User Profile Badge */}
+        <div className="flex items-center gap-2.5 text-left">
+          <div className="w-8 h-8 rounded-md bg-teal-800 text-white flex items-center justify-center text-xs font-bold shadow-xs shrink-0">
+            {user?.name ? user.name.charAt(0).toUpperCase() : "A"}
           </div>
           <div className="hidden sm:flex flex-col">
-            <span className="text-gray-900 font-bold text-sm tracking-tight leading-none mb-1">
-              {user?.name || "User"}
-            </span>
-            <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest">
+            <p className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[130px]">
+              {user?.name || "Administrator"}
+            </p>
+            <p className="text-[11px] text-slate-500 font-medium capitalize leading-none mt-0.5">
               {user?.role === "admin"
                 ? "Administrator"
                 : user?.role === "staff"
                   ? "Warehouse Staff"
                   : user?.role === "rep"
-                    ? "Sales Representative"
-                    : "User"}
-            </span>
+                    ? "Sales Rep"
+                    : user?.role === "cashier"
+                      ? "Cashier"
+                      : "User"}
+            </p>
           </div>
         </div>
 
-        <div className="hidden md:block h-6 w-px bg-gray-200 mx-2"></div>
+        <div className="h-5 w-px bg-stone-200 hidden sm:block" />
 
-        <div className="hidden md:flex flex-col">
-          <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none mb-1">
-            Warehouse Value
-          </p>
-          <p className="text-sm text-gray-900 font-black font-mono">
-            Rs.{" "}
-            {Number(totalValue).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-            })}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 lg:gap-6">
-        <div className="hidden xl:flex items-center gap-2 text-gray-500 bg-gray-50/50 px-4 py-2 rounded-xl border border-gray-100">
-          <Calendar size={16} className="text-blue-500" />
-          <span className="text-xs font-bold uppercase tracking-wide">
-            {formattedDate}
-          </span>
-        </div>
-
-        <div className="md:hidden flex flex-col items-end">
-          <span className="text-[10px] text-gray-400 font-bold uppercase">
-            Wh. Value
-          </span>
-          <span className="text-xs font-bold text-gray-800">
-            Rs.{" "}
-            {Number(totalValue).toLocaleString(undefined, {
-              maximumFractionDigits: 0,
-            })}
-          </span>
-        </div>
-
+        {/* Secondary Logout Button */}
         <button
+          type="button"
           onClick={handleLogout}
-          className="flex items-center gap-2 px-3 py-2 lg:px-4 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-all active:scale-95 shadow-sm"
-          title="Logout"
+          className="inline-flex items-center gap-1.5 bg-white hover:bg-stone-50 text-slate-600 hover:text-slate-900 px-2.5 py-1.5 rounded-md border border-stone-300 text-xs font-semibold transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+          title="Sign out of current session"
         >
-          <LogOut size={18} />
-          <span className="hidden sm:inline font-medium">Logout</span>
+          <LogOut size={14} className="text-slate-500" />
+          <span className="hidden sm:inline">Logout</span>
         </button>
       </div>
     </header>
