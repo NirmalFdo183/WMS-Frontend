@@ -671,7 +671,7 @@ const PosTerminal: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans select-none antialiased">
+    <div className="h-screen max-h-screen overflow-hidden bg-[#f8f9fa] text-slate-900 flex flex-col font-sans select-none antialiased">
       {/* 1. Header Workspace Bar */}
       <header className="h-16 bg-white border-b border-stone-200 px-4 md:px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
         {/* Brand & Connection Status */}
@@ -781,11 +781,11 @@ const PosTerminal: React.FC = () => {
       )}
 
       {/* 2. Main Workspace Layout */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
         {/* Left Section: Search & Product Catalog */}
-        <div className="flex-1 flex flex-col bg-[#f8f9fa] border-r border-stone-200 overflow-hidden">
+        <div className="flex-1 flex flex-col bg-[#f8f9fa] border-r border-stone-200 overflow-hidden min-h-0">
           {/* Top Search & Filter Bar */}
-          <div className="p-4 bg-white border-b border-stone-200 space-y-3">
+          <div className="p-4 bg-white border-b border-stone-200 space-y-3 shrink-0">
             {/* Search Input Box */}
             <form onSubmit={handleSearchSubmit} className="w-full">
               <label
@@ -857,7 +857,7 @@ const PosTerminal: React.FC = () => {
           </div>
 
           {/* Product Catalog Grid (Independently Scrollable) */}
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar min-h-0">
             {loading && allBatches.length === 0 ? (
               <div className="h-full flex items-center justify-center text-slate-500 gap-2">
                 <div className="w-5 h-5 border-2 border-teal-700 border-t-transparent rounded-full animate-spin" />
@@ -952,9 +952,9 @@ const PosTerminal: React.FC = () => {
         </div>
 
         {/* Right Section: Current Sale Cart & Checkout Panel */}
-        <div className="w-full lg:w-[420px] xl:w-[440px] bg-white flex flex-col border-l border-stone-200 shrink-0 overflow-hidden shadow-sm">
+        <div className="w-full lg:w-[420px] xl:w-[440px] bg-white flex flex-col border-l border-stone-200 shrink-0 overflow-hidden shadow-sm h-full min-h-0">
           {/* Cart Header */}
-          <div className="p-4 border-b border-stone-200 flex items-center justify-between bg-stone-50">
+          <div className="p-4 border-b border-stone-200 flex items-center justify-between bg-stone-50 shrink-0">
             <div>
               <h2 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
                 <span>Current sale</span>
@@ -981,7 +981,7 @@ const PosTerminal: React.FC = () => {
           </div>
 
           {/* Cart Row Items (Independently Scrollable) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-white">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-white min-h-0">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center">
                 <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-3 border border-stone-200">
@@ -1097,7 +1097,7 @@ const PosTerminal: React.FC = () => {
           </div>
 
           {/* Fixed Bottom Checkout Summary */}
-          <div className="p-4 bg-stone-50 border-t border-stone-200 space-y-3">
+          <div className="p-4 bg-stone-50 border-t border-stone-200 space-y-3 shrink-0">
             {/* Totals Breakdown */}
             <div className="space-y-1 text-xs">
               <div className="flex justify-between text-slate-600">
