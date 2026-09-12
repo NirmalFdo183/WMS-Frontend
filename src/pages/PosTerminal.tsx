@@ -21,6 +21,8 @@ import {
   RotateCcw,
   LogOut,
   AlertCircle,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -116,6 +118,33 @@ const PosTerminal: React.FC = () => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [recentSales, setRecentSales] = useState<any[]>([]);
 
+  // Fullscreen State & Management
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling fullscreen mode:", err);
+    }
+  };
+
   // Search Input Reference
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -169,6 +198,175 @@ const PosTerminal: React.FC = () => {
     fetchInventory();
     fetchHistory();
   }, []);
+
+  // Focus Tracking for Dialogs
+  const lastActiveElement = useRef<HTMLElement | null>(null);
+  const paymentDialogRef = useRef<HTMLDivElement>(null);
+
+  // Dialog Focus Trap & Restore
+  useEffect(() => {
+    if (isCheckoutOpen) {
+      lastActiveElement.current = document.activeElement as HTMLElement;
+      setTimeout(() => {
+        if (paymentDialogRef.current) {
+          const firstInput = paymentDialogRef.current.querySelector<HTMLElement>('input, button');
+          firstInput?.focus();
+        }
+      }, 50);
+    } else if (lastActiveElement.current) {
+      lastActiveElement.current.focus();
+    }
+  }, [isCheckoutOpen]);
+
+  useEffect(() => {
+    const handleDialogTab = (e: KeyboardEvent) => {
+      if (!isCheckoutOpen || e.key !== 'Tab') return;
+      if (!paymentDialogRef.current) return;
+
+      const focusableElements = paymentDialogRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleDialogTab);
+    return () => window.removeEventListener('keydown', handleDialogTab);
+  }, [isCheckoutOpen]);
+
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      if (e.key === 'F8') {
+        e.preventDefault();
+        const firstCartInput = document.querySelector<HTMLInputElement>('.cart-qty-input');
+        if (firstCartInput) {
+          firstCartInput.focus();
+          firstCartInput.select();
+        } else {
+          searchInputRef.current?.focus();
+        }
+        return;
+      }
+
+      if (e.key === 'F9') {
+        e.preventDefault();
+        if (e.repeat) return;
+        if (cart.length > 0 && !isCheckoutOpen) {
+          setIsCheckoutOpen(true);
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        if (isCheckoutOpen) {
+          e.preventDefault();
+          setIsCheckoutOpen(false);
+          return;
+        }
+        if (isHistoryOpen) {
+          e.preventDefault();
+          setIsHistoryOpen(false);
+          return;
+        }
+        if (document.activeElement === searchInputRef.current) {
+          setSearchTerm('');
+          searchInputRef.current?.blur();
+        }
+        return;
+      }
+
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (isCheckoutOpen || isHistoryOpen) return;
+        
+        const activeElement = document.activeElement as HTMLElement;
+        const tagName = activeElement?.tagName;
+        if (tagName === 'INPUT' || tagName === 'TEXTAREA') return;
+        
+        if (activeElement?.classList.contains('category-btn')) {
+          const categories = Array.from(document.querySelectorAll<HTMLElement>('.category-btn'));
+          const index = categories.indexOf(activeElement);
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            categories[(index + 1) % categories.length]?.focus();
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            categories[(index - 1 + categories.length) % categories.length]?.focus();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            document.querySelector<HTMLElement>('.product-add-btn')?.focus();
+          }
+        } else if (activeElement?.classList.contains('product-add-btn')) {
+          const products = Array.from(document.querySelectorAll<HTMLElement>('.product-add-btn'));
+          const index = products.indexOf(activeElement);
+          
+          let nextEl: HTMLElement | null = null;
+          if (e.key === 'ArrowRight') nextEl = products[index + 1];
+          if (e.key === 'ArrowLeft') nextEl = products[index - 1];
+          if (e.key === 'ArrowUp') {
+              const rect = activeElement.getBoundingClientRect();
+              let minDistance = Infinity;
+              for (let i = index - 1; i >= 0; i--) {
+                  const pRect = products[i].getBoundingClientRect();
+                  if (pRect.bottom < rect.top) {
+                      const dist = Math.abs(pRect.left - rect.left);
+                      if (dist < minDistance) {
+                          minDistance = dist;
+                          nextEl = products[i];
+                      }
+                  }
+              }
+              if (!nextEl) {
+                  document.querySelector<HTMLElement>('.category-btn')?.focus();
+                  e.preventDefault();
+                  return;
+              }
+          }
+          if (e.key === 'ArrowDown') {
+              const rect = activeElement.getBoundingClientRect();
+              let minDistance = Infinity;
+              for (let i = index + 1; i < products.length; i++) {
+                  const pRect = products[i].getBoundingClientRect();
+                  if (pRect.top > rect.bottom) {
+                      const dist = Math.abs(pRect.left - rect.left);
+                      if (dist < minDistance) {
+                          minDistance = dist;
+                          nextEl = products[i];
+                      }
+                  }
+              }
+          }
+          
+          if (nextEl) {
+            e.preventDefault();
+            nextEl.focus();
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalShortcuts);
+    return () => window.removeEventListener('keydown', handleGlobalShortcuts);
+  }, [cart.length, isCheckoutOpen, isHistoryOpen]);
 
   // Filter batches by search query & category
   useEffect(() => {
@@ -507,10 +705,26 @@ const PosTerminal: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsHistoryOpen(true)}
-            className="inline-flex items-center gap-1.5 bg-white hover:bg-stone-50 text-slate-700 px-3 py-1.5 rounded-md border border-stone-300 text-xs font-semibold transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-stone-50 text-slate-700 px-3 py-1.5 rounded-md border border-stone-300 text-xs font-semibold transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/50"
           >
             <History size={15} className="text-slate-500" />
             <span>Recent sales</span>
+          </button>
+
+          {/* Fullscreen Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-stone-50 text-slate-700 px-3 py-1.5 rounded-md border border-stone-300 text-xs font-semibold transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+            title={isFullscreen ? "Exit full screen" : "Enter full screen"}
+            aria-label={isFullscreen ? "Exit full screen" : "Enter full screen"}
+          >
+            {isFullscreen ? (
+              <Minimize2 size={15} className="text-slate-500" />
+            ) : (
+              <Maximize2 size={15} className="text-slate-500" />
+            )}
+            <span>{isFullscreen ? "Exit full screen" : "Full screen"}</span>
           </button>
 
           <div className="h-5 w-[1px] bg-stone-200 hidden sm:block" />
@@ -591,6 +805,11 @@ const PosTerminal: React.FC = () => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.repeat) {
+                      e.preventDefault();
+                    }
+                  }}
                   placeholder="Enter product title, barcode, or material SKU..."
                   className="w-full pl-10 pr-10 py-2.5 bg-stone-50 text-slate-900 rounded-lg border border-stone-300 placeholder-slate-400 text-sm font-medium focus:outline-none focus:bg-white focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors shadow-inner"
                 />
@@ -620,7 +839,7 @@ const PosTerminal: React.FC = () => {
                     key={cat}
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors shrink-0 ${
+                    className={`category-btn px-3 py-1 rounded-md text-xs font-semibold transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-teal-700/50 focus:border-teal-700 ${
                       selectedCategory === cat
                         ? "bg-teal-800 text-white shadow-sm"
                         : "bg-stone-100 text-slate-600 hover:bg-stone-200 border border-stone-200"
@@ -664,7 +883,8 @@ const PosTerminal: React.FC = () => {
                   return (
                     <div
                       key={batch.id}
-                      className="bg-white border border-stone-200 hover:border-teal-700/60 rounded-lg p-3.5 flex flex-col justify-between transition-colors shadow-sm group relative"
+                      onClick={() => addToCart(batch)}
+                      className="bg-white border border-stone-200 hover:border-teal-700/60 rounded-lg p-3.5 flex flex-col justify-between transition-colors shadow-sm group relative cursor-pointer"
                     >
                       {hasReturns && (
                         <span className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-200">
@@ -707,8 +927,16 @@ const PosTerminal: React.FC = () => {
 
                         <button
                           type="button"
-                          onClick={() => addToCart(batch)}
-                          className="min-h-[36px] min-w-[56px] px-3 py-1.5 bg-stone-100 hover:bg-teal-800 hover:text-white text-teal-800 font-bold text-xs rounded border border-stone-300 hover:border-teal-800 transition-colors flex items-center justify-center gap-1 shadow-sm active:scale-95 focus:ring-2 focus:ring-teal-700/30"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(batch);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.repeat) {
+                              e.preventDefault();
+                            }
+                          }}
+                          className="product-add-btn min-h-[36px] min-w-[56px] px-3 py-1.5 bg-stone-100 text-teal-800 group-hover:bg-teal-800 group-hover:text-white group-hover:border-teal-800 focus:bg-teal-800 focus:text-white focus:border-teal-800 font-bold text-xs rounded border border-stone-300 transition-colors flex items-center justify-center gap-1 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-teal-700/50"
                           aria-label={`Add ${p.name} to cart`}
                         >
                           <Plus size={14} />
@@ -801,7 +1029,7 @@ const PosTerminal: React.FC = () => {
                         onClick={() =>
                           updateCartItemQty(item.cart_id, item.total_qty - 1)
                         }
-                        className="min-w-[28px] min-h-[28px] rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 font-bold transition-colors"
+                        className="min-w-[28px] min-h-[28px] rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
                         aria-label="Decrease quantity"
                       >
                         <Minus size={12} />
@@ -817,14 +1045,14 @@ const PosTerminal: React.FC = () => {
                             parseInt(e.target.value) || 1
                           )
                         }
-                        className="w-10 text-center text-xs font-bold text-slate-900 font-mono focus:outline-none focus:bg-stone-50"
+                        className="cart-qty-input w-10 text-center text-xs font-bold text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-teal-700/50 focus:bg-white rounded"
                       />
                       <button
                         type="button"
                         onClick={() =>
                           updateCartItemQty(item.cart_id, item.total_qty + 1)
                         }
-                        className="min-w-[28px] min-h-[28px] rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 font-bold transition-colors"
+                        className="min-w-[28px] min-h-[28px] rounded hover:bg-stone-100 flex items-center justify-center text-slate-700 font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
                         aria-label="Increase quantity"
                       >
                         <Plus size={12} />
@@ -948,7 +1176,10 @@ const PosTerminal: React.FC = () => {
       {/* 3. Payment Checkout Dialog */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-stone-300 rounded-lg w-full max-w-md overflow-hidden shadow-xl animate-in fade-in zoom-in-95 duration-150">
+          <div 
+            ref={paymentDialogRef}
+            className="bg-white border border-stone-300 rounded-lg w-full max-w-md overflow-hidden shadow-xl animate-in fade-in zoom-in-95 duration-150"
+          >
             {/* Dialog Header */}
             <div className="px-5 py-3.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1085,7 +1316,12 @@ const PosTerminal: React.FC = () => {
                   (paymentType === "cash" && cashAmountNum < grandTotal)
                 }
                 onClick={handleProcessCheckout}
-                className="px-5 py-2 bg-teal-800 hover:bg-teal-900 disabled:opacity-50 text-white font-bold text-xs rounded shadow-sm flex items-center gap-1.5 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.repeat) {
+                    e.preventDefault();
+                  }
+                }}
+                className="px-5 py-2 bg-teal-800 hover:bg-teal-900 disabled:opacity-50 text-white font-bold text-xs rounded shadow-sm flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-700"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
