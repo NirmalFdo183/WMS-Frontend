@@ -19,6 +19,7 @@ import {
   Hash,
   Check,
   RotateCcw,
+  Truck,
 } from "lucide-react";
 
 interface Product {
@@ -479,25 +480,15 @@ const NewSupply: React.FC = () => {
   const modalLineTotal = modalPaidQty * modalNetPrice;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f8f9fa] text-slate-900 p-4 sm:p-6 font-sans">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Top Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-stone-200">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-teal-800">
-                Stock Intake & Batching
-              </span>
-              {/* <span className="inline-flex items-center gap-1 bg-stone-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded border border-stone-200 uppercase tracking-wide">
-                {step === "invoice" ? "Step 1: Header" : "Step 2: Items"}
-              </span> */}
-            </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+          <div className="flex items-center gap-2.5">
+            <Truck className="text-teal-800" size={30} />
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
               {editInvoiceId ? "Edit Supply Invoice" : "New Supply Entry"}
             </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Record incoming vendor invoices, verify stock batches and bill balances.
-            </p>
           </div>
 
           {step === "items" && (

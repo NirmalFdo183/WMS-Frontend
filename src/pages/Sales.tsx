@@ -368,21 +368,15 @@ const Sales = () => {
     });
     setSearchTerm("");
   };  return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-6">
       {/* 1. Header Area with Direct Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-stone-200 rounded-lg p-5 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Direct Sales Register
-            </h1>
-            <span className="bg-stone-100 text-slate-600 text-[11px] font-semibold px-2 py-0.5 rounded border border-stone-200">
-              Counter Sales
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Create, process, and record point of sale transactions.
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+        <div className="flex items-center gap-2.5">
+          <ShoppingCart className="text-teal-800" size={30} />
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            Direct Sales Register
+          </h1>
         </div>
 
         <div className="flex items-center gap-3">
@@ -1133,6 +1127,7 @@ const Sales = () => {
           }
         }
       `}</style>
+      </div>
     </div>
   );
 };
