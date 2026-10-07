@@ -570,29 +570,22 @@ const Settings: React.FC = () => {
   }, [users]);
 
   return (
-    <div className="min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Top Header (Dynamic by current view) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-              {activeTab === "manage-users" ? (
-                <>
-                  <Users className="text-teal-800" size={28} />
-                  <span>Manage Users</span>
-                </>
-              ) : (
-                <>
-                  <FileText className="text-teal-800" size={28} />
-                  <span>Cashier Audits</span>
-                </>
-              )}
-            </h1>
-            <p className="text-sm font-medium text-slate-500 mt-1">
-              {activeTab === "manage-users"
-                ? "Manage system cashiers and administrators, update profiles, and manage security credentials."
-                : "Audit sales, transactions, and register cash flow processed by cashiers."}
-            </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+          <div className="flex items-center gap-2.5">
+            {activeTab === "manage-users" ? (
+              <>
+                <Users className="text-teal-800" size={30} />
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Manage Users</h1>
+              </>
+            ) : (
+              <>
+                <FileText className="text-teal-800" size={30} />
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Cashier Audits</h1>
+              </>
+            )}
           </div>
 
           {/* Heading Action Buttons */}
