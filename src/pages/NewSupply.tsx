@@ -639,7 +639,7 @@ const NewSupply: React.FC = () => {
                       step="0.01"
                       required
                       placeholder="0.00"
-                      className="w-full h-9 pl-10 pr-3 rounded-lg bg-white border border-stone-300 text-xs font-bold text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+                      className="w-full h-9 pl-10 pr-3 rounded-lg bg-white border border-stone-300 text-xs font-bold text-slate-900  focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
                       value={invoiceData.total_bill_amount}
                       onChange={(e) =>
                         setInvoiceData({
@@ -688,7 +688,7 @@ const NewSupply: React.FC = () => {
                   <p className="text-xs font-bold text-slate-900 truncate">
                     {invoiceData.supplier_name}
                   </p>
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[11px] text-slate-500 ">
                     Inv: #{invoiceData.invoice_no} | {invoiceData.invoice_date}
                   </p>
                 </div>
@@ -717,7 +717,7 @@ const NewSupply: React.FC = () => {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Declared Bill Total
                 </p>
-                <p className="text-sm font-bold text-slate-900 font-mono">
+                <p className="text-sm font-bold text-slate-900 ">
                   {formatCurrency(originalInvoiceTotal)}
                 </p>
                 <p className="text-[11px] text-slate-400">
@@ -749,7 +749,7 @@ const NewSupply: React.FC = () => {
                   )}
                 </div>
                 <p
-                  className={`text-sm font-bold font-mono ${
+                  className={`text-sm font-bold  ${
                     isInvoiceMatched
                       ? "text-emerald-700"
                       : isInvoiceExceeded
@@ -816,7 +816,7 @@ const NewSupply: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-[11px] text-slate-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 w-28 text-center shrink-0">
+                        <span className=" text-[11px] text-slate-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 w-28 text-center shrink-0">
                           {p.barcode || p.material_code}
                         </span>
                         <span className="font-medium text-slate-900">
@@ -885,18 +885,18 @@ const NewSupply: React.FC = () => {
                         key={item.temp_id}
                         className="hover:bg-stone-50/70 transition-colors"
                       >
-                        <td className="px-4 py-2.5 text-center text-slate-400 font-mono text-[11px]">
+                        <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                           {idx + 1}
                         </td>
                         <td className="px-4 py-2.5">
                           <p className="font-semibold text-slate-900">
                             {item.product_name}
                           </p>
-                          <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          <p className="text-[11px] text-slate-400  mt-0.5">
                             {item.barcode || item.material_code}
                           </p>
                         </td>
-                        <td className="px-4 py-2.5 text-center font-mono text-[11px] text-slate-600">
+                        <td className="px-4 py-2.5 text-center  text-[11px] text-slate-600">
                           {item.no_cases} × {item.pack_size}
                           {item.extra_units > 0 && (
                             <span className="text-teal-700 font-semibold ml-1">
@@ -916,13 +916,13 @@ const NewSupply: React.FC = () => {
                             <span className="text-slate-400">-</span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-right font-mono text-slate-800">
+                        <td className="px-4 py-2.5 text-right  text-slate-800">
                           {formatCurrency(Number(item.netprice))}
                         </td>
-                        <td className="px-4 py-2.5 text-right font-mono text-slate-500">
+                        <td className="px-4 py-2.5 text-right  text-slate-500">
                           {formatCurrency(Number(item.retail_price))}
                         </td>
-                        <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                        <td className="px-4 py-2.5 text-right  font-bold text-slate-900">
                           {formatCurrency(
                             (item.qty - (item.free_qty || 0)) * item.netprice
                           )}
@@ -984,7 +984,7 @@ const NewSupply: React.FC = () => {
                 <h3 className="text-xs font-bold text-slate-900 truncate">
                   {activeProduct.name}
                 </h3>
-                <p className="text-[11px] text-slate-500 font-mono">
+                <p className="text-[11px] text-slate-500 ">
                   Code: {activeProduct.barcode || activeProduct.material_code}
                 </p>
               </div>
@@ -1101,7 +1101,7 @@ const NewSupply: React.FC = () => {
                     type="number"
                     required
                     step="0.01"
-                    className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
+                    className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs  font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
                     value={batchForm.net_price}
                     onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
@@ -1118,7 +1118,7 @@ const NewSupply: React.FC = () => {
                     type="number"
                     required
                     step="0.01"
-                    className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
+                    className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs  font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
                     value={batchForm.retail_price}
                     onKeyDown={handleBatchFormKeyDown}
                     onChange={(e) =>
@@ -1132,7 +1132,7 @@ const NewSupply: React.FC = () => {
               </div>
 
               {/* Live Preview Strip */}
-              <div className="bg-stone-50 border border-stone-200 rounded-lg p-2.5 flex items-center justify-between text-xs font-mono">
+              <div className="bg-stone-50 border border-stone-200 rounded-lg p-2.5 flex items-center justify-between text-xs ">
                 <div>
                   <p className="text-[10px] text-slate-500 font-sans uppercase font-semibold">
                     Units Total
@@ -1292,7 +1292,7 @@ const NewSupply: React.FC = () => {
                 <input
                   type="text"
                   required
-                  className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
+                  className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs  text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
                   value={newProduct.barcode}
                   onChange={(e) =>
                     setNewProduct({
@@ -1310,7 +1310,7 @@ const NewSupply: React.FC = () => {
                 <input
                   type="text"
                   required
-                  className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
+                  className="w-full h-8 px-2.5 rounded-lg bg-white border border-stone-300 text-xs  text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"
                   value={newProduct.material_code}
                   onChange={(e) =>
                     setNewProduct({

@@ -145,13 +145,13 @@ const SupplyInvoices: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
 
-    if (tabParam && (tabParam === "supply" || tabParam === "loading")) {
-      setActiveTab(tabParam as "supply" | "loading");
+    if (tabParam) {
+      setActiveTab(tabParam as any);
     } else if (location.state && location.state.activeTab) {
       setActiveTab(location.state.activeTab);
-      window.history.replaceState({}, document.title);
+      navigate(`?tab=${location.state.activeTab}`, { replace: true });
     }
-  }, [location]);
+  }, [location, navigate]);
 
   // Reset pagination on filter or tab change
   useEffect(() => {
@@ -483,7 +483,7 @@ const SupplyInvoices: React.FC = () => {
             <span>Prev</span>
           </button>
 
-          <span className="px-2.5 py-1 text-slate-600 font-semibold font-mono">
+          <span className="px-2.5 py-1 text-slate-600 font-semibold ">
             Page {currPage} of {totalPages}
           </span>
 
@@ -533,7 +533,7 @@ const SupplyInvoices: React.FC = () => {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
                   Warehouse Stock Value
                 </p>
-                <p className="text-xs font-bold text-teal-950 font-mono mt-1 leading-none">
+                <p className="text-xs font-bold text-teal-950  mt-1 leading-none">
                   {formatCurrency(Number(totalValue))}
                 </p>
               </div>
@@ -576,7 +576,10 @@ const SupplyInvoices: React.FC = () => {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => {
+                  setActiveTab(tab.id as any);
+                  navigate(`?tab=${tab.id}`, { replace: true });
+                }}
                 className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shadow-xs ${
                   isActive
                     ? "bg-teal-800 text-white shadow-sm"
@@ -587,7 +590,7 @@ const SupplyInvoices: React.FC = () => {
                 <span>{tab.label}</span>
                 {tab.count !== null && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full  font-bold ${
                       isActive
                         ? "bg-white/20 text-white"
                         : "bg-stone-100 text-slate-600"
@@ -757,10 +760,10 @@ const SupplyInvoices: React.FC = () => {
                           onClick={() => handleInvoiceClick(inv.id)}
                           className="hover:bg-stone-50/70 transition-colors cursor-pointer"
                         >
-                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono text-[11px]">
+                          <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                             {rowNum}
                           </td>
-                          <td className="px-4 py-2.5 font-bold font-mono text-teal-900">
+                          <td className="px-4 py-2.5 font-bold  text-teal-900">
                             #{inv.invoice_number}
                           </td>
                           <td className="px-4 py-2.5 text-slate-600 font-medium">
@@ -769,7 +772,7 @@ const SupplyInvoices: React.FC = () => {
                           <td className="px-4 py-2.5 font-semibold text-slate-900">
                             {inv.supplier?.name || `Supplier #${inv.supplier_id}`}
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                          <td className="px-4 py-2.5 text-right  font-bold text-slate-900">
                             {formatCurrency(Number(inv.total_bill_amount))}
                           </td>
                           <td className="px-4 py-2.5 text-right">
@@ -876,10 +879,10 @@ const SupplyInvoices: React.FC = () => {
                           key={load.id}
                           className="hover:bg-stone-50/70 transition-colors"
                         >
-                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono text-[11px]">
+                          <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                             {rowNum}
                           </td>
-                          <td className="px-4 py-2.5 font-bold font-mono text-teal-900">
+                          <td className="px-4 py-2.5 font-bold  text-teal-900">
                             {load.load_number}
                           </td>
                           <td className="px-4 py-2.5 text-slate-600 font-medium">
@@ -1017,10 +1020,10 @@ const SupplyInvoices: React.FC = () => {
                           key={sale.id}
                           className="hover:bg-stone-50/70 transition-colors"
                         >
-                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono text-[11px]">
+                          <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                             {rowNum}
                           </td>
-                          <td className="px-4 py-2.5 font-bold font-mono text-teal-900">
+                          <td className="px-4 py-2.5 font-bold  text-teal-900">
                             S-{sale.id.toString().padStart(6, "0")}
                           </td>
                           <td className="px-4 py-2.5 text-slate-600 font-medium">
@@ -1043,7 +1046,7 @@ const SupplyInvoices: React.FC = () => {
                               {sale.payment_type}
                             </span>
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                          <td className="px-4 py-2.5 text-right  font-bold text-slate-900">
                             {formatCurrency(Number(sale.total))}
                           </td>
                           <td className="px-4 py-2.5 text-right">
@@ -1100,7 +1103,7 @@ const SupplyInvoices: React.FC = () => {
                 <p className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">
                   Supply Invoice Details
                 </p>
-                <h3 className="text-sm font-bold text-slate-900 font-mono">
+                <h3 className="text-sm font-bold text-slate-900 ">
                   #{selectedInvoice.invoice_number}
                 </h3>
               </div>
@@ -1143,7 +1146,7 @@ const SupplyInvoices: React.FC = () => {
                       <p className="text-[10px] font-bold text-slate-400 uppercase">
                         Declared Total
                       </p>
-                      <p className="font-bold text-teal-900 font-mono text-base">
+                      <p className="font-bold text-teal-900  text-base">
                         {formatCurrency(Number(selectedInvoice.total_bill_amount))}
                       </p>
                     </div>
@@ -1170,12 +1173,12 @@ const SupplyInvoices: React.FC = () => {
                               <p className="font-semibold text-slate-900">
                                 {item.product.name}
                               </p>
-                              <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+                              <p className="text-[10px]  text-slate-400 mt-0.5">
                                 {item.product.barcode || item.product.material_code}
                                 {item.expiry_date && ` | Exp: ${item.expiry_date}`}
                               </p>
                             </td>
-                            <td className="px-3 py-2 text-center font-mono text-[11px] text-slate-600">
+                            <td className="px-3 py-2 text-center  text-[11px] text-slate-600">
                               {item.no_cases} × {item.pack_size}
                               {item.extra_units > 0 && ` + ${item.extra_units}`}
                             </td>
@@ -1188,13 +1191,13 @@ const SupplyInvoices: React.FC = () => {
                                 <span className="text-slate-400">-</span>
                               )}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono text-slate-800">
+                            <td className="px-3 py-2 text-right  text-slate-800">
                               {formatCurrency(Number(item.netprice))}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono text-slate-500">
+                            <td className="px-3 py-2 text-right  text-slate-500">
                               {formatCurrency(Number(item.retail_price))}
                             </td>
-                            <td className="px-3.5 py-2 text-right font-mono font-bold text-slate-900">
+                            <td className="px-3.5 py-2 text-right  font-bold text-slate-900">
                               {formatCurrency(
                                 (Number(item.no_cases) * Number(item.pack_size) +
                                   Number(item.extra_units || 0)) *
@@ -1241,7 +1244,7 @@ const SupplyInvoices: React.FC = () => {
                 <p className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">
                   Loading Manifest Details
                 </p>
-                <h3 className="text-sm font-bold text-slate-900 font-mono">
+                <h3 className="text-sm font-bold text-slate-900 ">
                   #{selectedLoading.load_number}
                 </h3>
               </div>
@@ -1315,11 +1318,11 @@ const SupplyInvoices: React.FC = () => {
                               <p className="font-semibold text-slate-900">
                                 {item.batch_stock?.product?.name}
                               </p>
-                              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                              <p className="text-[10px] text-slate-400  mt-0.5">
                                 {item.batch_stock?.product?.material_code}
                               </p>
                             </td>
-                            <td className="px-3 py-2.5 text-center font-mono text-[11px] text-slate-600 font-semibold">
+                            <td className="px-3 py-2.5 text-center  text-[11px] text-slate-600 font-semibold">
                               {item.qty} units
                             </td>
                             <td className="px-3 py-2.5 text-center">
@@ -1331,13 +1334,13 @@ const SupplyInvoices: React.FC = () => {
                                 <span className="text-slate-400">-</span>
                               )}
                             </td>
-                            <td className="px-4 py-2.5 text-right font-mono text-slate-800">
+                            <td className="px-4 py-2.5 text-right  text-slate-800">
                               {formatCurrency(netPrice)}
                             </td>
-                            <td className="px-4 py-2.5 text-right font-mono text-slate-500">
+                            <td className="px-4 py-2.5 text-right  text-slate-500">
                               {formatCurrency(retailPrice)}
                             </td>
-                            <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                            <td className="px-4 py-2.5 text-right  font-bold text-slate-900">
                               {formatCurrency(paidUnits * netPrice)}
                             </td>
                           </tr>
@@ -1379,7 +1382,7 @@ const SupplyInvoices: React.FC = () => {
                 <p className="text-[10px] font-bold text-teal-800 uppercase tracking-wider">
                   Sales Transaction Details
                 </p>
-                <h3 className="text-sm font-bold text-slate-900 font-mono">
+                <h3 className="text-sm font-bold text-slate-900 ">
                   S-{selectedSale.id.toString().padStart(6, "0")}
                 </h3>
               </div>
@@ -1425,7 +1428,7 @@ const SupplyInvoices: React.FC = () => {
                   <p className="text-[10px] font-bold text-slate-400 uppercase">
                     Grand Total
                   </p>
-                  <p className="font-bold text-teal-900 font-mono text-base">
+                  <p className="font-bold text-teal-900  text-base">
                     {formatCurrency(Number(selectedSale.total))}
                   </p>
                 </div>
@@ -1450,10 +1453,10 @@ const SupplyInvoices: React.FC = () => {
                           <td className="px-4 py-2.5 font-medium text-slate-900">
                             {item.product?.name}
                           </td>
-                          <td className="px-3 py-2.5 text-center font-bold font-mono">
+                          <td className="px-3 py-2.5 text-center font-bold ">
                             {item.qty}
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono text-slate-600">
+                          <td className="px-4 py-2.5 text-right  text-slate-600">
                             {formatCurrency(
                               Number(
                                 item.retail_price ||
@@ -1462,10 +1465,10 @@ const SupplyInvoices: React.FC = () => {
                               )
                             )}
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono text-rose-600">
+                          <td className="px-4 py-2.5 text-right  text-rose-600">
                             - {formatCurrency(Number(item.discount || 0))}
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                          <td className="px-4 py-2.5 text-right  font-bold text-slate-900">
                             {formatCurrency(Number(item.total))}
                           </td>
                         </tr>
@@ -1498,7 +1501,7 @@ const SupplyInvoices: React.FC = () => {
                 <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
                   Process Loading Returns
                 </p>
-                <h3 className="text-sm font-bold text-slate-900 font-mono">
+                <h3 className="text-sm font-bold text-slate-900 ">
                   #{loadings.find((l) => l.id === returnLoadingId)?.load_number}
                 </h3>
               </div>
@@ -1534,7 +1537,7 @@ const SupplyInvoices: React.FC = () => {
                             <p className="font-semibold text-slate-900">
                               {item.batch_stock?.product?.name}
                             </p>
-                            <p className="text-[10px] text-slate-400 font-mono">
+                            <p className="text-[10px] text-slate-400 ">
                               {item.batch_stock?.product?.material_code}
                             </p>
                           </td>
@@ -1643,7 +1646,7 @@ const SupplyInvoices: React.FC = () => {
       {printMode === "supply-invoice" && printableInvoice && (
         <div
           id="printable-supply-invoice"
-          className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 font-mono text-black text-xs"
+          className="hidden print:block fixed inset-0 bg-white z-[9999] p-8  text-black text-xs"
         >
           <div className="border-b-2 border-black pb-4 mb-4 text-center">
             <h1 className="text-xl font-black uppercase tracking-wider">
@@ -1753,7 +1756,7 @@ const SupplyInvoices: React.FC = () => {
       {printMode === "supply-report" && (
         <div
           id="printable-invoices-report"
-          className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 font-mono text-black text-xs"
+          className="hidden print:block fixed inset-0 bg-white z-[9999] p-8  text-black text-xs"
         >
           <div className="border-b-2 border-black pb-4 mb-4 text-center">
             <h1 className="text-xl font-black uppercase tracking-wider">
@@ -1787,12 +1790,12 @@ const SupplyInvoices: React.FC = () => {
               {filteredInvoices.map((inv, idx) => (
                 <tr key={inv.id} className="border-b border-black">
                   <td className="py-1.5 text-center">{idx + 1}</td>
-                  <td className="py-1.5 font-bold font-mono">#{inv.invoice_number}</td>
+                  <td className="py-1.5 font-bold ">#{inv.invoice_number}</td>
                   <td className="py-1.5 text-center">{inv.invoice_date}</td>
                   <td className="py-1.5 font-semibold">
                     {inv.supplier?.name || `Supplier #${inv.supplier_id}`}
                   </td>
-                  <td className="py-1.5 text-right font-bold font-mono">
+                  <td className="py-1.5 text-right font-bold ">
                     {Number(inv.total_bill_amount).toFixed(2)}
                   </td>
                 </tr>
@@ -1803,7 +1806,7 @@ const SupplyInvoices: React.FC = () => {
                 <td colSpan={4} className="py-2 text-right uppercase">
                   Grand Total Statement Value:
                 </td>
-                <td className="py-2 text-right font-mono">
+                <td className="py-2 text-right ">
                   Rs.{" "}
                   {filteredInvoices
                     .reduce((sum, inv) => sum + Number(inv.total_bill_amount || 0), 0)
@@ -1827,7 +1830,7 @@ const SupplyInvoices: React.FC = () => {
       {printMode === "load-list" && selectedLoading && (
         <div
           id="printable-loadlist"
-          className="hidden print:block fixed inset-0 bg-white z-[9999] p-8 font-mono text-black text-xs overflow-y-auto"
+          className="hidden print:block fixed inset-0 bg-white z-[9999] p-8  text-black text-xs overflow-y-auto"
         >
           <div className="flex justify-between items-start mb-6 border-b-2 border-black pb-4">
             <div className="w-48"></div>

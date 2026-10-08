@@ -411,7 +411,7 @@ const Dashboard = () => {
               </span>
             </div>
             <p className="text-xs font-semibold text-slate-700">Warehouse Inventory Value</p>
-            <h3 className="text-lg font-bold text-slate-900 font-mono tabular-nums mt-1">
+            <h3 className="text-lg font-bold text-slate-900  tabular-nums mt-1">
               {formatCurrency(totalValue)}
             </h3>
             <p className="text-[11px] text-slate-500 mt-1">
@@ -468,7 +468,7 @@ const Dashboard = () => {
                 loads completed
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 mt-1 font-mono tabular-nums">
+            <p className="text-[11px] text-slate-500 mt-1  tabular-nums">
               Billed: {formatCurrency(stats?.total_revenue || 0)}
             </p>
           </div>
@@ -487,10 +487,10 @@ const Dashboard = () => {
               </span>
             </div>
             <p className="text-xs font-semibold text-slate-700">Commission (5% Profit)</p>
-            <h3 className="text-lg font-bold text-teal-900 font-mono tabular-nums mt-1">
+            <h3 className="text-lg font-bold text-teal-900  tabular-nums mt-1">
               {formatCurrency(stats?.total_profit || 0)}
             </h3>
-            <p className="text-[11px] text-slate-500 mt-1 font-mono tabular-nums">
+            <p className="text-[11px] text-slate-500 mt-1  tabular-nums">
               From {formatCurrency(stats?.total_supply_cost || 0)} supply
             </p>
           </div>
@@ -541,7 +541,7 @@ const Dashboard = () => {
                       <p className="text-xs font-bold text-slate-900 line-clamp-1">
                         {batch.product?.name}
                       </p>
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      <p className="text-[11px] text-slate-500  mt-0.5">
                         SKU: {batch.product?.material_code} · Batch #{batch.id}
                       </p>
                     </div>
@@ -587,7 +587,7 @@ const Dashboard = () => {
                       <p className="text-xs font-bold text-slate-900 line-clamp-1">
                         {batch.product?.name}
                       </p>
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      <p className="text-[11px] text-slate-500  mt-0.5">
                         Expires: {batch.expiry_date} · Batch #{batch.id}
                       </p>
                     </div>
@@ -729,7 +729,7 @@ const Dashboard = () => {
                         onClick={() => navigate("/supply-invoices?tab=loading")}
                         className="hover:bg-stone-50/70 transition-colors cursor-pointer"
                       >
-                        <td className="py-2.5 px-4 font-bold text-slate-900 font-mono">
+                        <td className="py-2.5 px-4 font-bold text-slate-900 ">
                           {l.load_number}
                         </td>
                         <td className="py-2.5 px-3 text-slate-700 font-medium">
@@ -749,7 +749,7 @@ const Dashboard = () => {
                             {l.status}
                           </span>
                         </td>
-                        <td className="py-2.5 px-4 text-right font-mono text-slate-700 tabular-nums">
+                        <td className="py-2.5 px-4 text-right  text-slate-700 tabular-nums">
                           {l.loading_items?.length || 0}
                         </td>
                       </tr>
@@ -801,7 +801,7 @@ const Dashboard = () => {
                     className="p-3 hover:bg-stone-50/70 transition-colors flex items-center justify-between text-xs cursor-pointer"
                   >
                     <div>
-                      <p className="font-bold text-slate-900 font-mono">
+                      <p className="font-bold text-slate-900 ">
                         Sale #{sale.id.toString().padStart(5, "0")}
                       </p>
                       <p className="text-[11px] text-slate-500 mt-0.5">
@@ -809,7 +809,7 @@ const Dashboard = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-slate-900 font-mono tabular-nums">
+                      <p className="font-bold text-slate-900  tabular-nums">
                         {formatCurrency(Number(sale.total))}
                       </p>
                       <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">

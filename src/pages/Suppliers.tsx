@@ -442,7 +442,7 @@ const Suppliers = () => {
       } else {
         setDialogGeneralError(
           err.response.data?.message ||
-            "Failed to save supplier. Please try again.",
+          "Failed to save supplier. Please try again.",
         );
       }
     } finally {
@@ -480,7 +480,7 @@ const Suppliers = () => {
       } else {
         setDeleteError(
           err.response.data?.message ||
-            "Failed to delete supplier. Please try again.",
+          "Failed to delete supplier. Please try again.",
         );
       }
     } finally {
@@ -495,13 +495,12 @@ const Suppliers = () => {
         <div
           role="status"
           aria-live="polite"
-          className={`fixed bottom-6 right-6 z-50 max-w-md p-4 rounded-xl border shadow-lg flex items-center justify-between gap-3 text-sm animate-in slide-in-from-bottom-5 duration-200 ${
-            toast.type === "error"
+          className={`fixed bottom-6 right-6 z-50 max-w-md p-4 rounded-xl border shadow-lg flex items-center justify-between gap-3 text-sm animate-in slide-in-from-bottom-5 duration-200 ${toast.type === "error"
               ? "bg-red-50 border-red-200 text-red-800"
               : toast.type === "info"
                 ? "bg-teal-50 border-teal-200 text-teal-900"
                 : "bg-emerald-50 border-emerald-200 text-emerald-900"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2.5">
             {toast.type === "error" ? (
@@ -649,16 +648,19 @@ const Suppliers = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-stone-50/80 border-b border-stone-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    <th scope="col" className="px-6 py-3.5">
+                    <th scope="col" className="px-2 py-3.5">
+                      Supplier ID
+                    </th>
+                    <th scope="col" className="px-2 py-3.5">
                       Supplier
                     </th>
-                    <th scope="col" className="px-6 py-3.5">
+                    <th scope="col" className="px-2 py-3.5">
                       Contact number
                     </th>
-                    <th scope="col" className="px-6 py-3.5">
+                    <th scope="col" className="px-2 py-3.5">
                       Address
                     </th>
-                    <th scope="col" className="px-6 py-3.5 text-right">
+                    <th scope="col" className="px-2 py-3.5 text-right">
                       Actions
                     </th>
                   </tr>
@@ -671,22 +673,24 @@ const Suppliers = () => {
                         key={supplier.id}
                         className="hover:bg-stone-50/70 transition-colors"
                       >
-                        {/* Supplier Name & ID */}
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-slate-900 text-sm sm:text-base leading-snug">
-                              {supplier.name}
-                            </span>
-                            <span className="text-xs font-mono text-slate-500 mt-0.5">
-                              {formattedId}
-                            </span>
-                          </div>
+                        {/* Supplier ID */}
+                        <td className="py-2 px-4">
+                          <span className=" text-sm text-slate-600 tracking-wider">
+                            {formattedId}
+                          </span>
+                        </td>
+
+                        {/* Supplier Name */}
+                        <td className="py-2 px-4">
+                          <span className="font-semibold text-slate-900 leading-snug">
+                            {supplier.name}
+                          </span>
                         </td>
 
                         {/* Contact Number */}
-                        <td className="px-6 py-4">
+                        <td className="py-2 px-4">
                           {supplier.contactno ? (
-                            <span className="font-mono text-sm text-slate-700 select-all">
+                            <span className=" text-sm text-slate-700 select-all">
                               {supplier.contactno}
                             </span>
                           ) : (
@@ -695,7 +699,7 @@ const Suppliers = () => {
                         </td>
 
                         {/* Address */}
-                        <td className="px-6 py-4">
+                        <td className="py-2 px-4">
                           {supplier.address ? (
                             <p className="text-sm text-slate-600 break-words max-w-sm sm:max-w-md leading-relaxed">
                               {supplier.address}
@@ -706,7 +710,7 @@ const Suppliers = () => {
                         </td>
 
                         {/* Actions */}
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <td className="py-2 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
@@ -736,7 +740,7 @@ const Suppliers = () => {
                   {filteredSuppliers.length === 0 && suppliers.length > 0 && (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="px-6 py-12 text-center text-slate-500"
                       >
                         <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -767,7 +771,7 @@ const Suppliers = () => {
                   {suppliers.length === 0 && (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="px-6 py-14 text-center text-slate-500"
                       >
                         <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -830,7 +834,7 @@ const Suppliers = () => {
                   {editingSupplier ? (
                     <>
                       Update details for{" "}
-                      <span className="font-mono text-slate-700 font-semibold">
+                      <span className=" text-slate-700 font-semibold">
                         SUP-{String(editingSupplier.id).padStart(3, "0")}
                       </span>
                     </>
@@ -920,11 +924,10 @@ const Suppliers = () => {
                   aria-describedby={
                     fieldErrors.name ? "supplier-name-error" : undefined
                   }
-                  className={`w-full h-11 px-3.5 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
-                    fieldErrors.name
+                  className={`w-full h-11 px-3.5 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 ${fieldErrors.name
                       ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
                       : "border-stone-300 focus:border-teal-700 focus:ring-teal-700/20"
-                  }`}
+                    }`}
                 />
                 {fieldErrors.name && (
                   <p
@@ -965,11 +968,10 @@ const Suppliers = () => {
                   aria-describedby={
                     fieldErrors.contactno ? "supplier-contactno-error" : undefined
                   }
-                  className={`w-full h-11 px-3.5 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
-                    fieldErrors.contactno
+                  className={`w-full h-11 px-3.5 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 ${fieldErrors.contactno
                       ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
                       : "border-stone-300 focus:border-teal-700 focus:ring-teal-700/20"
-                  }`}
+                    }`}
                 />
                 {fieldErrors.contactno && (
                   <p
@@ -1016,11 +1018,10 @@ const Suppliers = () => {
                   aria-describedby={
                     fieldErrors.address ? "supplier-address-error" : undefined
                   }
-                  className={`w-full p-3 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 min-h-[90px] resize-y ${
-                    fieldErrors.address
+                  className={`w-full p-3 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 min-h-[90px] resize-y ${fieldErrors.address
                       ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
                       : "border-stone-300 focus:border-teal-700 focus:ring-teal-700/20"
-                  }`}
+                    }`}
                 />
                 {fieldErrors.address && (
                   <p

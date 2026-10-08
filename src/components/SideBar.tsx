@@ -250,10 +250,12 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 >
                   <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-300 space-y-1 py-0.5">
                     {resourcesSubItems.map((subItem) => {
+                      const searchParams = new URLSearchParams(location.search);
+                      const currentTab = searchParams.get("tab") || location.state?.activeTab;
                       const isCurrentActive =
                         isResourcesActive &&
-                        (location.state?.activeTab === subItem.id ||
-                          (!location.state?.activeTab && subItem.id === "routes"));
+                        (currentTab === subItem.id ||
+                          (!currentTab && subItem.id === "routes"));
 
                       return (
                         <NavLink
@@ -326,10 +328,12 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 >
                   <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-300 space-y-1 py-0.5">
                     {invoicesSubItems.map((subItem) => {
+                      const searchParams = new URLSearchParams(location.search);
+                      const currentTab = searchParams.get("tab") || location.state?.activeTab;
                       const isCurrentActive =
                         isInvoicesActive &&
-                        (location.state?.activeTab === subItem.id ||
-                          (!location.state?.activeTab && subItem.id === "supply"));
+                        (currentTab === subItem.id ||
+                          (!currentTab && subItem.id === "supply"));
 
                       return (
                         <NavLink

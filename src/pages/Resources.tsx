@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Edit2,
   Trash2,
@@ -66,14 +66,20 @@ type TabType = "routes" | "trucks" | "employees" | "sales-reps";
 const Resources: React.FC = () => {
   // State management for tabs
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("routes");
 
   useEffect(() => {
-    if (location.state && location.state.activeTab) {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    
+    if (tabParam) {
+      setActiveTab(tabParam as TabType);
+    } else if (location.state && location.state.activeTab) {
       setActiveTab(location.state.activeTab);
-      window.history.replaceState({}, document.title);
+      navigate(`?tab=${location.state.activeTab}`, { replace: true });
     }
-  }, [location]);
+  }, [location, navigate]);
 
   // Data States
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -564,7 +570,10 @@ const Resources: React.FC = () => {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                navigate(`?tab=${tab.id}`, { replace: true });
+              }}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? "bg-teal-800 text-white shadow-xs"
@@ -574,7 +583,7 @@ const Resources: React.FC = () => {
               <Icon size={16} className={isActive ? "text-teal-200" : "text-slate-500"} />
               <span>{tab.label}</span>
               <span
-                className={`text-xs px-2 py-0.5 rounded-full font-mono font-medium ${
+                className={`text-xs px-2 py-0.5 rounded-full  font-medium ${
                   isActive
                     ? "bg-teal-900/60 text-teal-100"
                     : "bg-stone-100 text-slate-600"
@@ -719,7 +728,7 @@ const Resources: React.FC = () => {
                         className="hover:bg-teal-50/20 transition-colors group"
                       >
                         <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-900">
-                          <span className="font-mono text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
+                          <span className=" text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
                             {r.route_code}
                           </span>
                         </td>
@@ -789,7 +798,7 @@ const Resources: React.FC = () => {
                         className="hover:bg-teal-50/20 transition-colors group"
                       >
                         <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-900">
-                          <span className="font-mono text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
+                          <span className=" text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
                             {t.licence_plate_no}
                           </span>
                         </td>
@@ -865,7 +874,7 @@ const Resources: React.FC = () => {
                           {e.name}
                         </td>
                         <td className="py-3.5 px-4 sm:px-6 font-medium">
-                          <span className="font-mono text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
+                          <span className=" text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
                             {e.nic}
                           </span>
                         </td>
@@ -938,7 +947,7 @@ const Resources: React.FC = () => {
                       >
                         <td className="py-3.5 px-4 sm:px-6">
                           <div className="flex items-center gap-2.5">
-                            <span className="font-mono text-xs font-medium px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200/80 shrink-0">
+                            <span className=" text-xs font-medium px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200/80 shrink-0">
                               {s.rep_id}
                             </span>
                             <span className="font-semibold text-slate-900">{s.name}</span>
@@ -949,7 +958,7 @@ const Resources: React.FC = () => {
                         </td>
                         <td className="py-3.5 px-4 sm:px-6">
                           {s.route?.route_code ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-50 text-teal-800 border border-teal-200 font-mono">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-50 text-teal-800 border border-teal-200 ">
                               {s.route.route_code}
                             </span>
                           ) : (
@@ -1147,7 +1156,7 @@ const Resources: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, nic: e.target.value })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium font-mono"
+                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium "
                       />
                     </div>
                     <div>
@@ -1188,7 +1197,7 @@ const Resources: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, rep_id: e.target.value })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium font-mono"
+                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium "
                       />
                     </div>
                     <div>
@@ -1245,7 +1254,7 @@ const Resources: React.FC = () => {
                             route_id: e.target.value,
                           })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900 font-mono"
+                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900 "
                       >
                         <option value="">Select Route</option>
                         {routes.map((r) => (

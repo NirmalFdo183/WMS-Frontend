@@ -535,7 +535,7 @@ const Loading: React.FC = () => {
                         type="text"
                         required
                         placeholder="e.g. LOAD-2024-001"
-                        className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-stone-300 text-xs font-bold text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
+                        className="w-full h-9 pl-9 pr-3 rounded-lg bg-white border border-stone-300 text-xs font-bold text-slate-900  focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 transition-colors"
                         value={loadingData.load_number}
                         onChange={(e) =>
                           setLoadingData({
@@ -768,7 +768,7 @@ const Loading: React.FC = () => {
                   <p className="text-xs font-bold text-slate-900 truncate">
                     {loadingData.load_number}
                   </p>
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[11px] text-slate-500 ">
                     {selectedTruckObj?.licence_plate_no || "No Truck"} | {selectedRouteObj?.route_code || "No Route"}
                   </p>
                 </div>
@@ -810,7 +810,7 @@ const Loading: React.FC = () => {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Total Manifest Net Value
                 </p>
-                <p className="text-sm font-bold text-slate-900 font-mono">
+                <p className="text-sm font-bold text-slate-900 ">
                   {formatCurrency(totalManifestNetValue)}
                 </p>
                 <p className="text-[11px] text-emerald-700 font-medium">
@@ -860,7 +860,7 @@ const Loading: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-[11px] text-slate-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 w-28 text-center shrink-0">
+                        <span className=" text-[11px] text-slate-500 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 w-28 text-center shrink-0">
                           {batch.product?.barcode || batch.product?.material_code}
                         </span>
                         <div>
@@ -877,7 +877,7 @@ const Loading: React.FC = () => {
                         <span className="text-[11px] font-semibold text-slate-700 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
                           Avail: {batch.remain_qty} units
                         </span>
-                        <span className="text-[11px] font-mono text-teal-800 font-semibold">
+                        <span className="text-[11px]  text-teal-800 font-semibold">
                           Net: {formatCurrency(Number(batch.netprice || 0))}
                         </span>
                       </div>
@@ -916,21 +916,21 @@ const Loading: React.FC = () => {
                           key={item.id}
                           className="hover:bg-stone-50/70 transition-colors"
                         >
-                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono text-[11px]">
+                          <td className="px-4 py-2.5 text-center text-slate-400  text-[11px]">
                             {idx + 1}
                           </td>
                           <td className="px-4 py-2.5">
                             <p className="font-semibold text-slate-900">
                               {item.batch_stock?.product?.name}
                             </p>
-                            <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                            <p className="text-[11px] text-slate-400  mt-0.5">
                               {item.batch_stock?.product?.barcode ||
                                 item.batch_stock?.product?.material_code}
                               <span className="mx-1.5 text-stone-300">|</span>
                               Exp: {item.batch_stock?.expiry_date || "N/A"}
                             </p>
                           </td>
-                          <td className="px-4 py-2.5 text-center font-mono text-[11px] text-slate-600">
+                          <td className="px-4 py-2.5 text-center  text-[11px] text-slate-600">
                             {cases} × {packSize}
                             {loose > 0 && (
                               <span className="text-teal-700 font-semibold ml-1">
@@ -950,15 +950,15 @@ const Loading: React.FC = () => {
                           <td className="px-4 py-2.5 text-center font-bold text-slate-900">
                             {item.qty}
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono text-slate-800">
+                          <td className="px-4 py-2.5 text-right  text-slate-800">
                             {formatCurrency(Number(item.net_price || 0))}
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono text-slate-500">
+                          <td className="px-4 py-2.5 text-right  text-slate-500">
                             {formatCurrency(
                               Number(item.batch_stock?.retail_price || 0)
                             )}
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                          <td className="px-4 py-2.5 text-right  font-bold text-slate-900">
                             {formatCurrency(
                               paidQty * Number(item.net_price || 0)
                             )}
@@ -1021,7 +1021,7 @@ const Loading: React.FC = () => {
                 <h3 className="text-xs font-bold text-slate-900 truncate">
                   {activeProduct.name}
                 </h3>
-                <p className="text-[11px] text-slate-500 font-mono">
+                <p className="text-[11px] text-slate-500 ">
                   Code: {activeProduct.barcode || activeProduct.material_code}
                 </p>
               </div>
@@ -1125,14 +1125,14 @@ const Loading: React.FC = () => {
               >
                 <div className="flex items-center justify-between font-medium mb-1">
                   <span>Total Requested:</span>
-                  <span className="font-bold font-mono">
+                  <span className="font-bold ">
                     {currentTotalRequested} units
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
                   <span>Warehouse Stock Remaining:</span>
                   <span
-                    className={`font-mono font-semibold ${
+                    className={` font-semibold ${
                       isStockInsufficient ? "text-rose-700" : "text-slate-700"
                     }`}
                   >
@@ -1141,7 +1141,7 @@ const Loading: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between pt-1 border-t border-stone-200">
                   <span className="font-semibold">Calculated Value:</span>
-                  <span className="font-bold font-mono text-teal-900">
+                  <span className="font-bold  text-teal-900">
                     {formatCurrency(currentLineValue)}
                   </span>
                 </div>
