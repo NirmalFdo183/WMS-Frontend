@@ -138,7 +138,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
         <button
           type="button"
           onClick={onClose}
-          className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-stone-100 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+          className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-stone-100 rounded-md transition-colors focus:outline-none "
           aria-label="Close sidebar"
         >
           <svg
@@ -170,7 +170,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 }
               }}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                `flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none  ${
                   isActive
                     ? "bg-teal-50 text-teal-950 border-l-4 border-teal-800 font-bold pl-2.5 shadow-xs"
                     : "text-slate-800 hover:text-slate-950 hover:bg-stone-100 border-l-4 border-transparent"
@@ -206,7 +206,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 <button
                   type="button"
                   onClick={() => setIsResourcesOpen((prev) => !prev)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 border-l-4 border-transparent ${
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none  border-l-4 border-transparent ${
                     isResourcesActive
                       ? "text-slate-950 font-bold bg-stone-100"
                       : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
@@ -267,7 +267,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                               onClose();
                             }
                           }}
-                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none  ${
                             isCurrentActive
                               ? "bg-teal-50 text-teal-950 font-bold border border-teal-300 shadow-2xs"
                               : "text-slate-700 hover:text-slate-950 hover:bg-stone-100 font-semibold border border-transparent"
@@ -284,7 +284,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 <button
                   type="button"
                   onClick={() => setIsInvoicesOpen((prev) => !prev)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 border-l-4 border-transparent ${
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none  border-l-4 border-transparent ${
                     isInvoicesActive
                       ? "text-slate-950 font-bold bg-stone-100"
                       : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
@@ -345,7 +345,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                               onClose();
                             }
                           }}
-                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                          className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none  ${
                             isCurrentActive
                               ? "bg-teal-50 text-teal-950 font-bold border border-teal-300 shadow-2xs"
                               : "text-slate-700 hover:text-slate-950 hover:bg-stone-100 font-semibold border border-transparent"
@@ -370,7 +370,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
             <button
               type="button"
               onClick={handleSettingsToggle}
-              className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 border-l-4 border-transparent ${
+              className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none  border-l-4 border-transparent ${
                 isSettingsActive
                   ? "text-slate-950 font-bold bg-stone-100"
                   : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
@@ -427,7 +427,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                         isActive ||
                         (subItem.path === "/settings/cashier-audits" &&
                           location.pathname === "/settings");
-                      return `flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                      return `flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-all group focus:outline-none  ${
                         isCurrentActive
                           ? "bg-teal-50 text-teal-950 font-bold border border-teal-300 shadow-2xs"
                           : "text-slate-700 hover:text-slate-950 hover:bg-stone-100 font-semibold border border-transparent"

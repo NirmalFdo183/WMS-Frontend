@@ -215,12 +215,13 @@ const Resources: React.FC = () => {
     setLoading(true);
     setFetchError(null);
     try {
-      if (activeTab === "routes") await fetchRoutes();
-      else if (activeTab === "trucks") await fetchTrucks();
-      else if (activeTab === "employees") await fetchEmployees();
-      else if (activeTab === "sales-reps") {
-        await Promise.all([fetchSalesReps(), fetchSuppliers(), fetchRoutes()]);
-      }
+      await Promise.all([
+        fetchRoutes(),
+        fetchTrucks(),
+        fetchEmployees(),
+        fetchSalesReps(),
+        fetchSuppliers(),
+      ]);
     } catch (err: any) {
       console.error(`Error loading ${activeTab} data:`, err);
       setFetchError(
