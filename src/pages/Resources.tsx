@@ -215,12 +215,13 @@ const Resources: React.FC = () => {
     setLoading(true);
     setFetchError(null);
     try {
-      if (activeTab === "routes") await fetchRoutes();
-      else if (activeTab === "trucks") await fetchTrucks();
-      else if (activeTab === "employees") await fetchEmployees();
-      else if (activeTab === "sales-reps") {
-        await Promise.all([fetchSalesReps(), fetchSuppliers(), fetchRoutes()]);
-      }
+      await Promise.all([
+        fetchRoutes(),
+        fetchTrucks(),
+        fetchEmployees(),
+        fetchSalesReps(),
+        fetchSuppliers(),
+      ]);
     } catch (err: any) {
       console.error(`Error loading ${activeTab} data:`, err);
       setFetchError(
@@ -488,7 +489,7 @@ const Resources: React.FC = () => {
                 : "bg-emerald-50 border-emerald-200 text-emerald-900"
           }`}
         >
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {toast.type === "error" ? (
               <AlertCircle size={18} className="shrink-0 text-red-600" />
             ) : (
@@ -509,7 +510,7 @@ const Resources: React.FC = () => {
 
       {/* 1. Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <FolderTree className="text-teal-800" size={30} />
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
             Resource Management
@@ -521,7 +522,7 @@ const Resources: React.FC = () => {
             type="button"
             onClick={handleRefresh}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white border border-stone-200 hover:bg-stone-50 active:bg-stone-100 text-slate-700 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/30 disabled:opacity-60 shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-2 px-3 py-2.5 bg-white border border-stone-200 hover:bg-stone-50 active:bg-stone-100 text-slate-700 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/30 disabled:opacity-60 shadow-xs cursor-pointer"
           >
             <RefreshCw
               size={16}
@@ -551,7 +552,7 @@ const Resources: React.FC = () => {
       </div>
 
       {/* 2. Navigation Tabs */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-white border border-stone-200 rounded-xl shadow-xs overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-1 p-1 bg-white border border-stone-200 rounded-xl shadow-xs overflow-x-auto no-scrollbar">
         {[
           { id: "routes" as TabType, label: "Routes", icon: MapPin },
           { id: "trucks" as TabType, label: "Trucks", icon: TruckIcon },
@@ -599,7 +600,7 @@ const Resources: React.FC = () => {
       {/* 3. Search & Metrics Toolbar */}
       <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-lg">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <Search size={16} />
           </div>
           <input
@@ -615,7 +616,7 @@ const Resources: React.FC = () => {
                     ? "employees by name, NIC, or phone..."
                     : "sales reps by name, ID, route, or supplier..."
             }`}
-            className="w-full pl-9 pr-9 py-2 text-sm bg-stone-50/70 border border-stone-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 transition-all"
+            className="w-full pl-9 pr-9 py-2.5 text-sm bg-stone-50/70 border border-stone-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-teal-700 focus:bg-white focus:ring-2 focus:ring-teal-700/20 transition-all"
           />
           {searchQuery && (
             <button
@@ -667,7 +668,7 @@ const Resources: React.FC = () => {
           <button
             type="button"
             onClick={handleRefresh}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-slate-800 text-sm font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50 shadow-xs cursor-pointer"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-slate-800 text-sm font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50 shadow-xs cursor-pointer"
           >
             <RefreshCw size={15} />
             <span>Retry Connection</span>
@@ -696,15 +697,15 @@ const Resources: React.FC = () => {
           {/* TAB 1: ROUTES TABLE */}
           {activeTab === "routes" && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[650px]">
+              <table className="w-full text-left border-collapse min-w-[650px] text-xs">
                 <thead>
-                  <tr className="bg-stone-50/80 border-b border-stone-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6">Route Code</th>
-                    <th className="py-3.5 px-4 sm:px-6">Description & Coverage Area</th>
-                    <th className="py-3.5 px-4 sm:px-6 text-right w-28">Actions</th>
+                  <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                    <th className="px-4 py-2.5 sm:">Route Code</th>
+                    <th className="px-4 py-2.5 sm:">Description & Coverage Area</th>
+                    <th className="px-4 py-2.5 sm: text-right w-28">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100 text-sm">
+                <tbody className="divide-y divide-stone-100">
                   {filteredRoutes.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="py-12 px-6 text-center">
@@ -713,7 +714,7 @@ const Resources: React.FC = () => {
                           <p className="font-semibold text-slate-700 text-sm">
                             No distribution routes found
                           </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-slate-400 mt-0">
                             {searchQuery
                               ? "Try adjusting your search query."
                               : "Click '+ Add Route' above to register your first route."}
@@ -727,21 +728,21 @@ const Resources: React.FC = () => {
                         key={r.id}
                         className="hover:bg-teal-50/20 transition-colors group"
                       >
-                        <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-900">
-                          <span className=" text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
+                        <td className="px-4 py-2.5 sm: font-medium text-slate-900">
+                          <span className="text-xs font-semibold text-slate-700 tracking-wider">
                             {r.route_code}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-slate-700 font-medium">
+                        <td className="px-4 py-2.5 sm: text-slate-700 font-medium">
                           {r.route_description}
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-2.5 sm: text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               type="button"
                               onClick={() => openModal(r)}
                               title="Edit Route"
-                              className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
                             >
                               <Edit2 size={16} />
                             </button>
@@ -749,7 +750,7 @@ const Resources: React.FC = () => {
                               type="button"
                               onClick={() => handleOpenDelete(r)}
                               title="Delete Route"
-                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -766,15 +767,15 @@ const Resources: React.FC = () => {
           {/* TAB 2: TRUCKS TABLE */}
           {activeTab === "trucks" && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[650px]">
+              <table className="w-full text-left border-collapse min-w-[650px] text-xs">
                 <thead>
-                  <tr className="bg-stone-50/80 border-b border-stone-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6">License Plate No</th>
-                    <th className="py-3.5 px-4 sm:px-6">Vehicle Specification</th>
-                    <th className="py-3.5 px-4 sm:px-6 text-right w-28">Actions</th>
+                  <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                    <th className="px-4 py-2.5 sm:">License Plate No</th>
+                    <th className="px-4 py-2.5 sm:">Vehicle Specification</th>
+                    <th className="px-4 py-2.5 sm: text-right w-28">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100 text-sm">
+                <tbody className="divide-y divide-stone-100">
                   {filteredTrucks.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="py-12 px-6 text-center">
@@ -783,7 +784,7 @@ const Resources: React.FC = () => {
                           <p className="font-semibold text-slate-700 text-sm">
                             No vehicles found
                           </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-slate-400 mt-0">
                             {searchQuery
                               ? "Try adjusting your search query."
                               : "Click '+ Add Truck' above to register a new transport truck."}
@@ -797,23 +798,23 @@ const Resources: React.FC = () => {
                         key={t.id}
                         className="hover:bg-teal-50/20 transition-colors group"
                       >
-                        <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-900">
-                          <span className=" text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
+                        <td className="px-4 py-2.5 sm: font-medium text-slate-900">
+                          <span className="text-xs font-semibold text-slate-700 tracking-wider">
                             {t.licence_plate_no}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-slate-700 font-medium">
+                        <td className="px-4 py-2.5 sm: text-slate-700 font-medium">
                           {t.description || (
                             <span className="text-slate-400 italic">No description provided</span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-2.5 sm: text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               type="button"
                               onClick={() => openModal(t)}
                               title="Edit Vehicle"
-                              className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
                             >
                               <Edit2 size={16} />
                             </button>
@@ -821,7 +822,7 @@ const Resources: React.FC = () => {
                               type="button"
                               onClick={() => handleOpenDelete(t)}
                               title="Delete Vehicle"
-                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -838,25 +839,26 @@ const Resources: React.FC = () => {
           {/* TAB 3: EMPLOYEES TABLE */}
           {activeTab === "employees" && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[700px]">
+              <table className="w-full text-left border-collapse min-w-[700px] text-xs">
                 <thead>
-                  <tr className="bg-stone-50/80 border-b border-stone-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6">Full Name</th>
-                    <th className="py-3.5 px-4 sm:px-6">NIC / Identification</th>
-                    <th className="py-3.5 px-4 sm:px-6">Mobile Contact</th>
-                    <th className="py-3.5 px-4 sm:px-6 text-right w-28">Actions</th>
+                  <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                    <th className="px-4 py-2.5 sm: w-28">Emp ID</th>
+                    <th className="px-4 py-2.5 sm:">Full Name</th>
+                    <th className="px-4 py-2.5 sm:">NIC / Identification</th>
+                    <th className="px-4 py-2.5 sm:">Mobile Contact</th>
+                    <th className="px-4 py-2.5 sm: text-right w-28">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100 text-sm">
+                <tbody className="divide-y divide-stone-100">
                   {filteredEmployees.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-12 px-6 text-center">
+                      <td colSpan={5} className="py-12 px-6 text-center">
                         <div className="flex flex-col items-center justify-center text-slate-400">
                           <Users size={36} className="text-slate-300 mb-2" />
                           <p className="font-semibold text-slate-700 text-sm">
                             No employees found
                           </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-slate-400 mt-0">
                             {searchQuery
                               ? "Try adjusting your search query."
                               : "Click '+ Add Employee' above to register staff members."}
@@ -870,24 +872,29 @@ const Resources: React.FC = () => {
                         key={e.id}
                         className="hover:bg-teal-50/20 transition-colors group"
                       >
-                        <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
+                        <td className="px-4 py-2.5 sm:">
+                          <span className="text-xs font-semibold text-slate-700 tracking-wider">
+                            EMP-{e.id.toString().padStart(3, "0")}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 sm: font-semibold text-slate-900">
                           {e.name}
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 font-medium">
-                          <span className=" text-xs font-medium px-2.5 py-1 rounded-md bg-stone-100 text-slate-700 border border-stone-200/80">
+                        <td className="px-4 py-2.5 sm: font-medium">
+                          <span className="text-xs font-semibold text-slate-700 tracking-wider">
                             {e.nic}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-slate-700 font-medium">
+                        <td className="px-4 py-2.5 sm: text-slate-700 font-medium">
                           {e.phoneno || <span className="text-slate-400 italic">None</span>}
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-2.5 sm: text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               type="button"
                               onClick={() => openModal(e)}
                               title="Edit Employee"
-                              className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
                             >
                               <Edit2 size={16} />
                             </button>
@@ -895,7 +902,7 @@ const Resources: React.FC = () => {
                               type="button"
                               onClick={() => handleOpenDelete(e)}
                               title="Delete Employee"
-                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -912,26 +919,27 @@ const Resources: React.FC = () => {
           {/* TAB 4: SALES REPS TABLE */}
           {activeTab === "sales-reps" && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[850px]">
+              <table className="w-full text-left border-collapse min-w-[850px] text-xs">
                 <thead>
-                  <tr className="bg-stone-50/80 border-b border-stone-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6">Representative</th>
-                    <th className="py-3.5 px-4 sm:px-6">Supplier Entity</th>
-                    <th className="py-3.5 px-4 sm:px-6">Route Allocation</th>
-                    <th className="py-3.5 px-4 sm:px-6">Direct Contact</th>
-                    <th className="py-3.5 px-4 sm:px-6 text-right w-28">Actions</th>
+                  <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                    <th className="px-4 py-2.5 sm:">Rep ID</th>
+                    <th className="px-4 py-2.5 sm:">Rep Name</th>
+                    <th className="px-4 py-2.5 sm:">Supplier Entity</th>
+                    <th className="px-4 py-2.5 sm:">Route Allocation</th>
+                    <th className="px-4 py-2.5 sm:">Direct Contact</th>
+                    <th className="px-4 py-2.5 sm: text-right w-28">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100 text-sm">
+                <tbody className="divide-y divide-stone-100">
                   {filteredSalesReps.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 px-6 text-center">
+                      <td colSpan={6} className="py-12 px-6 text-center">
                         <div className="flex flex-col items-center justify-center text-slate-400">
                           <UserCheck size={36} className="text-slate-300 mb-2" />
                           <p className="font-semibold text-slate-700 text-sm">
                             No sales representatives found
                           </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-slate-400 mt-0">
                             {searchQuery
                               ? "Try adjusting your search query."
                               : "Click '+ Add Sales Rep' above to register a sales representative."}
@@ -945,36 +953,36 @@ const Resources: React.FC = () => {
                         key={s.id}
                         className="hover:bg-teal-50/20 transition-colors group"
                       >
-                        <td className="py-3.5 px-4 sm:px-6">
-                          <div className="flex items-center gap-2.5">
-                            <span className=" text-xs font-medium px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200/80 shrink-0">
-                              {s.rep_id}
-                            </span>
-                            <span className="font-semibold text-slate-900">{s.name}</span>
-                          </div>
+                        <td className="px-4 py-2.5 sm:">
+                          <span className="text-xs font-semibold text-slate-700 tracking-wider">
+                            {s.rep_id}
+                          </span>
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-slate-700 font-medium">
+                        <td className="px-4 py-2.5 sm: font-semibold text-slate-900">
+                          {s.name}
+                        </td>
+                        <td className="px-4 py-2.5 sm: text-slate-700 font-medium">
                           {s.supplier?.name || <span className="text-slate-400 italic">Unassigned</span>}
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6">
+                        <td className="px-4 py-2.5 sm:">
                           {s.route?.route_code ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-50 text-teal-800 border border-teal-200 ">
+                            <span className="text-xs font-semibold text-slate-700 tracking-wider">
                               {s.route.route_code}
                             </span>
                           ) : (
                             <span className="text-slate-400 italic text-xs">Unassigned</span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-slate-700 font-medium">
+                        <td className="px-4 py-2.5 sm: text-slate-700 font-medium">
                           {s.contact || <span className="text-slate-400 italic">None</span>}
                         </td>
-                        <td className="py-3.5 px-4 sm:px-6 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-2.5 sm: text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               type="button"
                               onClick={() => openModal(s)}
                               title="Edit Sales Rep"
-                              className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-teal-700 hover:bg-stone-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40 cursor-pointer"
                             >
                               <Edit2 size={16} />
                             </button>
@@ -982,7 +990,7 @@ const Resources: React.FC = () => {
                               type="button"
                               onClick={() => handleOpenDelete(s)}
                               title="Delete Sales Rep"
-                              className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/40 cursor-pointer"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -1008,7 +1016,7 @@ const Resources: React.FC = () => {
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
                   {editingId ? "Edit Resource" : "Create New Resource"}
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0">
                   {activeTab === "routes"
                     ? "Distribution Route Details"
                     : activeTab === "trucks"
@@ -1035,7 +1043,7 @@ const Resources: React.FC = () => {
                 role="alert"
                 className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-medium flex items-start gap-2"
               >
-                <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+                <AlertCircle size={15} className="shrink-0 mt-0 text-red-600" />
                 <span>{modalError}</span>
               </div>
             )}
@@ -1046,7 +1054,7 @@ const Resources: React.FC = () => {
               {activeTab === "routes" && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Route Code <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1060,11 +1068,11 @@ const Resources: React.FC = () => {
                           route_code: e.target.value,
                         })
                       }
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
+                      className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Description & Coverage Area <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -1078,7 +1086,7 @@ const Resources: React.FC = () => {
                           route_description: e.target.value,
                         })
                       }
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 resize-none font-medium"
+                      className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 resize-none font-medium"
                     />
                   </div>
                 </>
@@ -1088,7 +1096,7 @@ const Resources: React.FC = () => {
               {activeTab === "trucks" && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       License Plate Number <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1102,11 +1110,11 @@ const Resources: React.FC = () => {
                           licence_plate_no: e.target.value,
                         })
                       }
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
+                      className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Vehicle Specifications
                     </label>
                     <input
@@ -1119,7 +1127,7 @@ const Resources: React.FC = () => {
                           description: e.target.value,
                         })
                       }
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
+                      className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
                     />
                   </div>
                 </>
@@ -1129,7 +1137,7 @@ const Resources: React.FC = () => {
               {activeTab === "employees" && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Full Legal Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1140,12 +1148,12 @@ const Resources: React.FC = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
+                      className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         NIC / Identification <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1156,11 +1164,11 @@ const Resources: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, nic: e.target.value })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium "
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium "
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Mobile Phone <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1174,7 +1182,7 @@ const Resources: React.FC = () => {
                             phoneno: e.target.value,
                           })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
                       />
                     </div>
                   </div>
@@ -1186,7 +1194,7 @@ const Resources: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Rep ID / Code <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1197,11 +1205,11 @@ const Resources: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, rep_id: e.target.value })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium "
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium "
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Full Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1212,14 +1220,14 @@ const Resources: React.FC = () => {
                         onChange={(e) =>
                           setFormData({ ...formData, name: e.target.value })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Supplier Entity <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -1231,7 +1239,7 @@ const Resources: React.FC = () => {
                             supplier_id: e.target.value,
                           })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900"
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900"
                       >
                         <option value="">Select Supplier</option>
                         {suppliers.map((s) => (
@@ -1242,7 +1250,7 @@ const Resources: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Assigned Route <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -1254,7 +1262,7 @@ const Resources: React.FC = () => {
                             route_id: e.target.value,
                           })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900 "
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900 "
                       >
                         <option value="">Select Route</option>
                         {routes.map((r) => (
@@ -1268,7 +1276,7 @@ const Resources: React.FC = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Direct Phone Contact
                       </label>
                       <input
@@ -1281,11 +1289,11 @@ const Resources: React.FC = () => {
                             contact: e.target.value,
                           })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors placeholder:text-slate-400 font-medium"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Joined Date
                       </label>
                       <input
@@ -1297,7 +1305,7 @@ const Resources: React.FC = () => {
                             join_date: e.target.value,
                           })
                         }
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900"
+                        className="w-full px-3 py-2.5 text-sm bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 transition-colors font-medium text-slate-900"
                       />
                     </div>
                   </div>
@@ -1310,14 +1318,14 @@ const Resources: React.FC = () => {
                   type="button"
                   onClick={closeModal}
                   disabled={saving}
-                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
+                  className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center gap-2 px-5 py-2 bg-teal-800 hover:bg-teal-900 active:bg-teal-950 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 disabled:opacity-60 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 active:bg-teal-950 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 disabled:opacity-60 cursor-pointer"
                 >
                   {saving ? (
                     <>
@@ -1356,7 +1364,7 @@ const Resources: React.FC = () => {
                 role="alert"
                 className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-medium flex items-start gap-2"
               >
-                <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+                <AlertCircle size={15} className="shrink-0 mt-0 text-red-600" />
                 <span>{deleteError}</span>
               </div>
             )}
@@ -1366,7 +1374,7 @@ const Resources: React.FC = () => {
                 type="button"
                 onClick={closeDeleteModal}
                 disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
+                className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1374,7 +1382,7 @@ const Resources: React.FC = () => {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60 cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60 cursor-pointer"
               >
                 {deleting ? (
                   <>
