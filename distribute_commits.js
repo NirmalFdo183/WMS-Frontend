@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 // Configuration
 const START_DATE = new Date('2026-07-01T12:00:00');
