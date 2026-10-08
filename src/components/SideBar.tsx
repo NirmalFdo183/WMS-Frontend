@@ -206,7 +206,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 <button
                   type="button"
                   onClick={() => setIsResourcesOpen((prev) => !prev)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 border-l-4 border-transparent ${
                     isResourcesActive
                       ? "text-slate-950 font-bold bg-stone-100"
                       : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
@@ -282,7 +282,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 <button
                   type="button"
                   onClick={() => setIsInvoicesOpen((prev) => !prev)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 border-l-4 border-transparent ${
                     isInvoicesActive
                       ? "text-slate-950 font-bold bg-stone-100"
                       : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
@@ -366,7 +366,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
             <button
               type="button"
               onClick={handleSettingsToggle}
-              className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 ${
+              className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors group focus:outline-none focus:ring-2 focus:ring-teal-700/50 border-l-4 border-transparent ${
                 isSettingsActive
                   ? "text-slate-950 font-bold bg-stone-100"
                   : "text-slate-800 hover:text-slate-950 hover:bg-stone-100"
