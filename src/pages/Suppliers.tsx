@@ -502,7 +502,7 @@ const Suppliers = () => {
                 : "bg-emerald-50 border-emerald-200 text-emerald-900"
             }`}
         >
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {toast.type === "error" ? (
               <AlertCircle size={18} className="shrink-0 text-red-600" />
             ) : (
@@ -536,7 +536,7 @@ const Suppliers = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <Users className="text-teal-800" size={30} />
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               Suppliers
@@ -559,7 +559,7 @@ const Suppliers = () => {
           <div className="relative flex-1 max-w-md">
             <Search
               size={17}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
               aria-hidden="true"
             />
             <input
@@ -576,7 +576,7 @@ const Suppliers = () => {
                 onClick={() => setSearchQuery("")}
                 aria-label="Clear search"
                 title="Clear search"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors"
               >
                 <X size={15} />
               </button>
@@ -618,7 +618,7 @@ const Suppliers = () => {
             <button
               type="button"
               onClick={fetchSuppliers}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-slate-800 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-slate-800 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
             >
               <RefreshCw size={15} />
               <span>Retry</span>
@@ -645,50 +645,54 @@ const Suppliers = () => {
         {!loading && !fetchError && (
           <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-stone-50/80 border-b border-stone-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    <th scope="col" className="px-2 py-3.5">
+                  <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
+                    <th className="px-4 py-2.5 w-10 text-center">#</th>
+                    <th scope="col" className="px-4 py-2.5">
                       Supplier ID
                     </th>
-                    <th scope="col" className="px-2 py-3.5">
+                    <th scope="col" className="px-4 py-2.5">
                       Supplier
                     </th>
-                    <th scope="col" className="px-2 py-3.5">
+                    <th scope="col" className="px-4 py-2.5">
                       Contact number
                     </th>
-                    <th scope="col" className="px-2 py-3.5">
+                    <th scope="col" className="px-4 py-2.5">
                       Address
                     </th>
-                    <th scope="col" className="px-2 py-3.5 text-right">
+                    <th scope="col" className="px-4 py-2.5 text-right">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  {filteredSuppliers.map((supplier) => {
+                  {filteredSuppliers.map((supplier, index) => {
                     const formattedId = `SUP-${String(supplier.id).padStart(3, "0")}`;
                     return (
                       <tr
                         key={supplier.id}
                         className="hover:bg-stone-50/70 transition-colors"
                       >
+                        <td className="px-4 py-2.5 text-center text-slate-400 text-[11px]">
+                          {index + 1}
+                        </td>
                         {/* Supplier ID */}
-                        <td className="py-2 px-4">
-                          <span className=" text-sm text-slate-600 tracking-wider">
+                        <td className="px-4 py-2.5">
+                          <span className=" text-xs font-semibold text-slate-700 tracking-wider">
                             {formattedId}
                           </span>
                         </td>
 
                         {/* Supplier Name */}
-                        <td className="py-2 px-4">
+                        <td className="px-4 py-2.5">
                           <span className="font-semibold text-slate-900 leading-snug">
                             {supplier.name}
                           </span>
                         </td>
 
                         {/* Contact Number */}
-                        <td className="py-2 px-4">
+                        <td className="px-4 py-2.5">
                           {supplier.contactno ? (
                             <span className=" text-sm text-slate-700 select-all">
                               {supplier.contactno}
@@ -699,7 +703,7 @@ const Suppliers = () => {
                         </td>
 
                         {/* Address */}
-                        <td className="py-2 px-4">
+                        <td className="px-4 py-2.5">
                           {supplier.address ? (
                             <p className="text-sm text-slate-600 break-words max-w-sm sm:max-w-md leading-relaxed">
                               {supplier.address}
@@ -710,8 +714,8 @@ const Suppliers = () => {
                         </td>
 
                         {/* Actions */}
-                        <td className="py-2 px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               type="button"
                               onClick={(e) => handleOpenEdit(supplier, e)}
@@ -740,7 +744,7 @@ const Suppliers = () => {
                   {filteredSuppliers.length === 0 && suppliers.length > 0 && (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-6 py-12 text-center text-slate-500"
                       >
                         <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -758,7 +762,7 @@ const Suppliers = () => {
                           <button
                             type="button"
                             onClick={() => setSearchQuery("")}
-                            className="mt-3 px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
+                            className="mt-3 px-3 py-1 bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/50"
                           >
                             Clear search
                           </button>
@@ -771,7 +775,7 @@ const Suppliers = () => {
                   {suppliers.length === 0 && (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-6 py-14 text-center text-slate-500"
                       >
                         <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -787,7 +791,7 @@ const Suppliers = () => {
                           <button
                             type="button"
                             onClick={handleOpenAdd}
-                            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700"
+                            className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700"
                           >
                             <Plus size={16} />
                             <span>Add supplier</span>
@@ -830,7 +834,7 @@ const Suppliers = () => {
                 >
                   {editingSupplier ? "Edit supplier" : "Add supplier"}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                <p className="text-xs sm:text-sm text-slate-500 mt-0">
                   {editingSupplier ? (
                     <>
                       Update details for{" "}
@@ -847,7 +851,7 @@ const Suppliers = () => {
                 type="button"
                 onClick={handleRequestCloseModal}
                 aria-label="Close dialog"
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40"
               >
                 <X size={20} />
               </button>
@@ -860,7 +864,7 @@ const Suppliers = () => {
                 aria-live="polite"
                 className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs sm:text-sm flex items-start gap-2"
               >
-                <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-600" />
+                <AlertCircle size={16} className="shrink-0 mt-0 text-red-600" />
                 <span>{dialogGeneralError}</span>
               </div>
             )}
@@ -869,7 +873,7 @@ const Suppliers = () => {
             {showDiscardConfirm && (
               <div
                 role="alert"
-                className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2"
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle size={16} className="shrink-0 text-amber-600" />
@@ -881,14 +885,14 @@ const Suppliers = () => {
                   <button
                     type="button"
                     onClick={() => setShowDiscardConfirm(false)}
-                    className="px-2.5 py-1 bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 rounded text-xs font-medium transition-colors"
+                    className="px-2 py-1 bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 rounded text-xs font-medium transition-colors"
                   >
                     Keep editing
                   </button>
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="px-2.5 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-medium transition-colors"
+                    className="px-2 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-medium transition-colors"
                   >
                     Discard changes
                   </button>
@@ -902,7 +906,7 @@ const Suppliers = () => {
               <div>
                 <label
                   htmlFor="supplier-name"
-                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                  className="block text-sm font-medium text-slate-700 mb-1"
                 >
                   Supplier name <span className="text-red-500">*</span>
                 </label>
@@ -933,7 +937,7 @@ const Suppliers = () => {
                   <p
                     id="supplier-name-error"
                     role="alert"
-                    className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1"
+                    className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1"
                   >
                     <AlertCircle size={13} className="shrink-0" />
                     {fieldErrors.name}
@@ -945,7 +949,7 @@ const Suppliers = () => {
               <div>
                 <label
                   htmlFor="supplier-contactno"
-                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                  className="block text-sm font-medium text-slate-700 mb-1"
                 >
                   Contact number
                 </label>
@@ -977,7 +981,7 @@ const Suppliers = () => {
                   <p
                     id="supplier-contactno-error"
                     role="alert"
-                    className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1"
+                    className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1"
                   >
                     <AlertCircle size={13} className="shrink-0" />
                     {fieldErrors.contactno}
@@ -989,7 +993,7 @@ const Suppliers = () => {
               <div>
                 <label
                   htmlFor="supplier-address"
-                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                  className="block text-sm font-medium text-slate-700 mb-1"
                 >
                   Business address
                 </label>
@@ -1027,7 +1031,7 @@ const Suppliers = () => {
                   <p
                     id="supplier-address-error"
                     role="alert"
-                    className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1"
+                    className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1"
                   >
                     <AlertCircle size={13} className="shrink-0" />
                     {fieldErrors.address}
@@ -1085,7 +1089,7 @@ const Suppliers = () => {
             className="bg-white rounded-xl shadow-xl w-full max-w-[460px] border border-stone-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150"
           >
             <div className="p-6">
-              <div className="flex items-start gap-3.5">
+              <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shrink-0">
                   <AlertTriangle size={20} />
                 </div>
@@ -1115,7 +1119,7 @@ const Suppliers = () => {
                 >
                   <AlertCircle
                     size={16}
-                    className="shrink-0 mt-0.5 text-red-600"
+                    className="shrink-0 mt-0 text-red-600"
                   />
                   <span>{deleteError}</span>
                 </div>
