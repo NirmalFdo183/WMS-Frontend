@@ -1,31 +1,42 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   AlertCircle,
-  AlertTriangle,
-  ArrowRight,
-  Boxes,
   CalendarClock,
   CheckCircle2,
   ClipboardList,
   Clock3,
   LayoutDashboard,
-  Plus,
+  PackageMinus,
+  PieChart as PieChartIcon,
+  PackageCheck,
+  PackageX,
   RefreshCw,
-  RotateCcw,
-  ShoppingCart,
+  Timer,
   Truck,
-  Undo2,
-  WalletCards,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useAuth } from "../context/AuthContext";
 import { useWarehouse } from "../context/WarehouseContext";
 
-interface DashboardStats {
-  low_stock_count: number;
-}
+/* ------------------------------------------------------------------ */
+/* Types                                                               */
+/* ------------------------------------------------------------------ */
 
 interface Product {
   id: number;
@@ -39,7 +50,6 @@ interface Product {
 interface BatchStock {
   id: number;
   remain_qty: number;
-  returned_qty?: number;
   netprice: number;
   expiry_date?: string | null;
   product?: Pick<Product, "id" | "name" | "material_code">;
@@ -68,103 +78,66 @@ interface LoadingRecord {
   loading_items?: LoadingItem[];
 }
 
-interface SaleRecord {
-  id: number;
-  date_time: string;
-  total: number;
-}
+type Tone = "teal" | "sky" | "amber" | "emerald";
 
-interface ReturnRecord {
-  id: number;
-  qty?: number;
-  return_date?: string;
-  created_at?: string;
-}
+/* ------------------------------------------------------------------ */
+/* Settings                                                            */
+/* ------------------------------------------------------------------ */
 
-interface AttentionItem {
-  id: string;
-  level: "critical" | "warning";
-  title: string;
-  detail: string;
-  route: string;
-  actionLabel: string;
-  sortValue: number;
-}
+const LOW_STOCK_LIMIT = 50; // units
+const EXPIRY_WINDOW_DAYS = 90;
+const TREND_DAYS = 30;
+const LOADINGS_FETCH_LIMIT = 500;
+const RECENT_DISPATCH_COUNT = 8;
 
-interface MetricCardProps {
-  label: string;
-  value: string;
-  detail: string;
-  icon: LucideIcon;
-  tone: "teal" | "sky" | "amber" | "emerald";
-  onClick: () => void;
-}
+const STATUS_META: Record<LoadingRecord["status"], { label: string; color: string; badge: string }> = {
+  pending: {
+    label: "Pending",
+    color: "#d97706",
+    badge: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  delivered: {
+    label: "Delivered",
+    color: "#0f766e",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  not_delivered: {
+    label: "Not delivered",
+    color: "#dc2626",
+    badge: "bg-red-50 text-red-700 border-red-200",
+  },
+};
 
-const toneStyles = {
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
+const toneStyles: Record<Tone, string> = {
   teal: "bg-teal-50 border-teal-100 text-teal-800",
   sky: "bg-sky-50 border-sky-100 text-sky-700",
   amber: "bg-amber-50 border-amber-100 text-amber-700",
   emerald: "bg-emerald-50 border-emerald-100 text-emerald-700",
 };
 
-const MetricCard = ({ label, value, detail, icon: Icon, tone, onClick }: MetricCardProps) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="group w-full bg-white p-4 rounded-xl border border-stone-200 shadow-xs text-left transition-all hover:border-stone-300 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-700/20"
-  >
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-slate-500">{label}</p>
-        <p className="text-2xl md:text-3xl font-bold text-slate-900 tabular-nums mt-1 truncate">
-          {value}
-        </p>
-      </div>
-      <span className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${toneStyles[tone]}`}>
-        <Icon className="w-5 h-5" />
-      </span>
-    </div>
-    <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-stone-100">
-      <span className="text-xs text-slate-500 truncate">{detail}</span>
-      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-700 transition-colors shrink-0" />
-    </div>
-  </button>
-);
-
-const formatCurrency = (amount: number) =>
-  `LKR ${Number.isFinite(amount) ? amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }) : "0.00"}`;
-
-const formatCompactCurrency = (amount: number) => {
-  if (!Number.isFinite(amount)) return "LKR 0";
-  return `LKR ${new Intl.NumberFormat("en-US", {
-    notation: amount >= 100000 ? "compact" : "standard",
-    maximumFractionDigits: amount >= 100000 ? 1 : 0,
-  }).format(amount)}`;
-};
-
 const formatDate = (value?: string | null) => {
   if (!value) return "Not scheduled";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Not scheduled";
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return date.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-const isSameDay = (value: string | undefined, compareWith: Date) => {
-  if (!value) return false;
-  const date = new Date(value);
-  return (
-    !Number.isNaN(date.getTime()) &&
-    date.getFullYear() === compareWith.getFullYear() &&
-    date.getMonth() === compareWith.getMonth() &&
-    date.getDate() === compareWith.getDate()
-  );
+const dayKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+const productUnits = (product: Product) =>
+  product.total_units ?? (product.shelf_stock ?? 0) + (product.pending_stock ?? 0);
+
+const minutesAgo = (from: Date, now: Date) => {
+  const mins = Math.floor((now.getTime() - from.getTime()) / 60000);
+  if (mins <= 0) return "just now";
+  if (mins === 1) return "1 min ago";
+  if (mins < 60) return `${mins} min ago`;
+  return from.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
 const extractArray = <T,>(payload: unknown): T[] => {
@@ -176,6 +149,91 @@ const extractArray = <T,>(payload: unknown): T[] => {
   return [];
 };
 
+/* ------------------------------------------------------------------ */
+/* Small building blocks                                               */
+/* ------------------------------------------------------------------ */
+
+const MetricCard = ({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  tone: Tone;
+}) => (
+  <div className="w-full bg-white p-5 rounded-xl border border-stone-200 shadow-xs">
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-slate-500">{label}</p>
+        <p className="text-xl 2xl:text-2xl font-bold text-slate-900 tabular-nums mt-1.5 break-words">{value}</p>
+      </div>
+      <span className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${toneStyles[tone]}`}>
+        <Icon className="w-5 h-5" />
+      </span>
+    </div>
+  </div>
+);
+
+const Panel = ({
+  title,
+  subtitle,
+  icon: Icon,
+  aside,
+  children,
+  className = "",
+}: {
+  title: string;
+  subtitle?: string;
+  icon: LucideIcon;
+  aside?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) => (
+  <section className={`bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden flex flex-col ${className}`}>
+    <div className="px-5 py-4 border-b border-stone-200 flex items-start justify-between gap-3">
+      <div>
+        <div className="flex items-center gap-2">
+          <Icon className="w-5 h-5 text-teal-800" />
+          <h2 className="text-base font-bold text-slate-900">{title}</h2>
+        </div>
+        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+      </div>
+      {aside}
+    </div>
+    {children}
+  </section>
+);
+
+const CountBadge = ({ count, tone }: { count: number; tone: "amber" | "red" | "slate" }) => {
+  const styles = {
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+    slate: "bg-stone-50 text-slate-600 border-stone-200",
+  };
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-semibold tabular-nums ${styles[tone]}`}>
+      {count.toLocaleString()}
+    </span>
+  );
+};
+
+const EmptyState = ({ title, detail }: { title: string; detail: string }) => (
+  <div className="px-5 py-10 flex flex-col items-center text-center flex-1 justify-center">
+    <span className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+      <CheckCircle2 className="w-5 h-5" />
+    </span>
+    <p className="text-sm font-semibold text-slate-800">{title}</p>
+    <p className="text-xs text-slate-500 mt-1">{detail}</p>
+  </div>
+);
+
+/* ------------------------------------------------------------------ */
+/* Dashboard                                                           */
+/* ------------------------------------------------------------------ */
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -184,12 +242,10 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [fetchWarning, setFetchWarning] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [now, setNow] = useState(new Date());
   const [products, setProducts] = useState<Product[]>([]);
   const [batches, setBatches] = useState<BatchStock[]>([]);
   const [loadings, setLoadings] = useState<LoadingRecord[]>([]);
-  const [sales, setSales] = useState<SaleRecord[]>([]);
-  const [returns, setReturns] = useState<ReturnRecord[]>([]);
 
   const fetchData = useCallback(async (manual = false) => {
     if (manual) setRefreshing(true);
@@ -197,159 +253,121 @@ const Dashboard = () => {
     setFetchWarning(null);
 
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    const requests = [
-      axios.get(`${baseUrl}/dashboard/stats`),
+    const results = await Promise.allSettled([
       axios.get(`${baseUrl}/products`),
       axios.get(`${baseUrl}/batch-stocks`),
-      axios.get(`${baseUrl}/loadings?limit=100`),
-      axios.get(`${baseUrl}/sales?limit=100`),
-      axios.get(`${baseUrl}/returns`),
-    ];
+      axios.get(`${baseUrl}/loadings?limit=${LOADINGS_FETCH_LIMIT}`),
+    ]);
 
-    try {
-      const results = await Promise.allSettled(requests);
-      const failedSections: string[] = [];
-      const sectionNames = ["summary", "products", "stock", "dispatches", "sales", "returns"];
-      results.forEach((result, index) => {
-        if (result.status === "rejected") failedSections.push(sectionNames[index]);
-      });
+    const sectionNames = ["products", "stock", "dispatches"];
+    const failed = results
+      .map((result, index) => (result.status === "rejected" ? sectionNames[index] : null))
+      .filter((name): name is string => name !== null);
 
-      const [statsResult, productsResult, batchesResult, loadingsResult, salesResult, returnsResult] = results;
-      if (statsResult.status === "fulfilled") setStats(statsResult.value.data as DashboardStats);
-      if (productsResult.status === "fulfilled") setProducts(extractArray<Product>(productsResult.value.data));
-      if (batchesResult.status === "fulfilled") setBatches(extractArray<BatchStock>(batchesResult.value.data));
-      if (loadingsResult.status === "fulfilled") setLoadings(extractArray<LoadingRecord>(loadingsResult.value.data));
-      if (salesResult.status === "fulfilled") setSales(extractArray<SaleRecord>(salesResult.value.data));
-      if (returnsResult.status === "fulfilled") setReturns(extractArray<ReturnRecord>(returnsResult.value.data));
+    const [productsRes, batchesRes, loadingsRes] = results;
+    if (productsRes.status === "fulfilled") setProducts(extractArray<Product>(productsRes.value.data));
+    if (batchesRes.status === "fulfilled") setBatches(extractArray<BatchStock>(batchesRes.value.data));
+    if (loadingsRes.status === "fulfilled") setLoadings(extractArray<LoadingRecord>(loadingsRes.value.data));
 
-      if (failedSections.length > 0) {
-        setFetchWarning(`Some ${failedSections.join(", ")} data could not be refreshed.`);
-      }
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
-      setFetchWarning("The dashboard could not be refreshed. Showing the most recent available data.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+    if (failed.length > 0) setFetchWarning(`Some ${failed.join(", ")} data could not be loaded.`);
+    setLastUpdated(new Date());
+    setNow(new Date());
+    setLoading(false);
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  // Keep the "updated X min ago" label fresh
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const handleRefresh = async () => {
     await Promise.all([fetchData(true), refreshTotalValue()]);
   };
 
-  const dashboardData = useMemo(() => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 6);
+  const data = useMemo(() => {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const trendStart = new Date(todayStart);
+    trendStart.setDate(trendStart.getDate() - (TREND_DAYS - 1));
     const expiryLimit = new Date(todayStart);
-    expiryLimit.setDate(expiryLimit.getDate() + 90);
+    expiryLimit.setDate(expiryLimit.getDate() + EXPIRY_WINDOW_DAYS);
 
-    const stockUnits = batches.reduce((sum, batch) => sum + Math.max(Number(batch.remain_qty) || 0, 0), 0);
-    const stockValue = batches.reduce(
-      (sum, batch) => sum + Math.max(Number(batch.remain_qty) || 0, 0) * (Number(batch.netprice) || 0),
-      0,
-    );
-    const returnedUnits = batches.reduce((sum, batch) => sum + Math.max(Number(batch.returned_qty) || 0, 0), 0);
-    const activeProducts = products.filter((product) => (product.shelf_stock ?? product.total_units ?? 0) > 0).length;
+    const loadingDate = (record: LoadingRecord) => {
+      const date = new Date(record.loading_date || record.prepared_date || "");
+      if (Number.isNaN(date.getTime())) return null;
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+    const loadUnits = (record: LoadingRecord) =>
+      (record.loading_items ?? []).reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
 
-    const pendingLoadings = loadings.filter((record) => record.status === "pending");
-    const pendingUnits = pendingLoadings.reduce(
-      (sum, record) => sum + (record.loading_items ?? []).reduce((itemSum, item) => itemSum + (Number(item.qty) || 0), 0),
-      0,
-    );
-
-    const todaySales = sales.filter((sale) => isSameDay(sale.date_time, now));
-    const todaySalesValue = todaySales.reduce((sum, sale) => sum + (Number(sale.total) || 0), 0);
-    const weekSales = sales.filter((sale) => new Date(sale.date_time) >= weekStart);
-    const weekSalesValue = weekSales.reduce((sum, sale) => sum + (Number(sale.total) || 0), 0);
-    const weekDelivered = loadings.filter((record) => {
-      const date = record.loading_date ? new Date(record.loading_date) : null;
-      return record.status === "delivered" && date && !Number.isNaN(date.getTime()) && date >= weekStart;
+    // Cards
+    const pending = loadings.filter((record) => record.status === "pending");
+    const pendingUnits = pending.reduce((sum, record) => sum + loadUnits(record), 0);
+    const recent = loadings.filter((record) => {
+      const date = loadingDate(record);
+      return date !== null && date >= trendStart;
     });
-    const weekReturns = returns.filter((record) => {
-      const value = record.return_date || record.created_at;
-      const date = value ? new Date(value) : null;
-      return date && !Number.isNaN(date.getTime()) && date >= weekStart;
+    const deliveredRecent = recent.filter((record) => record.status === "delivered").length;
+    const failedRecent = recent.filter((record) => record.status === "not_delivered").length;
+    const closedRecent = deliveredRecent + failedRecent;
+    const successRate = closedRecent > 0 ? Math.round((deliveredRecent / closedRecent) * 100) : null;
+
+    // Deliveries per day (by loading date) for the trend chart
+    const trendMap = new Map<string, { delivered: number; not_delivered: number; pending: number }>();
+    for (const record of recent) {
+      const key = dayKey(loadingDate(record) as Date);
+      const bucket = trendMap.get(key) ?? { delivered: 0, not_delivered: 0, pending: 0 };
+      bucket[record.status] = (bucket[record.status] ?? 0) + 1;
+      trendMap.set(key, bucket);
+    }
+    const deliveryTrend = Array.from({ length: TREND_DAYS }, (_, index) => {
+      const date = new Date(trendStart);
+      date.setDate(date.getDate() + index);
+      const bucket = trendMap.get(dayKey(date)) ?? { delivered: 0, not_delivered: 0, pending: 0 };
+      return { label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }), ...bucket };
     });
-    const weekReturnUnits = weekReturns.reduce((sum, record) => sum + (Number(record.qty) || 0), 0);
 
-    const outOfStockProducts = products
-      .filter((product) => (product.total_units ?? ((product.shelf_stock ?? 0) + (product.pending_stock ?? 0))) <= 0)
-      .sort((a, b) => a.name.localeCompare(b.name));
-    const lowStockProducts = products
-      .filter((product) => {
-        const units = product.total_units ?? ((product.shelf_stock ?? 0) + (product.pending_stock ?? 0));
-        return units > 0 && units <= 50;
+    // Pending loadings, oldest first, with how long they have been waiting
+    const waiting = pending
+      .map((record) => {
+        const date = loadingDate(record);
+        const daysWaiting = date ? Math.round((todayStart.getTime() - date.getTime()) / 86400000) : null;
+        return { record, units: loadUnits(record), daysWaiting };
       })
-      .sort((a, b) => {
-        const aUnits = a.total_units ?? ((a.shelf_stock ?? 0) + (a.pending_stock ?? 0));
-        const bUnits = b.total_units ?? ((b.shelf_stock ?? 0) + (b.pending_stock ?? 0));
-        return aUnits - bUnits;
-      });
+      .sort((a, b) => (b.daysWaiting ?? -1) - (a.daysWaiting ?? -1));
 
-    const expiredBatches = batches
-      .filter((batch) => {
-        if (!batch.expiry_date || batch.remain_qty <= 0) return false;
-        const expiry = new Date(batch.expiry_date);
-        return !Number.isNaN(expiry.getTime()) && expiry < todayStart;
-      })
-      .sort((a, b) => new Date(a.expiry_date!).getTime() - new Date(b.expiry_date!).getTime());
-    const expiringBatches = batches
-      .filter((batch) => {
-        if (!batch.expiry_date || batch.remain_qty <= 0) return false;
-        const expiry = new Date(batch.expiry_date);
-        return !Number.isNaN(expiry.getTime()) && expiry >= todayStart && expiry <= expiryLimit;
-      })
-      .sort((a, b) => new Date(a.expiry_date!).getTime() - new Date(b.expiry_date!).getTime());
+    // Dispatch status split
+    const statusCounts = (Object.keys(STATUS_META) as LoadingRecord["status"][]).map((status) => ({
+      status,
+      name: STATUS_META[status].label,
+      value: loadings.filter((record) => record.status === status).length,
+      color: STATUS_META[status].color,
+    }));
 
-    const attentionItems: AttentionItem[] = [
-      ...expiredBatches.map((batch) => ({
-        id: `expired-${batch.id}`,
-        level: "critical" as const,
-        title: `${batch.product?.name ?? "Stock batch"} has expired`,
-        detail: `${batch.remain_qty.toLocaleString()} units · expired ${formatDate(batch.expiry_date)}`,
-        route: "/products",
-        actionLabel: "Review stock",
-        sortValue: 0,
-      })),
-      ...outOfStockProducts.map((product) => ({
-        id: `empty-${product.id}`,
-        level: "critical" as const,
-        title: `${product.name} is out of stock`,
-        detail: `${product.material_code} · no available or allocated units`,
-        route: "/products",
-        actionLabel: "View product",
-        sortValue: 1,
-      })),
-      ...expiringBatches.map((batch) => ({
-        id: `expiring-${batch.id}`,
-        level: "warning" as const,
-        title: `${batch.product?.name ?? "Stock batch"} expires soon`,
-        detail: `${batch.remain_qty.toLocaleString()} units · expires ${formatDate(batch.expiry_date)}`,
-        route: "/products",
-        actionLabel: "Review batch",
-        sortValue: 2,
-      })),
-      ...lowStockProducts.map((product) => {
-        const units = product.total_units ?? ((product.shelf_stock ?? 0) + (product.pending_stock ?? 0));
-        return {
-          id: `low-${product.id}`,
-          level: "warning" as const,
-          title: `${product.name} is running low`,
-          detail: `${product.material_code} · ${units.toLocaleString()} units remaining`,
-          route: "/products",
-          actionLabel: "Plan supply",
-          sortValue: 3,
-        };
-      }),
-    ].sort((a, b) => a.sortValue - b.sortValue).slice(0, 6);
+    // Low stocks: out of stock first, then fewest units
+    const lowStock = products
+      .map((product) => ({ product, units: productUnits(product) }))
+      .filter(({ units }) => units <= LOW_STOCK_LIMIT)
+      .sort((a, b) => a.units - b.units || a.product.name.localeCompare(b.product.name));
+
+    // Expiring soon: expired batches first, then soonest expiry
+    const expiring = batches
+      .filter((batch) => batch.expiry_date && Number(batch.remain_qty) > 0)
+      .map((batch) => ({ batch, expiry: new Date(batch.expiry_date as string) }))
+      .filter(({ expiry }) => !Number.isNaN(expiry.getTime()) && expiry <= expiryLimit)
+      .map(({ batch, expiry }) => ({
+        batch,
+        expiry,
+        expired: expiry < todayStart,
+        daysLeft: Math.ceil((expiry.getTime() - todayStart.getTime()) / 86400000),
+      }))
+      .sort((a, b) => a.expiry.getTime() - b.expiry.getTime());
 
     const recentLoadings = [...loadings]
       .sort((a, b) => {
@@ -357,29 +375,25 @@ const Dashboard = () => {
         const bDate = new Date(b.loading_date || b.prepared_date || 0).getTime();
         return bDate - aDate;
       })
-      .slice(0, 6);
+      .slice(0, RECENT_DISPATCH_COUNT);
 
     return {
-      stockUnits,
-      stockValue,
-      returnedUnits,
-      activeProducts,
-      pendingLoadings,
+      pendingCount: pending.length,
       pendingUnits,
-      todaySales,
-      todaySalesValue,
-      weekSales,
-      weekSalesValue,
-      weekDelivered,
-      weekReturnUnits,
-      outOfStockProducts,
-      lowStockProducts,
-      expiredBatches,
-      expiringBatches,
-      attentionItems,
+      deliveredRecent,
+      failedRecent,
+      successRate,
+      deliveryTrend,
+      recentTotal: recent.length,
+      waiting,
+      statusCounts,
+      totalLoadings: loadings.length,
+      lowStock,
+      expiring,
+      expiredCount: expiring.filter((row) => row.expired).length,
       recentLoadings,
     };
-  }, [batches, loadings, products, returns, sales]);
+  }, [batches, loadings, products]);
 
   if (loading) {
     return (
@@ -397,23 +411,22 @@ const Dashboard = () => {
   return (
     <div className="w-full min-h-full bg-[#f8f9fa] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-900">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
           <div>
             <div className="flex items-center gap-2">
               <LayoutDashboard className="text-teal-800" size={30} />
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                Warehouse Dashboard
-              </h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Warehouse Dashboard</h1>
             </div>
             <p className="text-sm text-slate-500 mt-1.5 ml-10">
-              Welcome back, {user?.name?.split(" ")[0] || "Admin"}. Here is what needs your attention today.
+              Welcome back, {user?.name?.split(" ")[0] || "Admin"}.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <Clock3 className="w-3.5 h-3.5" />
-              Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              Updated {minutesAgo(lastUpdated, now)}
             </div>
             <button
               type="button"
@@ -423,15 +436,6 @@ const Dashboard = () => {
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-teal-700" : ""}`} />
               <span>{refreshing ? "Refreshing" : "Refresh"}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/new-supply")}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-teal-800 hover:bg-teal-900 text-white text-sm font-semibold shadow-xs transition-colors focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Supply</span>
-              <span className="sm:hidden">Supply</span>
             </button>
           </div>
         </div>
@@ -448,270 +452,337 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Delivery cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
-            label="Stock on hand"
-            value={`${dashboardData.stockUnits.toLocaleString()} units`}
-            detail={`${dashboardData.activeProducts.toLocaleString()} products currently available`}
-            icon={Boxes}
-            tone="teal"
-            onClick={() => navigate("/products")}
-          />
-          <MetricCard
-            label="Current stock value"
-            value={formatCompactCurrency(dashboardData.stockValue)}
-            detail="Based on remaining units at net cost"
-            icon={WalletCards}
-            tone="sky"
-            onClick={() => navigate("/products")}
-          />
-          <MetricCard
             label="Pending dispatches"
-            value={dashboardData.pendingLoadings.length.toLocaleString()}
-            detail={`${dashboardData.pendingUnits.toLocaleString()} units allocated to trucks`}
+            value={data.pendingCount.toLocaleString()}
             icon={Truck}
-            tone={dashboardData.pendingLoadings.length > 0 ? "amber" : "teal"}
-            onClick={() => navigate("/supply-invoices?tab=loading")}
+            tone={data.pendingCount > 0 ? "amber" : "teal"}
+          />
+          <MetricCard label="Units out on trucks" value={data.pendingUnits.toLocaleString()} icon={PackageCheck} tone="sky" />
+          <MetricCard
+            label={`Delivered (last ${TREND_DAYS} days)`}
+            value={data.deliveredRecent.toLocaleString()}
+            icon={CheckCircle2}
+            tone="emerald"
           />
           <MetricCard
-            label="Today's POS sales"
-            value={formatCompactCurrency(dashboardData.todaySalesValue)}
-            detail={`${dashboardData.todaySales.length.toLocaleString()} transactions completed`}
-            icon={ShoppingCart}
-            tone="emerald"
-            onClick={() => navigate("/supply-invoices?tab=sales")}
+            label={`Not delivered (last ${TREND_DAYS} days)`}
+            value={data.failedRecent.toLocaleString()}
+            icon={PackageX}
+            tone={data.failedRecent > 0 ? "amber" : "teal"}
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <section className="lg:col-span-2 bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
-                  <h2 className="text-base font-bold text-slate-900">Needs attention</h2>
+        {/* Delivery charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Panel
+            title="Deliveries"
+            subtitle={`Loadings per day, last ${TREND_DAYS} days`}
+            icon={Truck}
+            className="lg:col-span-2"
+            aside={
+              <div className="text-right">
+                <p className="text-[11px] text-slate-500">Success rate</p>
+                <p className="text-sm font-bold text-slate-900 tabular-nums">
+                  {data.successRate === null ? "–" : `${data.successRate}%`}
+                </p>
+              </div>
+            }
+          >
+            <div className="px-3 pt-4 pb-2 h-72">
+              {data.recentTotal === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-slate-500">
+                  No loadings in the last {TREND_DAYS} days.
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Stock risks ordered by urgency</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate("/products")}
-                className="text-xs font-semibold text-teal-800 hover:text-teal-950 inline-flex items-center gap-1"
-              >
-                Open inventory <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.deliveryTrend} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
+                    <CartesianGrid stroke="#f1f5f9" vertical={false} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11, fill: "#64748b" }}
+                      tickLine={false}
+                      axisLine={{ stroke: "#e7e5e4" }}
+                      interval="preserveStartEnd"
+                      minTickGap={24}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 11, fill: "#64748b" }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={32}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#f5f5f4" }}
+                      contentStyle={{ borderRadius: 8, border: "1px solid #e7e5e4", fontSize: 12 }}
+                    />
+                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="delivered" name="Delivered" stackId="s" fill={STATUS_META.delivered.color} />
+                    <Bar dataKey="not_delivered" name="Not delivered" stackId="s" fill={STATUS_META.not_delivered.color} />
+                    <Bar dataKey="pending" name="Pending" stackId="s" fill={STATUS_META.pending.color} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
+          </Panel>
 
-            {dashboardData.attentionItems.length === 0 ? (
-              <div className="px-5 py-12 flex flex-col items-center text-center">
-                <span className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
-                  <CheckCircle2 className="w-5 h-5" />
-                </span>
-                <h3 className="text-sm font-bold text-slate-800">Warehouse stock looks healthy</h3>
-                <p className="text-xs text-slate-500 mt-1">No expired, expiring, low-stock, or empty products need action.</p>
-              </div>
+          <Panel title="Dispatch status" subtitle="All recorded loadings" icon={PieChartIcon}>
+            {data.totalLoadings === 0 ? (
+              <EmptyState title="No dispatches yet" detail="Loadings will appear here once created." />
             ) : (
-              <div className="divide-y divide-stone-100">
-                {dashboardData.attentionItems.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => navigate(item.route)}
-                    className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-stone-50 transition-colors group"
-                  >
-                    <span className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${
-                      item.level === "critical"
-                        ? "bg-red-50 border-red-100 text-red-600"
-                        : "bg-amber-50 border-amber-100 text-amber-700"
-                    }`}>
-                      {item.level === "critical" ? <AlertCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-slate-800 truncate">{item.title}</span>
-                      <span className="block text-xs text-slate-500 mt-0.5 truncate">{item.detail}</span>
-                    </span>
-                    <span className="hidden sm:inline text-xs font-semibold text-slate-500 group-hover:text-teal-800 shrink-0">
-                      {item.actionLabel}
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-700 shrink-0" />
-                  </button>
-                ))}
+              <div className="p-5 flex flex-col items-center gap-4">
+                <div className="relative w-full h-44">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data.statusCounts}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius="62%"
+                        outerRadius="90%"
+                        paddingAngle={2}
+                        stroke="none"
+                      >
+                        {data.statusCounts.map((entry) => (
+                          <Cell key={entry.status} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e7e5e4", fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-2xl font-bold text-slate-900 tabular-nums">{data.totalLoadings}</span>
+                    <span className="text-[11px] text-slate-500">loadings</span>
+                  </div>
+                </div>
+                <ul className="w-full space-y-2">
+                  {data.statusCounts.map((entry) => (
+                    <li key={entry.status} className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-slate-600">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                        {entry.name}
+                      </span>
+                      <span className="font-semibold text-slate-900 tabular-nums">{entry.value}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
-          </section>
-
-          <aside className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-stone-200">
-              <h2 className="text-base font-bold text-slate-900">Quick actions</h2>
-              <p className="text-xs text-slate-500 mt-1">Common warehouse tasks</p>
-            </div>
-            <div className="p-3 space-y-1">
-              {[
-                { label: "Record a new supply", detail: "Receive supplier stock", icon: Plus, route: "/new-supply" },
-                { label: "Create a loading", detail: "Prepare a truck dispatch", icon: Truck, route: "/loading" },
-                { label: "Process a return", detail: "Put returned goods back in stock", icon: RotateCcw, route: "/returns" },
-                { label: "Open POS terminal", detail: "Start a counter sale", icon: ShoppingCart, route: "/pos" },
-              ].map((action) => (
-                <button
-                  key={action.label}
-                  type="button"
-                  onClick={() => navigate(action.route)}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg text-left hover:bg-stone-50 transition-colors group"
-                >
-                  <span className="w-9 h-9 rounded-lg bg-teal-50 border border-teal-100 text-teal-800 flex items-center justify-center shrink-0">
-                    <action.icon className="w-4 h-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-slate-800">{action.label}</span>
-                    <span className="block text-xs text-slate-500 mt-0.5 truncate">{action.detail}</span>
-                  </span>
-                  <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-teal-700 shrink-0" />
-                </button>
-              ))}
-            </div>
-          </aside>
+          </Panel>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <section className="lg:col-span-2 bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-teal-800" />
-                  <h2 className="text-base font-bold text-slate-900">Recent dispatches</h2>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">Latest truck loading activity</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate("/supply-invoices?tab=loading")}
-                className="text-xs font-semibold text-teal-800 hover:text-teal-950 inline-flex items-center gap-1"
-              >
-                View all <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {dashboardData.recentLoadings.length === 0 ? (
-              <div className="px-5 py-12 text-center">
-                <Truck className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-slate-700">No dispatches recorded yet</p>
-                <button type="button" onClick={() => navigate("/loading")} className="text-xs font-semibold text-teal-800 mt-2 hover:underline">
-                  Create the first loading
-                </button>
-              </div>
+        {/* Waiting deliveries */}
+        <div>
+          <Panel
+            title="Waiting to be delivered"
+            subtitle="Pending loadings, longest waiting first. Click a row for details."
+            icon={Timer}
+            aside={<CountBadge count={data.waiting.length} tone={data.waiting.length > 0 ? "amber" : "slate"} />}
+          >
+            {data.waiting.length === 0 ? (
+              <EmptyState title="Nothing waiting" detail="Every loading has been closed off." />
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-auto max-h-80">
                 <table className="w-full text-left">
-                  <thead className="bg-stone-50 border-b border-stone-200">
-                    <tr className="text-[11px] uppercase tracking-wider text-slate-500">
-                      <th className="px-5 py-3 font-semibold">Loading</th>
-                      <th className="px-4 py-3 font-semibold">Route / truck</th>
-                      <th className="px-4 py-3 font-semibold">Date</th>
-                      <th className="px-5 py-3 font-semibold text-right">Status</th>
+                  <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
+                    <tr className="text-[11px] uppercase tracking-wide text-slate-500">
+                      <th className="px-5 py-2.5 font-semibold">Loading</th>
+                      <th className="px-4 py-2.5 font-semibold">Route / truck</th>
+                      <th className="px-4 py-2.5 font-semibold text-right">Units</th>
+                      <th className="px-5 py-2.5 font-semibold text-right">Waiting</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
-                    {dashboardData.recentLoadings.map((record) => {
-                      const routeLabel = record.route?.route_code || record.route?.name || "Route not set";
-                      const truckLabel = record.truck?.licence_plate_no || record.truck?.truck_number || "Truck not set";
-                      const statusStyle =
-                        record.status === "delivered"
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : record.status === "not_delivered"
-                            ? "bg-red-50 text-red-700 border-red-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200";
-                      return (
-                        <tr key={record.id} className="hover:bg-stone-50/70 transition-colors">
-                          <td className="px-5 py-3.5">
-                            <p className="text-sm font-semibold text-slate-800">{record.load_number}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">
-                              {(record.loading_items?.length ?? 0).toLocaleString()} product lines
-                            </p>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <p className="text-sm font-medium text-slate-700">{routeLabel}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{truckLabel}</p>
-                          </td>
-                          <td className="px-4 py-3.5 text-sm text-slate-600 whitespace-nowrap">
-                            {formatDate(record.loading_date || record.prepared_date)}
-                          </td>
-                          <td className="px-5 py-3.5 text-right">
-                            <span className={`inline-flex px-2 py-1 rounded-md border text-[11px] font-semibold capitalize whitespace-nowrap ${statusStyle}`}>
-                              {record.status.replace("_", " ")}
+                    {data.waiting.map(({ record, units, daysWaiting }) => (
+                      <tr
+                        key={record.id}
+                        onClick={() => navigate(`/supply-invoices?tab=loading&loadingId=${record.id}`)}
+                        className="hover:bg-stone-50 transition-colors cursor-pointer"
+                        title="View delivery details"
+                      >
+                        <td className="px-5 py-3">
+                          <p className="text-sm font-semibold text-slate-800">{record.load_number}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">{formatDate(record.loading_date || record.prepared_date)}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-sm text-slate-700">{record.route?.route_code || record.route?.name || "Not set"}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            {record.truck?.licence_plate_no || record.truck?.truck_number || "Not set"}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700 text-right tabular-nums">{units.toLocaleString()}</td>
+                        <td className="px-5 py-3 text-right whitespace-nowrap">
+                          {daysWaiting === null ? (
+                            <span className="text-xs text-slate-500">No date</span>
+                          ) : daysWaiting <= 0 ? (
+                            <span className="text-sm font-medium text-slate-700">Today</span>
+                          ) : (
+                            <span className={`text-sm font-semibold tabular-nums ${daysWaiting >= 3 ? "text-red-700" : "text-amber-700"}`}>
+                              {daysWaiting} {daysWaiting === 1 ? "day" : "days"}
                             </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             )}
-          </section>
+          </Panel>
 
-          <aside className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-stone-200">
-              <div className="flex items-center gap-2">
-                <CalendarClock className="w-5 h-5 text-teal-800" />
-                <h2 className="text-base font-bold text-slate-900">Last 7 days</h2>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">A quick operational pulse</p>
-            </div>
-            <div className="p-5 space-y-4">
-              <div>
-                <p className="text-xs text-slate-500">POS revenue</p>
-                <p className="text-xl font-bold text-slate-900 tabular-nums mt-1">{formatCurrency(dashboardData.weekSalesValue)}</p>
-                <p className="text-xs text-slate-500 mt-1">{dashboardData.weekSales.length} transactions</p>
-              </div>
-              <div className="h-px bg-stone-100" />
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-stone-50 border border-stone-200 p-3">
-                  <Truck className="w-4 h-4 text-teal-800 mb-2" />
-                  <p className="text-lg font-bold text-slate-900 tabular-nums">{dashboardData.weekDelivered.length}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Delivered loads</p>
-                </div>
-                <div className="rounded-lg bg-stone-50 border border-stone-200 p-3">
-                  <Undo2 className="w-4 h-4 text-teal-800 mb-2" />
-                  <p className="text-lg font-bold text-slate-900 tabular-nums">{dashboardData.weekReturnUnits}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Returned units</p>
-                </div>
-              </div>
-              <div className="rounded-lg bg-teal-50 border border-teal-100 p-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold text-teal-950">Returned stock available</p>
-                  <p className="text-[11px] text-teal-800 mt-0.5">Prioritized for the next sale</p>
-                </div>
-                <span className="text-lg font-bold text-teal-900 tabular-nums">{dashboardData.returnedUnits}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate("/monthly-reports")}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-stone-200 bg-white text-slate-700 text-sm font-semibold hover:bg-stone-50 transition-colors"
-              >
-                Open full reports <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </aside>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Out of stock", value: dashboardData.outOfStockProducts.length, color: "text-red-600" },
-            { label: "Low stock", value: stats?.low_stock_count ?? dashboardData.lowStockProducts.length, color: "text-amber-700" },
-            { label: "Expiring soon", value: dashboardData.expiringBatches.length, color: "text-amber-700" },
-            { label: "Expired batches", value: dashboardData.expiredBatches.length, color: "text-red-600" },
-          ].map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => navigate("/products")}
-              className="bg-white border border-stone-200 rounded-xl px-4 py-3 text-left hover:border-stone-300 transition-colors"
-            >
-              <p className={`text-xl font-bold tabular-nums ${item.color}`}>{item.value}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{item.label}</p>
-            </button>
-          ))}
+        {/* Stock risk tables */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Panel
+            title="Low stocks"
+            subtitle={`Products with ${LOW_STOCK_LIMIT} units or fewer`}
+            icon={PackageMinus}
+            aside={<CountBadge count={data.lowStock.length} tone={data.lowStock.length > 0 ? "amber" : "slate"} />}
+          >
+            {data.lowStock.length === 0 ? (
+              <EmptyState title="Stock levels look healthy" detail={`No product is at or below ${LOW_STOCK_LIMIT} units.`} />
+            ) : (
+              <div className="overflow-auto max-h-80">
+                <table className="w-full text-left">
+                  <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
+                    <tr className="text-[11px] uppercase tracking-wide text-slate-500">
+                      <th className="px-5 py-2.5 font-semibold">Product</th>
+                      <th className="px-4 py-2.5 font-semibold">Code</th>
+                      <th className="px-5 py-2.5 font-semibold text-right">Units left</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {data.lowStock.map(({ product, units }) => (
+                      <tr key={product.id}>
+                        <td className="px-5 py-3 text-sm font-medium text-slate-800">{product.name}</td>
+                        <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{product.material_code}</td>
+                        <td className="px-5 py-3 text-right whitespace-nowrap">
+                          {units <= 0 ? (
+                            <span className="inline-flex px-2 py-0.5 rounded-md border text-[11px] font-semibold bg-red-50 text-red-700 border-red-200">
+                              Out of stock
+                            </span>
+                          ) : (
+                            <span className="text-sm font-semibold text-amber-700 tabular-nums">{units.toLocaleString()}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
+
+          <Panel
+            title="Expiring soon"
+            subtitle={`Batches expiring within ${EXPIRY_WINDOW_DAYS} days`}
+            icon={CalendarClock}
+            aside={
+              <div className="flex items-center gap-1.5">
+                {data.expiredCount > 0 && <CountBadge count={data.expiredCount} tone="red" />}
+                <CountBadge count={data.expiring.length} tone={data.expiring.length > 0 ? "amber" : "slate"} />
+              </div>
+            }
+          >
+            {data.expiring.length === 0 ? (
+              <EmptyState title="Nothing expiring soon" detail={`No batch expires in the next ${EXPIRY_WINDOW_DAYS} days.`} />
+            ) : (
+              <div className="overflow-auto max-h-80">
+                <table className="w-full text-left">
+                  <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
+                    <tr className="text-[11px] uppercase tracking-wide text-slate-500">
+                      <th className="px-5 py-2.5 font-semibold">Product</th>
+                      <th className="px-4 py-2.5 font-semibold text-right">Units</th>
+                      <th className="px-5 py-2.5 font-semibold text-right">Expiry</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {data.expiring.map(({ batch, expired, daysLeft }) => (
+                      <tr key={batch.id} className={expired ? "bg-red-50/40" : undefined}>
+                        <td className="px-5 py-3 text-sm font-medium text-slate-800">
+                          {batch.product?.name ?? "Stock batch"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700 text-right tabular-nums">
+                          {Number(batch.remain_qty).toLocaleString()}
+                        </td>
+                        <td className="px-5 py-3 text-right whitespace-nowrap">
+                          <p className={`text-sm font-medium ${expired ? "text-red-700" : "text-slate-700"}`}>
+                            {formatDate(batch.expiry_date)}
+                          </p>
+                          <p className={`text-[11px] mt-0.5 ${expired ? "text-red-600 font-semibold" : "text-slate-500"}`}>
+                            {expired ? "Expired" : daysLeft === 0 ? "Expires today" : `${daysLeft} days left`}
+                          </p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
         </div>
+
+        {/* Recent dispatches */}
+        <Panel title="Recent dispatches" subtitle="Click a row to see the delivery details" icon={ClipboardList}>
+          {data.recentLoadings.length === 0 ? (
+            <div className="px-5 py-12 text-center">
+              <Truck className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-700">No dispatches recorded yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[640px]">
+                <thead className="bg-stone-50 border-b border-stone-200">
+                  <tr className="text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="px-5 py-2.5 font-semibold">Loading</th>
+                    <th className="px-4 py-2.5 font-semibold">Route</th>
+                    <th className="px-4 py-2.5 font-semibold">Truck</th>
+                    <th className="px-4 py-2.5 font-semibold">Date</th>
+                    <th className="px-5 py-2.5 font-semibold text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {data.recentLoadings.map((record) => {
+                    const status = STATUS_META[record.status] ?? STATUS_META.pending;
+                    return (
+                      <tr
+                        key={record.id}
+                        onClick={() => navigate(`/supply-invoices?tab=loading&loadingId=${record.id}`)}
+                        className="hover:bg-stone-50 transition-colors cursor-pointer"
+                        title="View delivery details"
+                      >
+                        <td className="px-5 py-3.5">
+                          <p className="text-sm font-semibold text-slate-800">{record.load_number}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            {(record.loading_items?.length ?? 0).toLocaleString()} product lines
+                          </p>
+                        </td>
+                        <td className="px-4 py-3.5 text-sm font-medium text-slate-700">
+                          {record.route?.route_code || record.route?.name || "Not set"}
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-slate-600">
+                          {record.truck?.licence_plate_no || record.truck?.truck_number || "Not set"}
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                          {formatDate(record.loading_date || record.prepared_date)}
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <span className={`inline-flex px-2 py-1 rounded-md border text-[11px] font-semibold whitespace-nowrap ${status.badge}`}>
+                            {status.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
       </div>
     </div>
   );
