@@ -153,6 +153,18 @@ const SupplyInvoices: React.FC = () => {
     }
   }, [location, navigate]);
 
+  // Open a loading's details when linked from the dashboard (?loadingId=)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const loadingIdParam = params.get("loadingId");
+    if (!loadingIdParam || loadings.length === 0) return;
+
+    const match = loadings.find((l) => String(l.id) === loadingIdParam);
+    if (match) setSelectedLoading(match);
+    // Drop the param so closing the modal doesn't reopen it
+    navigate(`?tab=${params.get("tab") || "loading"}`, { replace: true });
+  }, [location.search, loadings, navigate]);
+
   // Reset pagination on filter or tab change
   useEffect(() => {
     setCurrentPage(1);
