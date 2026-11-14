@@ -575,12 +575,13 @@ const Dashboard = () => {
         </div>
 
         {/* Waiting deliveries */}
-        <div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Panel
             title="Waiting to be delivered"
             subtitle="Pending loadings, longest waiting first. Click a row for details."
             icon={Timer}
             aside={<CountBadge count={data.waiting.length} tone={data.waiting.length > 0 ? "amber" : "slate"} />}
+            className="lg:order-1"
           >
             {data.waiting.length === 0 ? (
               <EmptyState title="Nothing waiting" detail="Every loading has been closed off." />
@@ -633,15 +634,14 @@ const Dashboard = () => {
             )}
           </Panel>
 
-        </div>
-
         {/* Stock risk tables */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="contents">
           <Panel
             title="Low stocks"
             subtitle={`Products with ${LOW_STOCK_LIMIT} units or fewer`}
             icon={PackageMinus}
             aside={<CountBadge count={data.lowStock.length} tone={data.lowStock.length > 0 ? "amber" : "slate"} />}
+            className="lg:order-3 lg:col-span-2"
           >
             {data.lowStock.length === 0 ? (
               <EmptyState title="Stock levels look healthy" detail={`No product is at or below ${LOW_STOCK_LIMIT} units.`} />
@@ -681,6 +681,7 @@ const Dashboard = () => {
             title="Expiring soon"
             subtitle={`Batches expiring within ${EXPIRY_WINDOW_DAYS} days`}
             icon={CalendarClock}
+            className="lg:order-2"
             aside={
               <div className="flex items-center gap-1.5">
                 {data.expiredCount > 0 && <CountBadge count={data.expiredCount} tone="red" />}
@@ -691,7 +692,7 @@ const Dashboard = () => {
             {data.expiring.length === 0 ? (
               <EmptyState title="Nothing expiring soon" detail={`No batch expires in the next ${EXPIRY_WINDOW_DAYS} days.`} />
             ) : (
-              <div className="overflow-auto max-h-80">
+              <div className="overflow-y-auto max-h-[294px]">
                 <table className="w-full text-left">
                   <thead className="bg-stone-50 border-b border-stone-200 sticky top-0">
                     <tr className="text-[11px] uppercase tracking-wide text-slate-500">
@@ -725,6 +726,7 @@ const Dashboard = () => {
             )}
           </Panel>
         </div>
+        </div>
 
         {/* Recent dispatches */}
         <Panel title="Recent dispatches" subtitle="Click a row to see the delivery details" icon={ClipboardList}>
@@ -734,9 +736,9 @@ const Dashboard = () => {
               <p className="text-sm font-semibold text-slate-700">No dispatches recorded yet</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[377px]">
               <table className="w-full text-left min-w-[640px]">
-                <thead className="bg-stone-50 border-b border-stone-200">
+                <thead className="bg-stone-50 border-b border-stone-200 sticky top-0 z-10">
                   <tr className="text-[11px] uppercase tracking-wide text-slate-500">
                     <th className="px-5 py-2.5 font-semibold">Loading</th>
                     <th className="px-4 py-2.5 font-semibold">Route</th>

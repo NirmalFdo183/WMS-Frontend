@@ -547,7 +547,10 @@ const Shops: React.FC = () => {
                     Assigned Route
                   </th>
                   <th scope="col" className="px-4 py-2.5">
-                    Contact & Location
+                    Contact
+                  </th>
+                  <th scope="col" className="px-4 py-2.5">
+                    Location
                   </th>
                   <th scope="col" className="px-4 py-2.5 text-right">
                     Actions
@@ -586,10 +589,15 @@ const Shops: React.FC = () => {
                         <p className=" text-xs sm:text-sm text-slate-800 select-all font-medium">
                           {shop.phoneno || <span className="text-slate-400 font-sans font-normal">—</span>}
                         </p>
-                        <p className="text-xs text-slate-500 break-words max-w-sm sm:max-w-md leading-relaxed">
+                        <p className="hidden">
                           {shop.Address || <span className="text-slate-400">—</span>}
                         </p>
                       </div>
+                    </td>
+
+                    {/* Location */}
+                    <td className="px-4 py-2.5 text-xs text-slate-500 break-words max-w-sm sm:max-w-md leading-relaxed">
+                      {shop.Address || "Not provided"}
                     </td>
 
                     {/* Actions */}
@@ -622,7 +630,7 @@ const Shops: React.FC = () => {
                 {filteredShops.length === 0 && shops.length > 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-6 py-12 text-center text-slate-500"
                     >
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
@@ -657,7 +665,7 @@ const Shops: React.FC = () => {
                 {shops.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-6 py-14 text-center text-slate-500"
                     >
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
