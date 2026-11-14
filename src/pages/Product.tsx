@@ -1094,9 +1094,9 @@ const ProductPage: React.FC = () => {
               </div>
 
               {/* Group Products Table */}
-              <div className="overflow-x-auto">
+              <div className="overflow-auto max-h-[727px]">
                 <table className="w-full text-left text-xs min-w-[1500px]">
-                  <thead>
+                  <thead className="sticky top-0 z-10">
                     <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
                       <th className="px-4 py-2.5 w-10 text-center">#</th>
                       <th className="px-4 py-2.5">Product Name</th>
@@ -1220,9 +1220,9 @@ const ProductPage: React.FC = () => {
       ) : (
         /* Flat Directory Table */
         <div className="bg-white rounded-xl border border-stone-200 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[727px]">
             <table className="w-full text-left text-xs min-w-[1500px]">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-stone-50/80 text-[10px] font-semibold text-slate-500 uppercase tracking-wider border-b border-stone-200">
                   <th className="px-4 py-2.5 w-10 text-center">#</th>
                   <th className="px-4 py-2.5">Product Name</th>

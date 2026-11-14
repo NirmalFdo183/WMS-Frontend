@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Eye, EyeOff, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, AlertTriangle, Loader2, CheckCircle2, KeyRound } from "lucide-react";
 
 interface FieldErrors {
   username?: string;
@@ -17,6 +17,15 @@ const Login = () => {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [generalError, setGeneralError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetStep, setResetStep] = useState<"email" | "verify">("email");
+  const [resetEmail, setResetEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
 
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -129,6 +138,75 @@ const Login = () => {
       passwordInputRef.current?.focus();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openPasswordReset = () => {
+    setResetEmail("");
+    setVerificationCode("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setResetError("");
+    setResetMessage("");
+    setResetStep("email");
+    setShowPasswordReset(true);
+  };
+
+  const handleSendResetCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail.trim()) {
+      setResetError("Enter your registered email address.");
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      setResetError("");
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/forgot-password`, {
+        email: resetEmail.trim(),
+      });
+      setResetMessage(response.data.message);
+      setResetStep("verify");
+    } catch (err: any) {
+      setResetError(err.response?.data?.message || "Unable to send a verification code. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (verificationCode.length !== 6) {
+      setResetError("Enter the 6-digit verification code from your email.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setResetError("Your new password must contain at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setResetError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      setResetError("");
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/reset-password`, {
+        email: resetEmail.trim(),
+        code: verificationCode,
+        password: newPassword,
+        password_confirmation: confirmPassword,
+      });
+      setResetMessage(response.data.message);
+      setResetStep("email");
+      setVerificationCode("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      setResetError(err.response?.data?.message || "Unable to reset the password. Please try again.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -289,6 +367,16 @@ const Login = () => {
             )}
           </div>
 
+          <div className="flex justify-end -mt-1">
+            <button
+              type="button"
+              onClick={openPasswordReset}
+              className="text-xs font-semibold text-teal-800 hover:text-teal-950 hover:underline focus:outline-none focus:ring-2 focus:ring-teal-700/40 rounded"
+            >
+              Forgot password?
+            </button>
+          </div>
+
           {/* Submit Button */}
           <div className="pt-2">
             <button
@@ -318,6 +406,82 @@ const Login = () => {
           </p>
         </div>
       </div>
+
+      {showPasswordReset && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-[420px] bg-white rounded-xl border border-stone-200 shadow-xl p-6">
+            <div className="flex items-start gap-3 mb-5">
+              <span className="w-10 h-10 rounded-lg bg-teal-50 text-teal-800 flex items-center justify-center shrink-0">
+                <KeyRound size={20} />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Reset password</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {resetStep === "email" ? "We will email a verification code to your registered address." : "Enter the verification code and choose a new password."}
+                </p>
+              </div>
+            </div>
+
+            {resetError && (
+              <div role="alert" className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex gap-2">
+                <AlertCircle size={16} className="shrink-0" />
+                {resetError}
+              </div>
+            )}
+            {resetMessage && (
+              <div role="status" className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex gap-2">
+                <CheckCircle2 size={16} className="shrink-0" />
+                {resetMessage}
+              </div>
+            )}
+
+            {resetStep === "email" ? (
+              <form onSubmit={handleSendResetCode} className="space-y-4">
+                <div>
+                  <label htmlFor="reset-email" className="block text-sm font-medium text-slate-700 mb-1.5">Registered email</label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    autoComplete="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full h-11 px-3.5 text-base text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+                  />
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button type="button" onClick={() => setShowPasswordReset(false)} className="flex-1 h-10 border border-stone-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-stone-50">Cancel</button>
+                  <button type="submit" disabled={resetLoading} className="flex-1 h-10 bg-teal-800 hover:bg-teal-900 text-white text-sm font-medium rounded-lg disabled:opacity-60">
+                    {resetLoading ? "Sending..." : "Send code"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-3.5">
+                <div>
+                  <label htmlFor="verification-code" className="block text-sm font-medium text-slate-700 mb-1.5">Verification code</label>
+                  <input id="verification-code" inputMode="numeric" maxLength={6} value={verificationCode} onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))} placeholder="6-digit code" className="w-full h-11 px-3.5 text-base tracking-[0.25em] text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20" />
+                </div>
+                <div>
+                  <label htmlFor="new-password" className="block text-sm font-medium text-slate-700 mb-1.5">New password</label>
+                  <input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full h-11 px-3.5 text-base text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20" />
+                </div>
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 mb-1.5">Confirm new password</label>
+                  <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full h-11 px-3.5 text-base text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20" />
+                </div>
+                <button type="button" onClick={() => { setResetStep("email"); setResetMessage(""); setResetError(""); }} className="text-xs font-semibold text-teal-800 hover:underline">Use a different email or resend code</button>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setShowPasswordReset(false)} className="flex-1 h-10 border border-stone-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-stone-50">Cancel</button>
+                  <button type="submit" disabled={resetLoading} className="flex-1 h-10 bg-teal-800 hover:bg-teal-900 text-white text-sm font-medium rounded-lg disabled:opacity-60">
+                    {resetLoading ? "Resetting..." : "Reset password"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
