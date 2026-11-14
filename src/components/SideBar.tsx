@@ -434,17 +434,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                       }`;
                     }}
                   >
-                    {({ isActive }) => {
-                      const isCurrentActive =
-                        isActive ||
-                        (subItem.path === "/settings/cashier-audits" &&
-                          location.pathname === "/settings");
-                      return (
-                        <>
-                          <span className="truncate">{subItem.name}</span>
-                        </>
-                      );
-                    }}
+                    <span className="truncate">{subItem.name}</span>
                   </NavLink>
                 ))}
               </div>
