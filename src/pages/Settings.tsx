@@ -27,7 +27,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-type TabId = "cashier-audits" | "manage-users";
+type TabId = "profile" | "cashier-audits" | "manage-users";
+type UserRole = "super_admin" | "admin" | "data_entry" | "cashier";
 
 interface SystemUser {
   id: number;
@@ -36,7 +37,7 @@ interface SystemUser {
   email?: string | null;
   phone: string;
   address?: string | null;
-  role: "admin" | "cashier";
+  role: UserRole;
   created_at?: string;
   sales_count?: number;
 }
@@ -88,8 +89,9 @@ const Settings: React.FC = () => {
   const { tab } = useParams<{ tab?: string }>();
 
   // Active view determined by URL route
-  const activeTab: TabId =
-    tab === "manage-users" || tab === "users"
+  const activeTab: TabId = tab === "profile"
+    ? "profile"
+    : tab === "manage-users" || tab === "users"
       ? "manage-users"
       : "cashier-audits";
 
@@ -105,14 +107,14 @@ const Settings: React.FC = () => {
   } | null>(null);
 
   // Manage Users State & Filters
-  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "cashier">(
+  const [roleFilter, setRoleFilter] = useState<"all" | UserRole>(
     "all"
   );
   const [userSearchTerm, setUserSearchTerm] = useState("");
 
   // Create User Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createRole, setCreateRole] = useState<"admin" | "cashier">("cashier");
+  const [createRole, setCreateRole] = useState<UserRole>("cashier");
   const [createForm, setCreateForm] = useState({
     name: "",
     username: "",
@@ -136,7 +138,7 @@ const Settings: React.FC = () => {
     phone: "",
     email: "",
     address: "",
-    role: "cashier" as "admin" | "cashier",
+    role: "cashier" as UserRole,
   });
   const [passwordForm, setPasswordForm] = useState({
     password: "",
@@ -212,13 +214,13 @@ const Settings: React.FC = () => {
   useEffect(() => {
     if (activeTab === "manage-users") {
       fetchUsers();
-    } else {
+    } else if (activeTab === "cashier-audits") {
       fetchSales();
     }
   }, [activeTab]);
 
   // Open Create User Modal preconfigured by role
-  const openCreateModal = (role: "admin" | "cashier") => {
+  const openCreateModal = (role: UserRole) => {
     setCreateRole(role);
     setCreateForm({
       name: "",
@@ -565,8 +567,9 @@ const Settings: React.FC = () => {
   // Counts for role filters
   const userCounts = useMemo(() => {
     const admins = users.filter((u) => u.role === "admin").length;
+    const dataEntry = users.filter((u) => u.role === "data_entry").length;
     const cashiers = users.filter((u) => u.role === "cashier").length;
-    return { all: users.length, admin: admins, cashier: cashiers };
+    return { all: users.length, admin: admins, data_entry: dataEntry, cashier: cashiers };
   }, [users]);
 
   return (
@@ -575,7 +578,12 @@ const Settings: React.FC = () => {
         {/* Page Top Header (Dynamic by current view) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
           <div className="flex items-center gap-2.5">
-            {activeTab === "manage-users" ? (
+            {activeTab === "profile" ? (
+              <>
+                <UserIcon className="text-teal-800" size={30} />
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">My Profile</h1>
+              </>
+            ) : activeTab === "manage-users" ? (
               <>
                 <Users className="text-teal-800" size={30} />
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Manage Users</h1>
@@ -600,18 +608,28 @@ const Settings: React.FC = () => {
                 <Plus size={16} />
                 <span>+ New Cashier</span>
               </button>
-
               <button
                 type="button"
-                onClick={() => openCreateModal("admin")}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
-                title="Create a new administrator user account"
+                onClick={() => openCreateModal("data_entry")}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
+                title="Create a new end-of-day data entry account"
               >
                 <Plus size={16} />
-                <span>+ New Admin</span>
+                <span>+ New Data Entry</span>
               </button>
+              {currentUser?.role === "super_admin" && (
+                <button
+                  type="button"
+                  onClick={() => openCreateModal("admin")}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  title="Create a new administrator user account"
+                >
+                  <Plus size={16} />
+                  <span>+ New Admin</span>
+                </button>
+              )}
             </div>
-          ) : (
+          ) : activeTab === "cashier-audits" ? (
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
@@ -627,7 +645,7 @@ const Settings: React.FC = () => {
                 <span>Refresh Audits</span>
               </button>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Global Feedback Banner */}
@@ -655,6 +673,38 @@ const Settings: React.FC = () => {
             >
               <X size={16} />
             </button>
+          </div>
+        )}
+
+        {activeTab === "profile" && (
+          <div className="max-w-2xl bg-white border border-stone-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="p-6 sm:p-8 flex items-center gap-4 border-b border-stone-200 bg-stone-50/60">
+              <div className="w-14 h-14 rounded-xl bg-teal-800 text-white flex items-center justify-center text-xl font-bold">
+                {currentUser?.name?.charAt(0).toUpperCase() || "U"}
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">{currentUser?.name || "User"}</h2>
+                <p className="text-sm text-slate-500 capitalize">{(currentUser?.role || "user").replace("_", " ")}</p>
+              </div>
+            </div>
+            <dl className="divide-y divide-stone-100">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 px-6 py-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Username</dt>
+                <dd className="sm:col-span-2 text-sm font-medium text-slate-800">{currentUser?.username ? `@${currentUser.username}` : "Not available"}</dd>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 px-6 py-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</dt>
+                <dd className="sm:col-span-2 text-sm font-medium text-slate-800">{currentUser?.email || "Not available"}</dd>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 px-6 py-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Phone</dt>
+                <dd className="sm:col-span-2 text-sm font-medium text-slate-800">{currentUser?.phone || "Not available"}</dd>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 px-6 py-4">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Address</dt>
+                <dd className="sm:col-span-2 text-sm font-medium text-slate-800">{currentUser?.address || "Not available"}</dd>
+              </div>
+            </dl>
           </div>
         )}
 
@@ -1152,6 +1202,18 @@ const Settings: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setRoleFilter("data_entry")}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    roleFilter === "data_entry"
+                      ? "bg-sky-700 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <FileText size={13} />
+                  <span>Data Entry ({userCounts.data_entry || 0})</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setRoleFilter("cashier")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                     roleFilter === "cashier"
@@ -1385,6 +1447,19 @@ const Settings: React.FC = () => {
                     </button>
                     <button
                       type="button"
+                      onClick={() => setCreateRole("data_entry")}
+                      className={`py-2 px-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+                        createRole === "data_entry"
+                          ? "bg-sky-50 border-sky-500 text-sky-900"
+                          : "bg-white border-stone-300 text-slate-600 hover:bg-stone-50"
+                      }`}
+                    >
+                      <FileText size={14} />
+                      <span>Data Entry</span>
+                    </button>
+                    {currentUser?.role === "super_admin" && (
+                    <button
+                      type="button"
                       onClick={() => setCreateRole("admin")}
                       className={`py-2 px-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
                         createRole === "admin"
@@ -1395,6 +1470,7 @@ const Settings: React.FC = () => {
                       <Shield size={14} />
                       <span>Administrator</span>
                     </button>
+                    )}
                   </div>
                 </div>
 

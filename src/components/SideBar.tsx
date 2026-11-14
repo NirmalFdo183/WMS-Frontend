@@ -89,6 +89,11 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
 
   const settingsSubItems = [
     {
+      name: "My Profile",
+      path: "/settings/profile",
+      icon: <UserCheck size={15} />,
+    },
+    {
       name: "Cashier Audits",
       path: "/settings/cashier-audits",
       icon: <FileText size={15} />,
@@ -100,12 +105,13 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
     },
   ];
 
-  const visibleItems =
-    user?.role === "cashier"
-      ? navItems.filter((item) => item.path === "/pos")
+  const visibleItems = user?.role === "cashier"
+    ? navItems.filter((item) => item.path === "/pos")
+    : user?.role === "data_entry"
+      ? navItems.filter((item) => ["/new-supply", "/loading", "/returns"].includes(item.path))
       : navItems;
 
-  const showSettings = user?.role !== "cashier";
+  const showSettings = user?.role === "super_admin" || user?.role === "admin";
 
   const handleSettingsToggle = () => {
     setIsSettingsOpen((prev) => !prev);
