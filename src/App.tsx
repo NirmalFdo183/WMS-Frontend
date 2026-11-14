@@ -105,7 +105,7 @@ const LoginRoute = () => {
 const router = createBrowserRouter([
   {
     path: "/login",
-    element: <Login />,
+    element: <LoginRoute />,
     errorElement: <RouteErrorBoundary />,
   },
   {
