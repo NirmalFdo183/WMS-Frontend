@@ -4,6 +4,7 @@ import {
   Navigate,
   useRouteError,
 } from "react-router-dom";
+import type { ReactNode } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WarehouseProvider } from "./context/WarehouseContext";
 import Login from "./pages/Login";
@@ -54,9 +55,33 @@ const RouteErrorBoundary = () => {
   );
 };
 
-// Protected Route Wrapper for Admin & Warehouse Staff
+const hasWarehouseAccess = (role?: string) =>
+  role === "super_admin" || role === "admin" || role === "data_entry";
+
+const hasDataEntryAccess = (role?: string) =>
+  role === "super_admin" || role === "admin" || role === "data_entry";
+
+const DataEntryRoute = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated, isAuthLoading, user } = useAuth();
+  if (isAuthLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return hasDataEntryAccess(user?.role) ? <>{children}</> : <Navigate to="/pos" replace />;
+};
+
+const ManagementRoute = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated, isAuthLoading, user } = useAuth();
+  if (isAuthLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return user?.role === "super_admin" || user?.role === "admin" ? <>{children}</> : <Navigate to="/new-supply" replace />;
+};
+
+// Protected Route Wrapper for Owner, Admin & Data Entry
 const ProtectedRoute = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAuthLoading, user } = useAuth();
+  if (isAuthLoading) {
+    return null;
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -66,23 +91,25 @@ const ProtectedRoute = () => {
     return <Navigate to="/pos" replace />;
   }
 
-  // Only admin role can access the warehouse management system
-  if (user?.role !== "admin") {
+  if (!hasWarehouseAccess(user?.role)) {
     return <Navigate to="/login" replace />;
   }
 
   return <Layout />;
 };
 
-// Protected Route for POS Terminal (Accessible by Cashiers and Admins)
+// Protected Route for POS Terminal (Accessible by Cashiers, Admins and Owner)
 const PosProtectedRoute = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAuthLoading, user } = useAuth();
+  if (isAuthLoading) {
+    return null;
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Allow both admin and cashier into POS terminal
-  if (user?.role !== "admin" && user?.role !== "cashier") {
+  if (user?.role !== "super_admin" && user?.role !== "admin" && user?.role !== "cashier") {
     return <Navigate to="/login" replace />;
   }
 
@@ -91,7 +118,11 @@ const PosProtectedRoute = () => {
 
 // Route wrapper for Login: redirect already logged-in users to their area
 const LoginRoute = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAuthLoading, user } = useAuth();
+  if (isAuthLoading) {
+    return null;
+  }
+
   if (isAuthenticated && user) {
     return user.role === "cashier" ? (
       <Navigate to="/pos" replace />
@@ -120,52 +151,52 @@ const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
-        element: <Dashboard />,
+        element: <ManagementRoute><Dashboard /></ManagementRoute>,
       },
       {
         path: "suppliers",
-        element: <Suppliers />,
+        element: <ManagementRoute><Suppliers /></ManagementRoute>,
       },
       {
         path: "products",
-        element: <Product />,
+        element: <ManagementRoute><Product /></ManagementRoute>,
       },
       {
         path: "new-supply",
-        element: <NewSupply />,
+        element: <DataEntryRoute><NewSupply /></DataEntryRoute>,
       },
       {
         path: "loading",
-        element: <Loading />,
+        element: <DataEntryRoute><Loading /></DataEntryRoute>,
       },
 
       {
         path: "resources",
-        element: <Resources />,
+        element: <ManagementRoute><Resources /></ManagementRoute>,
       },
       {
         path: "shops",
-        element: <Shops />,
+        element: <ManagementRoute><Shops /></ManagementRoute>,
       },
       {
         path: "settings",
-        element: <Settings />,
+        element: <ManagementRoute><Settings /></ManagementRoute>,
       },
       {
         path: "settings/:tab",
-        element: <Settings />,
+        element: <ManagementRoute><Settings /></ManagementRoute>,
       },
       {
         path: "supply-invoices",
-        element: <SupplyInvoices />,
+        element: <ManagementRoute><SupplyInvoices /></ManagementRoute>,
       },
       {
         path: "returns",
-        element: <Returns />,
+        element: <DataEntryRoute><Returns /></DataEntryRoute>,
       },
       {
         path: "monthly-reports",
-        element: <MonthlyReports />,
+        element: <ManagementRoute><MonthlyReports /></ManagementRoute>,
       },
       {
         path: "",
