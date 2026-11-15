@@ -98,11 +98,15 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       path: "/settings/cashier-audits",
       icon: <FileText size={15} />,
     },
-    {
-      name: "Manage Users",
-      path: "/settings/manage-users",
-      icon: <Users size={15} />,
-    },
+    ...(user?.role === "super_admin"
+      ? [
+          {
+            name: "Manage Users",
+            path: "/settings/manage-users",
+            icon: <Users size={15} />,
+          },
+        ]
+      : []),
   ];
 
   const visibleItems = user?.role === "cashier"

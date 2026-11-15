@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Users,
@@ -28,7 +28,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 
 type TabId = "profile" | "cashier-audits" | "manage-users";
-type UserRole = "super_admin" | "admin" | "data_entry" | "cashier";
+type UserRole = "super_admin" | "admin" | "cashier";
 
 interface SystemUser {
   id: number;
@@ -87,11 +87,20 @@ const formatCurrency = (amount: number) => {
 const Settings: React.FC = () => {
   const { user: currentUser } = useAuth();
   const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
 
-  // Active view determined by URL route
+  const isSuperAdmin = currentUser?.role === "super_admin";
+
+  useEffect(() => {
+    if ((tab === "manage-users" || tab === "users") && currentUser && !isSuperAdmin) {
+      navigate("/settings/cashier-audits", { replace: true });
+    }
+  }, [tab, currentUser, isSuperAdmin, navigate]);
+
+  // Active view determined by URL route (Manage Users strictly requires super_admin)
   const activeTab: TabId = tab === "profile"
     ? "profile"
-    : tab === "manage-users" || tab === "users"
+    : (tab === "manage-users" || tab === "users") && isSuperAdmin
       ? "manage-users"
       : "cashier-audits";
 
@@ -567,9 +576,8 @@ const Settings: React.FC = () => {
   // Counts for role filters
   const userCounts = useMemo(() => {
     const admins = users.filter((u) => u.role === "admin").length;
-    const dataEntry = users.filter((u) => u.role === "data_entry").length;
     const cashiers = users.filter((u) => u.role === "cashier").length;
-    return { all: users.length, admin: admins, data_entry: dataEntry, cashier: cashiers };
+    return { all: users.length, admin: admins, cashier: cashiers };
   }, [users]);
 
   return (
@@ -610,24 +618,13 @@ const Settings: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => openCreateModal("data_entry")}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
-                title="Create a new end-of-day data entry account"
+                onClick={() => openCreateModal("admin")}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
+                title="Create a new administrator user account"
               >
                 <Plus size={16} />
-                <span>+ New Data Entry</span>
+                <span>+ New Admin</span>
               </button>
-              {currentUser?.role === "super_admin" && (
-                <button
-                  type="button"
-                  onClick={() => openCreateModal("admin")}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
-                  title="Create a new administrator user account"
-                >
-                  <Plus size={16} />
-                  <span>+ New Admin</span>
-                </button>
-              )}
             </div>
           ) : activeTab === "cashier-audits" ? (
             <div className="flex items-center gap-2 shrink-0">
@@ -1202,18 +1199,6 @@ const Settings: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRoleFilter("data_entry")}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
-                    roleFilter === "data_entry"
-                      ? "bg-sky-700 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <FileText size={13} />
-                  <span>Data Entry ({userCounts.data_entry || 0})</span>
-                </button>
-                <button
-                  type="button"
                   onClick={() => setRoleFilter("cashier")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                     roleFilter === "cashier"
@@ -1447,19 +1432,6 @@ const Settings: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setCreateRole("data_entry")}
-                      className={`py-2 px-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
-                        createRole === "data_entry"
-                          ? "bg-sky-50 border-sky-500 text-sky-900"
-                          : "bg-white border-stone-300 text-slate-600 hover:bg-stone-50"
-                      }`}
-                    >
-                      <FileText size={14} />
-                      <span>Data Entry</span>
-                    </button>
-                    {currentUser?.role === "super_admin" && (
-                    <button
-                      type="button"
                       onClick={() => setCreateRole("admin")}
                       className={`py-2 px-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
                         createRole === "admin"
@@ -1470,7 +1442,6 @@ const Settings: React.FC = () => {
                       <Shield size={14} />
                       <span>Administrator</span>
                     </button>
-                    )}
                   </div>
                 </div>
 
