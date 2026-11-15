@@ -253,6 +253,23 @@ const Dashboard = () => {
     setFetchWarning(null);
 
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+    // Fast path: one request that returns only the records this page uses
+    // (low-stock products, batches expiring soon, recent dispatches).
+    try {
+      const res = await axios.get(`${baseUrl}/dashboard/overview?limit=${LOADINGS_FETCH_LIMIT}`);
+      setProducts(extractArray<Product>(res.data?.products));
+      setBatches(extractArray<BatchStock>(res.data?.batches));
+      setLoadings(extractArray<LoadingRecord>(res.data?.loadings));
+      setLastUpdated(new Date());
+      setNow(new Date());
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    } catch {
+      // Older backend without /dashboard/overview: fall back to the full lists below.
+    }
+
     const results = await Promise.allSettled([
       axios.get(`${baseUrl}/products`),
       axios.get(`${baseUrl}/batch-stocks`),
