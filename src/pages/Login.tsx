@@ -211,23 +211,49 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-center items-center py-10 px-4 sm:px-6">
-      {/* Centered Login Card */}
-      <div className="w-full max-w-[420px] bg-white rounded-xl border border-stone-200 shadow-sm p-6 sm:p-8">
+    <div className="relative min-h-screen w-full flex flex-col justify-center items-center py-10 px-4 sm:px-6 overflow-hidden select-none">
+      {/* Background warehouse image: crystal sharp so card glass blur contrasts dramatically */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-100"
+        style={{ backgroundImage: "url('/login-bg.jpg')" }}
+        aria-hidden="true"
+      />
+
+      {/* Translucent cinematic dark overlay (preserves warehouse visuals & lighting) */}
+      <div
+        className="absolute inset-0 bg-slate-950/45 mix-blend-multiply"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-slate-950/50 pointer-events-none"
+        aria-hidden="true"
+      />
+
+      {/* Apple-style Glassmorphism Login Card: Luminous White Glass */}
+      <div
+        className="relative z-10 w-full max-w-[420px] rounded-3xl border border-white/80 border-t-white p-7 sm:p-9 shadow-[0_24px_60px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,1)] transition-all"
+        style={{
+          backgroundColor: "rgba(255, 255, 255, 0.92)",
+          backdropFilter: "blur(28px) saturate(180%)",
+          WebkitBackdropFilter: "blur(28px) saturate(180%)",
+        }}
+      >
         {/* Brand Area */}
         <div className="text-center mb-6">
-          <img
-            src="/logo-bg-removed.png"
-            alt="Thejani Traders Logo"
-            width={72}
-            height={81}
-            className="w-[72px] h-[81px] object-contain mx-auto"
-            loading="eager"
-          />
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-3">
+          <div className="w-[88px] h-[88px] rounded-2xl bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] border border-stone-150 flex items-center justify-center mx-auto mb-3.5">
+            <img
+              src="/logo-bg-removed.png"
+              alt="Thejani Traders Logo"
+              width={68}
+              height={76}
+              className="w-[68px] h-[76px] object-contain drop-shadow-xs"
+              loading="eager"
+            />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Thejani Traders
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+          <p className="text-xs font-medium text-slate-500 tracking-wide mt-1">
             Warehouse Management System
           </p>
         </div>
@@ -237,10 +263,10 @@ const Login = () => {
           <div
             role="alert"
             aria-live="polite"
-            className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5"
+            className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex items-start gap-2.5"
           >
-            <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-600" />
-            <span className="font-medium text-sm leading-snug">{generalError}</span>
+            <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-600" />
+            <span className="leading-snug">{generalError}</span>
           </div>
         )}
 
@@ -250,7 +276,7 @@ const Login = () => {
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-slate-700 mb-1.5"
+              className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 ml-0.5"
             >
               Username
             </label>
@@ -270,17 +296,17 @@ const Login = () => {
               aria-describedby={
                 fieldErrors.username ? "username-error" : undefined
               }
-              className={`w-full h-11 px-3.5 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+              className={`w-full h-11 px-4 text-base text-slate-900 placeholder:text-slate-400 font-normal rounded-xl border bg-white transition-all focus:outline-none focus:ring-4 shadow-2xs ${
                 fieldErrors.username
-                  ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
-                  : "border-stone-300 focus:border-teal-700 focus:ring-teal-700/20"
+                  ? "border-red-300 focus:border-red-500 focus:ring-red-500/15"
+                  : "border-stone-250 hover:border-stone-350 focus:border-teal-700 focus:ring-teal-700/15"
               }`}
             />
             {fieldErrors.username && (
               <p
                 id="username-error"
                 role="alert"
-                className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1"
+                className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1 ml-0.5"
               >
                 <AlertCircle size={13} className="shrink-0" />
                 {fieldErrors.username}
@@ -292,7 +318,7 @@ const Login = () => {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-slate-700 mb-1.5"
+              className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 ml-0.5"
             >
               Password
             </label>
@@ -318,10 +344,10 @@ const Login = () => {
                     .filter(Boolean)
                     .join(" ") || undefined
                 }
-                className={`w-full h-11 pl-3.5 pr-11 text-base text-slate-900 bg-white border rounded-lg transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+                className={`w-full h-11 pl-4 pr-11 text-base text-slate-900 placeholder:text-slate-400 font-normal rounded-xl border bg-white transition-all focus:outline-none focus:ring-4 shadow-2xs ${
                   fieldErrors.password
-                    ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
-                    : "border-stone-300 focus:border-teal-700 focus:ring-teal-700/20"
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500/15"
+                    : "border-stone-250 hover:border-stone-350 focus:border-teal-700 focus:ring-teal-700/15"
                 }`}
               />
 
@@ -331,7 +357,7 @@ const Login = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 title={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-700/40"
               >
                 {showPassword ? (
                   <EyeOff size={18} aria-hidden="true" />
@@ -347,7 +373,7 @@ const Login = () => {
                 id="capslock-warning"
                 role="status"
                 aria-live="polite"
-                className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md mt-1.5 font-medium flex items-center gap-1.5"
+                className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg mt-1.5 font-medium flex items-center gap-1.5 ml-0.5"
               >
                 <AlertTriangle size={13} className="shrink-0 text-amber-600" />
                 Caps Lock is on
@@ -359,7 +385,7 @@ const Login = () => {
               <p
                 id="password-error"
                 role="alert"
-                className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1"
+                className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1 ml-0.5"
               >
                 <AlertCircle size={13} className="shrink-0" />
                 {fieldErrors.password}
@@ -367,11 +393,11 @@ const Login = () => {
             )}
           </div>
 
-          <div className="flex justify-end -mt-1">
+          <div className="flex justify-end -mt-0.5">
             <button
               type="button"
               onClick={openPasswordReset}
-              className="text-xs font-semibold text-teal-800 hover:text-teal-950 hover:underline focus:outline-none focus:ring-2 focus:ring-teal-700/40 rounded"
+              className="text-xs font-semibold text-teal-800 hover:text-teal-950 hover:underline focus:outline-none focus:ring-2 focus:ring-teal-700/40 rounded transition-colors"
             >
               Forgot password?
             </button>
@@ -382,7 +408,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-teal-800 hover:bg-teal-900 active:bg-teal-950 text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full h-11 bg-teal-800 hover:bg-teal-700 active:bg-teal-900 text-white font-semibold text-sm rounded-xl shadow-[0_4px_14px_rgba(15,118,110,0.35)] hover:shadow-[0_6px_20px_rgba(15,118,110,0.45)] transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-teal-700/20 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? (
                 <>
@@ -397,10 +423,10 @@ const Login = () => {
         </form>
 
         {/* Administrator Assistance */}
-        <div className="mt-6 pt-5 border-t border-stone-100 text-center">
-          <p className="text-sm text-slate-500">
+        <div className="mt-6 pt-5 border-t border-stone-150 text-center">
+          <p className="text-xs text-slate-500">
             Need access?{" "}
-            <span className="text-slate-700 font-medium">
+            <span className="text-slate-800 font-semibold">
               Contact your administrator.
             </span>
           </p>
@@ -408,10 +434,17 @@ const Login = () => {
       </div>
 
       {showPasswordReset && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-[420px] bg-white rounded-xl border border-stone-200 shadow-xl p-6">
+        <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div
+            className="w-full max-w-[420px] rounded-3xl border border-white/80 border-t-white p-7 shadow-[0_24px_60px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,1)] transition-all"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.94)",
+              backdropFilter: "blur(28px) saturate(180%)",
+              WebkitBackdropFilter: "blur(28px) saturate(180%)",
+            }}
+          >
             <div className="flex items-start gap-3 mb-5">
-              <span className="w-10 h-10 rounded-lg bg-teal-50 text-teal-800 flex items-center justify-center shrink-0">
+              <span className="w-10 h-10 rounded-xl bg-teal-50 text-teal-800 flex items-center justify-center shrink-0 shadow-xs border border-teal-100">
                 <KeyRound size={20} />
               </span>
               <div>
@@ -423,14 +456,14 @@ const Login = () => {
             </div>
 
             {resetError && (
-              <div role="alert" className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex gap-2">
-                <AlertCircle size={16} className="shrink-0" />
+              <div role="alert" className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium flex gap-2">
+                <AlertCircle size={16} className="shrink-0 text-red-600" />
                 {resetError}
               </div>
             )}
             {resetMessage && (
-              <div role="status" className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex gap-2">
-                <CheckCircle2 size={16} className="shrink-0" />
+              <div role="status" className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex gap-2">
+                <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
                 {resetMessage}
               </div>
             )}
@@ -438,7 +471,7 @@ const Login = () => {
             {resetStep === "email" ? (
               <form onSubmit={handleSendResetCode} className="space-y-4">
                 <div>
-                  <label htmlFor="reset-email" className="block text-sm font-medium text-slate-700 mb-1.5">Registered email</label>
+                  <label htmlFor="reset-email" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 ml-0.5">Registered email</label>
                   <input
                     id="reset-email"
                     type="email"
@@ -446,12 +479,12 @@ const Login = () => {
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full h-11 px-3.5 text-base text-slate-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
+                    className="w-full h-11 px-4 text-base text-slate-900 bg-white border border-stone-250 rounded-xl focus:outline-none focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15"
                   />
                 </div>
                 <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => setShowPasswordReset(false)} className="flex-1 h-10 border border-stone-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-stone-50">Cancel</button>
-                  <button type="submit" disabled={resetLoading} className="flex-1 h-10 bg-teal-800 hover:bg-teal-900 text-white text-sm font-medium rounded-lg disabled:opacity-60">
+                  <button type="button" onClick={() => setShowPasswordReset(false)} className="flex-1 h-10 border border-stone-250 bg-white hover:bg-stone-50 text-slate-700 text-sm font-semibold rounded-xl transition-all cursor-pointer">Cancel</button>
+                  <button type="submit" disabled={resetLoading} className="flex-1 h-10 bg-teal-800 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-[0_4px_14px_rgba(15,118,110,0.3)] disabled:opacity-60 transition-all cursor-pointer">
                     {resetLoading ? "Sending..." : "Send code"}
                   </button>
                 </div>
@@ -459,21 +492,21 @@ const Login = () => {
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-3.5">
                 <div>
-                  <label htmlFor="verification-code" className="block text-sm font-medium text-slate-700 mb-1.5">Verification code</label>
-                  <input id="verification-code" inputMode="numeric" maxLength={6} value={verificationCode} onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))} placeholder="6-digit code" className="w-full h-11 px-3.5 text-base tracking-[0.25em] text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20" />
+                  <label htmlFor="verification-code" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 ml-0.5">Verification code</label>
+                  <input id="verification-code" inputMode="numeric" maxLength={6} value={verificationCode} onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))} placeholder="6-digit code" className="w-full h-11 px-4 text-base tracking-[0.25em] text-slate-900 bg-white border border-stone-250 rounded-xl focus:outline-none focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15" />
                 </div>
                 <div>
-                  <label htmlFor="new-password" className="block text-sm font-medium text-slate-700 mb-1.5">New password</label>
-                  <input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full h-11 px-3.5 text-base text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20" />
+                  <label htmlFor="new-password" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 ml-0.5">New password</label>
+                  <input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full h-11 px-4 text-base text-slate-900 bg-white border border-stone-250 rounded-xl focus:outline-none focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15" />
                 </div>
                 <div>
-                  <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 mb-1.5">Confirm new password</label>
-                  <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full h-11 px-3.5 text-base text-slate-900 border border-stone-300 rounded-lg focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20" />
+                  <label htmlFor="confirm-password" className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 ml-0.5">Confirm new password</label>
+                  <input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full h-11 px-4 text-base text-slate-900 bg-white border border-stone-250 rounded-xl focus:outline-none focus:border-teal-700 focus:ring-4 focus:ring-teal-700/15" />
                 </div>
                 <button type="button" onClick={() => { setResetStep("email"); setResetMessage(""); setResetError(""); }} className="text-xs font-semibold text-teal-800 hover:underline">Use a different email or resend code</button>
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowPasswordReset(false)} className="flex-1 h-10 border border-stone-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-stone-50">Cancel</button>
-                  <button type="submit" disabled={resetLoading} className="flex-1 h-10 bg-teal-800 hover:bg-teal-900 text-white text-sm font-medium rounded-lg disabled:opacity-60">
+                  <button type="button" onClick={() => setShowPasswordReset(false)} className="flex-1 h-10 border border-stone-250 bg-white hover:bg-stone-50 text-slate-700 text-sm font-semibold rounded-xl transition-all cursor-pointer">Cancel</button>
+                  <button type="submit" disabled={resetLoading} className="flex-1 h-10 bg-teal-800 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-[0_4px_14px_rgba(15,118,110,0.3)] disabled:opacity-60 transition-all cursor-pointer">
                     {resetLoading ? "Resetting..." : "Reset password"}
                   </button>
                 </div>
