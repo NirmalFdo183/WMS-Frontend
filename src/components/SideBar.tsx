@@ -77,7 +77,6 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
     { name: "Supply Invoices", id: "supply", icon: <FileText size={15} /> },
     { name: "Loading Manifests", id: "loading", icon: <Truck size={15} /> },
     { name: "Sales Invoices", id: "sales", icon: <ShoppingCart size={15} /> },
-    { name: "Shop Invoices", id: "shop", icon: <Store size={15} /> },
   ];
 
   const resourcesSubItems = [
@@ -109,11 +108,14 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
       : []),
   ];
 
-  const visibleItems = user?.role === "cashier"
-    ? navItems.filter((item) => item.path === "/pos")
-    : user?.role === "data_entry"
-      ? navItems.filter((item) => ["/new-supply", "/loading", "/returns"].includes(item.path))
-      : navItems;
+  const visibleItems =
+    user?.role === "cashier"
+      ? navItems.filter((item) => item.path === "/pos")
+      : user?.role === "data_entry"
+        ? navItems.filter((item) =>
+            ["/new-supply", "/loading", "/returns"].includes(item.path),
+          )
+        : navItems;
 
   const showSettings = user?.role === "super_admin" || user?.role === "admin";
 
@@ -191,7 +193,9 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                 <>
                   <span
                     className={`shrink-0 transition-colors ${
-                      isActive ? "text-teal-800" : "text-slate-500 group-hover:text-slate-800"
+                      isActive
+                        ? "text-teal-800"
+                        : "text-slate-500 group-hover:text-slate-800"
                     }`}
                   >
                     {item.icon}
@@ -261,7 +265,8 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                   <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-300 space-y-1 py-0.5">
                     {resourcesSubItems.map((subItem) => {
                       const searchParams = new URLSearchParams(location.search);
-                      const currentTab = searchParams.get("tab") || location.state?.activeTab;
+                      const currentTab =
+                        searchParams.get("tab") || location.state?.activeTab;
                       const isCurrentActive =
                         isResourcesActive &&
                         (currentTab === subItem.id ||
@@ -339,7 +344,8 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
                   <div className="ml-3.5 pl-3 pr-1 border-l-2 border-stone-300 space-y-1 py-0.5">
                     {invoicesSubItems.map((subItem) => {
                       const searchParams = new URLSearchParams(location.search);
-                      const currentTab = searchParams.get("tab") || location.state?.activeTab;
+                      const currentTab =
+                        searchParams.get("tab") || location.state?.activeTab;
                       const isCurrentActive =
                         isInvoicesActive &&
                         (currentTab === subItem.id ||

@@ -16,7 +16,6 @@ import {
   FileText,
   Truck,
   ShoppingCart,
-  Store,
   Layers,
   CheckCircle2,
   Plus,
@@ -106,7 +105,7 @@ const SupplyInvoices: React.FC = () => {
 
   // Active Tab & Filters
   const [activeTab, setActiveTab] = useState<
-    "supply" | "shop" | "loading" | "sales"
+    "supply" | "loading" | "sales"
   >("supply");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("all");
@@ -145,11 +144,13 @@ const SupplyInvoices: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
 
-    if (tabParam) {
-      setActiveTab(tabParam as any);
-    } else if (location.state && location.state.activeTab) {
+    if (tabParam && ["supply", "loading", "sales"].includes(tabParam)) {
+      setActiveTab(tabParam as "supply" | "loading" | "sales");
+    } else if (location.state && location.state.activeTab && ["supply", "loading", "sales"].includes(location.state.activeTab)) {
       setActiveTab(location.state.activeTab);
       navigate(`?tab=${location.state.activeTab}`, { replace: true });
+    } else {
+      setActiveTab("supply");
     }
   }, [location, navigate]);
 
@@ -581,7 +582,6 @@ const SupplyInvoices: React.FC = () => {
             { id: "supply", label: "Supply Invoices", icon: <FileText size={14} />, count: invoices.length },
             { id: "loading", label: "Loading Manifests", icon: <Truck size={14} />, count: loadings.length },
             { id: "sales", label: "Sales Invoices", icon: <ShoppingCart size={14} />, count: sales.length },
-            { id: "shop", label: "Shop Invoices", icon: <Store size={14} />, count: null },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -615,8 +615,7 @@ const SupplyInvoices: React.FC = () => {
         </div>
 
         {/* Toolbar: Search, Filters by Month & Year, Print Statement */}
-        {activeTab !== "shop" && (
-          <div className="bg-white border border-stone-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+        <div className="bg-white border border-stone-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             {/* Search Input */}
             <div className="relative flex-1 max-w-md">
               <Search
@@ -715,7 +714,6 @@ const SupplyInvoices: React.FC = () => {
               )}
             </div>
           </div>
-        )}
 
         {/* TAB 1: SUPPLY INVOICES */}
         {activeTab === "supply" && (
@@ -1089,21 +1087,6 @@ const SupplyInvoices: React.FC = () => {
                 filteredSales.length,
                 setCurrentPage
               )}
-          </div>
-        )}
-
-        {/* TAB 4: SHOP INVOICES */}
-        {activeTab === "shop" && (
-          <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-12 text-center">
-            <div className="w-12 h-12 bg-stone-100 text-slate-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Store size={24} />
-            </div>
-            <h3 className="text-sm font-bold text-slate-800">
-              Shop Invoices Module
-            </h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Direct shop store invoices and retail billing module is currently in progress
-            </p>
           </div>
         )}
       </div>
