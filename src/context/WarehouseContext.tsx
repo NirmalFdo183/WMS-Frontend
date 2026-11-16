@@ -10,6 +10,8 @@ interface WarehouseContextType {
   refreshTotalValue: () => Promise<void>;
 }
 
+const VALUE_ROLES: ReadonlyArray<string | undefined> = ["admin", "super_admin"];
+
 const WarehouseContext = createContext<WarehouseContextType | undefined>(
   undefined,
 );
@@ -22,7 +24,7 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchTotalValue = async () => {
     // Only administrators have access to warehouse supplier invoices financial valuation
-    if (user && user.role !== "admin") return;
+    if (user && !VALUE_ROLES.includes(user.role)) return;
 
     // Check localStorage fallback if user object is loading
     if (!user) {
@@ -30,7 +32,7 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (parsed?.role !== "admin") return;
+          if (!VALUE_ROLES.includes(parsed?.role)) return;
         } catch {
           // fallback
         }
@@ -69,13 +71,13 @@ export const WarehouseProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (user?.role === "admin") {
+    if (user && VALUE_ROLES.includes(user.role)) {
       fetchTotalValue();
     }
   }, [token, user]);
 
   const refreshTotalValue = async () => {
-    if (user?.role === "admin") {
+    if (user && VALUE_ROLES.includes(user.role)) {
       await fetchTotalValue();
     }
   };
